@@ -1,0 +1,39 @@
+name:                ASPMS
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/githubuser/ASPMS#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2018 Author name here
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:       src
+  exposed-modules:      AccountDataSource
+                      , Html
+                      , Css
+  build-depends:        base
+                      , containers
+                      , VDU
+                      , blaze-html
+                      , clay
+                      , text
+                      , array
+  default-language:    Haskell2010
+
+executable ASPMS
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , Spock >= 0.11
+                     , mtl
+                     , text
+                     , ASPMS
+  default-language:    Haskell2010
