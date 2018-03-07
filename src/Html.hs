@@ -50,8 +50,26 @@ home = LT.toStrict $ renderHtml $ docTypeHtml $ do
 account :: String -> T.Text
 account uid = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
-      H.title "Account Details"
-      H.style $ toHtml CSS.accountDetailsCss
+        H.title "Account Details"
+        H.style $ toHtml CSS.accountDetailsCss
+        script ! type_ "text/javascript" $ toHtml $
+            "window.onload = function() {" ++
+            "   var checkbox = document.getElementById('lineOverviewConfig')," ++
+            "       child1 = document.getElementById('enableGlobalCommand')," ++
+            "       child2 = document.getElementById('enableRegulation');" ++
+            "   checkbox.onchange = function() {" ++
+            "      if (checkbox.checked) {" ++
+            "          child1.removeAttribute('disabled');" ++
+            "          child2.removeAttribute('disabled');" ++
+            "      }" ++
+            "      else {" ++
+            "          child1.checked = false;" ++
+            "          child2.checked = false;" ++
+            "          child1.setAttribute('disabled', 'disabled');" ++
+            "          child2.setAttribute('disabled', 'disabled');" ++
+            "      }" ++
+            "   };" ++
+            "};"
     H.body $ do
         toHtml ("Individual Account Details" ++ uid)
         H.div $ case (readMaybe uid :: Maybe UserID) of
@@ -63,6 +81,21 @@ account uid = LT.toStrict $ renderHtml $ docTypeHtml $ do
     where invalidMsg = toHtml ("Invalid User ID" :: String)
 
 --- Helpers ---
+-- General Helpers
+checkbox :: Html -> AttributeValue -> Bool -> Html
+checkbox label name' isChecked = H.div $ do
+    markChecked $ input ! type_ "checkbox" ! name name' ! A.id name'
+    H.label ! for name' $ label
+    where
+        markChecked elem = if isChecked
+            then elem ! checked "checked"
+            else elem
+
+labelledInput :: (ToValue a) => Html -> AttributeValue -> a -> Html
+labelledInput label' name' val = H.div ! class_ "row" $ do
+    H.label ! for name' $ label'
+    input ! type_ "text" ! A.id name' ! name name' ! value (toValue val)
+
 -- Home page helpers
 accountAndSystemParameterView :: AccountAndSystemParameterConfig -> Html
 accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig systemParams) = do
@@ -87,31 +120,50 @@ accountView (uid, acc) = H.div ! class_ "row" $ do
 -- Account Page Helpers
 accountDetailedView :: Account -> Html
 accountDetailedView (Account accountPassword accountName accountACR accountAOC) = H.form ! class_ "form" ! action "account" ! method "post" $ do
-    -- H.label ! for "accountName" $ toHtml ("Account Name" :: String)
-    -- input ! type_ "text" ! name "accountName" ! value (toValue accountName)
-    labelledInput "Account Name" accountName
+    labelledInput "Account Name" "accountName" accountName
 
-    labelledInput "Account Password" accountPassword
+    labelledInput "Account Password" "accountPassword" accountPassword
 
-    H.label ! for "accountACR" $ "Account ACR"
-    H.div $ mapM_ acrView (assocs accountACR)
-    where
-        labelledInput :: String -> String -> Html
-        labelledInput labelStr val = H.div ! class_ "row" $ do
-            H.label ! for nameStr $ toHtml labelStr
-            input ! type_ "text" ! name nameStr ! value (toValue val)
-            where nameStr = toValue $ filter (' ' /=) $ Prelude.map toLower labelStr
+    H.div ! class_ "row" $ do
+        H.label ! for "accountACR" $ "Account ACR"
+        H.div ! A.id "accountACR" $ mapM_ acrView (assocs accountACR)
+
+    H.div ! class_ "row" $ do
+        H.label ! for "accountAOC" $ "Account AOC"
+        H.div ! A.id "accountAOC" $ areaOfControlView accountAOC
 
 acrView :: (OC_ID, Bool) -> Html
-acrView (ocId, isAllowed) = H.div $ do
-    markChecked $ input ! type_ "checkbox" ! name (toValue ocIdStr)
-    H.label ! for (toValue ocIdStr) $ toHtml ocIdStr
+acrView (ocId, isAllowed) = checkbox (toHtml ocIdStr) (toValue ocIdStr) isAllowed
     where
         ocIdStr = show ocId
-        markChecked elem = if isAllowed
-            then elem ! checked "checked"
-            else elem
+
+areaOfControlView :: AreaOfControl -> Html
+areaOfControlView (AreaOfControl aocLineOverview aocMaintenanceMonitor aocTimetableManagement aocRollingStockController aocCrewController aocRollingStockManagement) = do
+    lineOverviewConfigView aocLineOverview
+    checkbox "AOC Maintenance Monitor" "aocMaintenanceMonitor" aocMaintenanceMonitor
+    checkbox "AOC Timetable Management" "aocTimetableManagement" aocTimetableManagement
+    checkbox "AOC Rolling Stock Controller" "aocRollingStockController" aocRollingStockController
+    checkbox "AOC Crew Controller" "aocCrewController" aocCrewController
+    checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" aocRollingStockManagement
+
+lineOverviewConfigView :: Maybe LineOverviewConfig -> Html
+lineOverviewConfigView Nothing = H.div $ do
+    checkbox "Line Overview Config" "lineOverviewConfig" False
+    H.div $ do
+        checkbox "Enable Global Command" "enableGlobalCommand" False ! disabled "disabled"
+        checkbox "Enable Regulation" "enableRegulation" False ! disabled "disabled"
+
+lineOverviewConfigView (Just (LineOverviewConfig enableGlobalCommand enableEnableRegulation)) = H.div $ do
+    checkbox "Line Overview Config" "lineOverviewConfig" True
+    H.div ! class_ "row" $ do
+        checkbox "Enable Global Command" "enableGlobalCommand" enableGlobalCommand
+        checkbox "Enable Regulation" "enableRegulation" enableEnableRegulation
 
 -- System Parameter Page Helpers
 systemParamsView :: SystemParameter -> Html
-systemParamsView _ = H.div "System Parameters View Here"
+systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwellTime delayDetectionThreshHold intestationStopDetectionTime tunnelLimit runningTimeList dwellTimeSet alarmLevel) = H.div $ do
+    h1 "System Parameters View Here"
+
+    labelledInput "Departure Offset" "departureOffset" departureOffset
+    -- H.label ! for "departureOffset" $ "Departure Offset"
+    -- input ! type_ "text" ! A.id "departureOffset" ! name "departureOffset" ! value (toValue departureOffset)
