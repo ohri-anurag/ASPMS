@@ -8,6 +8,7 @@ import SP6.Data.ID
 import qualified Data.Map.Strict as M
 import qualified Data.Array.Unboxed as A
 
+-- TODO Read/Write this from a file
 accountAndSystemParameterConfig :: AccountAndSystemParameterConfig
 accountAndSystemParameterConfig = AccountAndSystemParameterConfig {
         accountConfig = fakeAccountConfig,

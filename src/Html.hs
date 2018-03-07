@@ -46,6 +46,7 @@ home = LT.toStrict $ renderHtml $ docTypeHtml $ do
                 H.div ! A.id "systemParamsViewButton" $ "System Parameters"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
+-- TODO Read JS from a static file
 -- Account Page HTML
 account :: String -> T.Text
 account uid = LT.toStrict $ renderHtml $ docTypeHtml $ do
@@ -165,5 +166,11 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
     h1 "System Parameters View Here"
 
     labelledInput "Departure Offset" "departureOffset" departureOffset
+    labelledInput "Route Trigger Offset" "routeTriggerOffset" routeTriggerOffset
+    labelledInput "Minimum Dwell Time" "minimumDwellTime" minimumDwellTime
+    labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" delayDetectionThreshHold
+    -- TODO intestationStopDetectionTime should be interstationStopDetectionTime
+    labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" intestationStopDetectionTime
+    labelledInput "Tunnel Limit" "tunnelLimit" tunnelLimit
     -- H.label ! for "departureOffset" $ "Departure Offset"
     -- input ! type_ "text" ! A.id "departureOffset" ! name "departureOffset" ! value (toValue departureOffset)

@@ -7,6 +7,7 @@ import Clay as C
 import qualified Data.Text.Lazy as T
 -- import qualified Data.Text as T
 
+-- TODO Try a little refactoring
 homeCss :: T.Text
 homeCss = render $ do
     star ? do
