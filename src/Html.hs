@@ -11,6 +11,9 @@ import Text.Blaze.Html.Renderer.Text(renderHtml)
 -- CSS
 import qualified Css as CSS
 
+-- JS
+import qualified Js as JS
+
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text as T
 
@@ -46,31 +49,13 @@ home = LT.toStrict $ renderHtml $ docTypeHtml $ do
                 H.div ! A.id "systemParamsViewButton" $ "System Parameters"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
--- TODO Read JS from a static file
 -- Account Page HTML
 account :: String -> T.Text
 account uid = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Account Details"
         H.style $ toHtml CSS.accountDetailsCss
-        script ! type_ "text/javascript" $ toHtml $
-            "window.onload = function() {" ++
-            "   var checkbox = document.getElementById('lineOverviewConfig')," ++
-            "       child1 = document.getElementById('enableGlobalCommand')," ++
-            "       child2 = document.getElementById('enableRegulation');" ++
-            "   checkbox.onchange = function() {" ++
-            "      if (checkbox.checked) {" ++
-            "          child1.removeAttribute('disabled');" ++
-            "          child2.removeAttribute('disabled');" ++
-            "      }" ++
-            "      else {" ++
-            "          child1.checked = false;" ++
-            "          child2.checked = false;" ++
-            "          child1.setAttribute('disabled', 'disabled');" ++
-            "          child2.setAttribute('disabled', 'disabled');" ++
-            "      }" ++
-            "   };" ++
-            "};"
+        script ! type_ "text/javascript" $ toHtml $ JS.account
     H.body $ do
         toHtml ("Individual Account Details" ++ uid)
         H.div $ case (readMaybe uid :: Maybe UserID) of
@@ -78,7 +63,6 @@ account uid = LT.toStrict $ renderHtml $ docTypeHtml $ do
             Just id -> case M.lookup id (accountConfig accountAndSystemParameterConfig) of
                 Nothing -> invalidMsg
                 Just acc -> accountDetailedView acc
-    -- TODO
     where invalidMsg = toHtml ("Invalid User ID" :: String)
 
 --- Helpers ---
