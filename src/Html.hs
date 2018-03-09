@@ -172,5 +172,9 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
     -- TODO intestationStopDetectionTime should be interstationStopDetectionTime
     labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" intestationStopDetectionTime
     labelledInput "Tunnel Limit" "tunnelLimit" tunnelLimit
-    -- H.label ! for "departureOffset" $ "Departure Offset"
-    -- input ! type_ "text" ! A.id "departureOffset" ! name "departureOffset" ! value (toValue departureOffset)
+
+    a ! href "/runningTimeList" $ "Running Time Lists"
+    br
+    a ! href "/dwellTimeSet" $ "Dwell Time Sets"
+    br
+    a ! href "alarmLevel" $ "Alarm Levels"

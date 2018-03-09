@@ -56,6 +56,12 @@ app = do
     get ("account" <//> var) $ \uid ->
         userAuthenticated (html $ H.account uid) (redirect "/login")
 
+    get "runningTimeList" $ html "Running Time List Edit Page"
+
+    get "dwellTimeSet" $ html "Dwell Time Set Edit Page"
+
+    get "alarmLevel" $ html "Alarm Level Edit Page"
+
     post "login" $ paramsPost >>= \ps ->
         if validatePassword ps
             then toggleAppState >> writeSession UserLoggedIn >> redirect "/home"
