@@ -27,6 +27,12 @@ library
                       , jmacro
                       , text
                       , array
+                      , time
+                      , bytestring
+                      , cereal
+                      , aeson
+                      , unordered-containers
+                      , hashable
   default-language:    Haskell2010
 
 executable ASPMS

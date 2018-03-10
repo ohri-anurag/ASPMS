@@ -4,17 +4,21 @@ module Main where
 import Web.Spock
 import Web.Spock.Config
 
+import Data.Monoid((<>))
 import Control.Monad.Trans
--- import Data.Monoid
 import Data.IORef
 import qualified Data.Text as T
 
--- Provides the data for all accounts
-import AccountDataSource
 -- Provides HTML templates
 import qualified Html as H
 
-data MyAppState = MyAppState (IORef AppState)
+-- Data Source
+import AccountDataSource
+
+data MyAppState = MyAppState
+    { state :: IORef AppState
+    , cache :: IORef AccountAndSystemParameterConfig
+    }
 
 
 data AppState = InUse | Free
@@ -28,10 +32,11 @@ toggle Free = (InUse, InUse)
 toggle InUse = (Free, Free)
 
 main :: IO ()
-main =
-    do ref <- newIORef Free
-       spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref)
-       runSpock 8080 (spock spockCfg app)
+main = do
+    ref <- newIORef Free
+    dataRef <- getData >>= newIORef
+    spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref dataRef)
+    runSpock 8080 (spock spockCfg app)
 
 validatePassword :: [(T.Text, T.Text)] -> Bool
 validatePassword parameters = case lookup "password" parameters of
@@ -44,42 +49,61 @@ app = do
         redirect "/login"
 
     get "login" $
-    -- userAuthenticated (redirect "/home") (file "text/html" "res/Login.html")
         userAuthenticated (redirect "/home") (html H.login)
 
     get "logout" $
         toggleAppState >> writeSession UserLoggedOut >> redirect "/login"
 
     get "home" $
-        userAuthenticated (html H.home) (redirect "/login")
+        userAuthenticated (withData H.home) (redirect "/login")
 
     get ("account" <//> var) $ \uid ->
-        userAuthenticated (html $ H.account uid) (redirect "/login")
+        userAuthenticated (withData $ H.account uid) (redirect "/login")
+    post "account" $
+        userAuthenticated (
+            paramsPost >>= \ps -> do
+                (MyAppState _ cache) <- getState
+                acData <- liftIO (readIORef cache)
+                case updateAccount ps acData of
+                    Just acData' -> (runQuery $ \_ -> do
+                        putData acData'
+                        atomicModifyIORef' cache (\_ -> ( acData',() ))) >> text "1"
+                    Nothing -> text "0"
+        ) (redirect "/login")
 
-    get "runningTimeList" $ html "Running Time List Edit Page"
+    get "runningTimeLists" $
+        userAuthenticated (withData H.runningTimeLists) (redirect "/login")
 
-    get "dwellTimeSet" $ html "Dwell Time Set Edit Page"
+    get "dwellTimeSets" $
+        userAuthenticated (withData H.dwellTimeSets) (redirect "/login")
 
-    get "alarmLevel" $ html "Alarm Level Edit Page"
+    get "alarmLevels" $
+        userAuthenticated (withData H.alarmLevels) (redirect "/login")
 
     post "login" $ paramsPost >>= \ps ->
         if validatePassword ps
             then toggleAppState >> writeSession UserLoggedIn >> redirect "/home"
             else redirect "/login"
     where
+        -- Read account data from the cache, and run the action with that data
+        withData :: (AccountAndSystemParameterConfig -> T.Text) -> SpockAction () UserSession MyAppState ()
+        withData action = do
+            (MyAppState _ cache) <- getState
+            liftIO (readIORef cache) >>= html . action
+
         -- Check if this user is logged in. If yes, perform the given action, otherwise redirect to the login page.
         userAuthenticated actionTrue actionFalse = readSession >>= \session ->
             case session of
                 UserLoggedIn -> actionTrue
                 UserLoggedOut -> do
                   -- Check if some other user is already using the app. If yes, don't show the login page.
-                    (MyAppState ref) <- getState
+                    (MyAppState ref _) <- getState
                     liftIO (readIORef ref) >>= \state -> case state of
                         InUse -> text "The account management system is in use by another user. Kindly login at a later time."
                         Free -> actionFalse
 
         toggleAppState = do
-            (MyAppState ref) <- getState
+            (MyAppState ref _) <- getState
             liftIO $ atomicModifyIORef' ref toggle
 
 -- TODO

@@ -19,11 +19,11 @@ import qualified Data.Text as T
 
 import qualified Data.Map.Strict as M
 
-import Data.Char(toLower)
-
+-- Account Data Types
 import SP6.Data.Account
 import SP6.Data.ID
-import AccountDataSource
+import SP6.Data.Command
+import Data.Time.Clock(NominalDiffTime)
 
 import Text.Read(readMaybe)
 import Data.Array.IArray(assocs)
@@ -37,8 +37,8 @@ login = LT.toStrict $ renderHtml $ H.docTypeHtml $ do
     H.body $ H.form ! action "login" ! method "post" $ input ! type_ "password" ! placeholder "Password" ! name "password"
 
 -- Home Page HTML
-home :: T.Text
-home = LT.toStrict $ renderHtml $ docTypeHtml $ do
+home :: AccountAndSystemParameterConfig -> T.Text
+home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Home"
         H.style $ toHtml CSS.homeCss
@@ -50,20 +50,51 @@ home = LT.toStrict $ renderHtml $ docTypeHtml $ do
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
 -- Account Page HTML
-account :: String -> T.Text
-account uid = LT.toStrict $ renderHtml $ docTypeHtml $ do
+account :: String -> AccountAndSystemParameterConfig -> T.Text
+account uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Account Details"
         H.style $ toHtml CSS.accountDetailsCss
         script ! type_ "text/javascript" $ toHtml $ JS.account
     H.body $ do
-        toHtml ("Individual Account Details" ++ uid)
+        toHtml ("Individual Account Details" :: String)
+        H.span ! A.id "userID" $ toHtml uid
         H.div $ case (readMaybe uid :: Maybe UserID) of
             Nothing -> invalidMsg
             Just id -> case M.lookup id (accountConfig accountAndSystemParameterConfig) of
                 Nothing -> invalidMsg
                 Just acc -> accountDetailedView acc
     where invalidMsg = toHtml ("Invalid User ID" :: String)
+
+-- Running Time List HTML
+runningTimeLists :: AccountAndSystemParameterConfig -> T.Text
+runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+    H.head $ do
+        H.title "Running Time Lists"
+    H.body $ do
+        h1 "Running Time Lists"
+        -- TODO Do this using lenses
+        runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
+
+-- Dwell Time Set HTML
+dwellTimeSets :: AccountAndSystemParameterConfig -> T.Text
+dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+    H.head $ do
+        H.title "Dwell Time Sets"
+    H.body $ do
+        h1 "Dwell Time Sets"
+        -- TODO Do this using lenses
+        dwellTimeSetsView $ dwellTimeSet $ systemParameter accountAndSystemParameterConfig
+
+-- Alarm Levels HTML
+alarmLevels :: AccountAndSystemParameterConfig -> T.Text
+alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+    H.head $ do
+        H.title "Alarm Levels"
+    H.body $ do
+        h1 "Alarm Levels"
+        -- TODO Do this using lenses
+        mapM_ alarmLevelView $ M.toList $ alarmLevel $ systemParameter accountAndSystemParameterConfig
 
 --- Helpers ---
 -- General Helpers
@@ -104,7 +135,7 @@ accountView (uid, acc) = H.div ! class_ "row" $ do
 
 -- Account Page Helpers
 accountDetailedView :: Account -> Html
-accountDetailedView (Account accountPassword accountName accountACR accountAOC) = H.form ! class_ "form" ! action "account" ! method "post" $ do
+accountDetailedView (Account accountPassword accountName accountACR accountAOC) = H.form ! A.id "accountForm" ! class_ "form" $ do
     labelledInput "Account Name" "accountName" accountName
 
     labelledInput "Account Password" "accountPassword" accountPassword
@@ -116,6 +147,9 @@ accountDetailedView (Account accountPassword accountName accountACR accountAOC) 
     H.div ! class_ "row" $ do
         H.label ! for "accountAOC" $ "Account AOC"
         H.div ! A.id "accountAOC" $ areaOfControlView accountAOC
+
+    -- TODO VALIDATION
+    button ! class_ "submit" ! A.id "submit" $ "Edit Account"
 
 acrView :: (OC_ID, Bool) -> Html
 acrView (ocId, isAllowed) = checkbox (toHtml ocIdStr) (toValue ocIdStr) isAllowed
@@ -132,14 +166,13 @@ areaOfControlView (AreaOfControl aocLineOverview aocMaintenanceMonitor aocTimeta
     checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" aocRollingStockManagement
 
 lineOverviewConfigView :: Maybe LineOverviewConfig -> Html
-lineOverviewConfigView Nothing = H.div $ do
-    checkbox "Line Overview Config" "lineOverviewConfig" False
+lineOverviewConfigView Nothing = H.div ! A.id "aocLineOverviewDiv" $ do
+    checkbox "Line Overview Config" "aocLineOverview" False
     H.div $ do
         checkbox "Enable Global Command" "enableGlobalCommand" False ! disabled "disabled"
-        checkbox "Enable Regulation" "enableRegulation" False ! disabled "disabled"
-
-lineOverviewConfigView (Just (LineOverviewConfig enableGlobalCommand enableEnableRegulation)) = H.div $ do
-    checkbox "Line Overview Config" "lineOverviewConfig" True
+        checkbox "Enable Regulation" "enableEnableRegulation" False ! disabled "disabled"
+lineOverviewConfigView (Just (LineOverviewConfig enableGlobalCommand enableEnableRegulation)) = H.div ! A.id "aocLineOverviewDiv" $ do
+    checkbox "Line Overview Config" "aocLineOverview" True
     H.div ! class_ "row" $ do
         checkbox "Enable Global Command" "enableGlobalCommand" enableGlobalCommand
         checkbox "Enable Regulation" "enableRegulation" enableEnableRegulation
@@ -157,8 +190,48 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
     labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" intestationStopDetectionTime
     labelledInput "Tunnel Limit" "tunnelLimit" tunnelLimit
 
-    a ! href "/runningTimeList" $ "Running Time Lists"
+    a ! href "/runningTimeLists" $ "Running Time Lists"
     br
-    a ! href "/dwellTimeSet" $ "Dwell Time Sets"
+    a ! href "/dwellTimeSets" $ "Dwell Time Sets"
     br
-    a ! href "alarmLevel" $ "Alarm Levels"
+    a ! href "alarmLevels" $ "Alarm Levels"
+
+-- Running Time Lists Page Helpers
+runningTimeListsView :: RunningTimeLists -> Html
+runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting) = do
+    runningTimeListView maximumPerformance
+    runningTimeListView fivePercentCoasting
+    runningTimeListView eightPercentCoasting
+    runningTimeListView energySaving
+    runningTimeListView fullCoasting
+
+runningTimeListView :: M.Map (StopPointCode, StopPointCode) NominalDiffTime -> Html
+runningTimeListView rtl = mapM_ runningTimeView $ M.toList rtl
+
+runningTimeView :: ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
+runningTimeView ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) (show diffTime)
+    where
+        stc1Str = show stc1
+        stc2Str = show stc2
+        label = stc1Str ++ " -> " ++ stc2Str
+        name = stc1Str ++ "," ++ stc2Str
+
+-- Dwell Time Sets Page Helpers
+dwellTimeSetsView :: DwellTimeSets -> Html
+dwellTimeSetsView (DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3) = do
+    dwellTimeSetView dwellTimeSet1
+    dwellTimeSetView dwellTimeSet2
+    dwellTimeSetView dwellTimeSet3
+
+dwellTimeSetView :: M.Map StopPointCode NominalDiffTime -> Html
+dwellTimeSetView dts = mapM_ dwellTimeView $ M.toList dts
+
+dwellTimeView :: (StopPointCode, NominalDiffTime) -> Html
+dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) (show diffTime)
+    where spcStr = show spc
+
+-- Alarm Levels Page Helpers
+-- TODO Create a select drop down for alarm level
+alarmLevelView :: (EventTag, AlarmLevel) -> Html
+alarmLevelView (eTag, aLevel) = labelledInput (toHtml $ eTagStr) (toValue $ eTagStr) (show aLevel)
+    where eTagStr = show eTag
