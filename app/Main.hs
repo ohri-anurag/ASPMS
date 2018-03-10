@@ -14,6 +14,7 @@ import qualified Html as H
 
 -- Data Source
 import AccountDataSource
+import Text.Read(readMaybe)
 
 data MyAppState = MyAppState
     { state :: IORef AppState
@@ -58,7 +59,11 @@ app = do
         userAuthenticated (withData H.home) (redirect "/login")
 
     get ("account" <//> var) $ \uid ->
-        userAuthenticated (withData $ H.account uid) (redirect "/login")
+        -- TODO This will have to be changed when the UserID type changes.
+        case readMaybe uid of
+            Just x -> userAuthenticated (withData $ H.editAccount x) (redirect "/login")
+            Nothing -> error "Invalid UserID"
+
     post "account" $
         userAuthenticated (
             paramsPost >>= \ps -> do
@@ -70,6 +75,9 @@ app = do
                         atomicModifyIORef' cache (\_ -> ( acData',() ))) >> text "1"
                     Nothing -> text "0"
         ) (redirect "/login")
+
+    get "addAccount" $
+        userAuthenticated (withData $ H.addAccount) (redirect "/login")
 
     get "runningTimeLists" $
         userAuthenticated (withData H.runningTimeLists) (redirect "/login")

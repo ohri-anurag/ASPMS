@@ -2,6 +2,9 @@
 
 module Html where
 
+import Control.Monad(join)
+import Data.Maybe(isJust,maybe,fromJust)
+
 -- HTML
 -- import Text.Blaze
 import Text.Blaze.Html5 as H
@@ -26,7 +29,11 @@ import SP6.Data.Command
 import Data.Time.Clock(NominalDiffTime)
 
 import Text.Read(readMaybe)
-import Data.Array.IArray(assocs)
+import Data.Array.Unboxed(assocs)
+
+-- Account Mode
+data AccountMode = ADD | EDIT
+    deriving Eq
 
 --- Web Pages ---
 
@@ -50,21 +57,36 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
 -- Account Page HTML
-account :: String -> AccountAndSystemParameterConfig -> T.Text
-account uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+editAccount :: UserID -> AccountAndSystemParameterConfig -> T.Text
+editAccount uid = account EDIT (Just uid)
+
+addAccount :: AccountAndSystemParameterConfig -> T.Text
+addAccount = account ADD Nothing
+
+account :: AccountMode -> Maybe UserID -> AccountAndSystemParameterConfig -> T.Text
+account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
-        H.title "Account Details"
+        H.title accountTitle
         H.style $ toHtml CSS.accountDetailsCss
         script ! type_ "text/javascript" $ toHtml $ JS.account
     H.body $ do
-        toHtml ("Individual Account Details" :: String)
-        H.span ! A.id "userID" $ toHtml uid
-        H.div $ case (readMaybe uid :: Maybe UserID) of
-            Nothing -> invalidMsg
-            Just id -> case M.lookup id (accountConfig accountAndSystemParameterConfig) of
+        userIdDisplay
+        accountDetails
+    where
+        uid' = fromJust uid
+        invalidMsg = toHtml ("Invalid User ID" :: String)
+        accountTitle = if mode == EDIT then "Account Details" else "Add Account"
+        userIdDisplay = if mode == EDIT
+            then do
+                toHtml ("Individual Account Details" :: String)
+                H.span ! A.id "userID" $ toHtml $ show uid'
+            else labelledInput "User Id" "userID" "Enter User ID here" (Nothing :: Maybe String)
+        accountDetails = if mode == EDIT
+            then H.div $ case M.lookup uid' (accountConfig accountAndSystemParameterConfig) of
                 Nothing -> invalidMsg
-                Just acc -> accountDetailedView acc
-    where invalidMsg = toHtml ("Invalid User ID" :: String)
+                Just acc -> accountDetailedView (Just acc)
+            else accountDetailedView Nothing
+
 
 -- Running Time List HTML
 runningTimeLists :: AccountAndSystemParameterConfig -> T.Text
@@ -98,19 +120,25 @@ alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docType
 
 --- Helpers ---
 -- General Helpers
-checkbox :: Html -> AttributeValue -> Bool -> Html
-checkbox label name' isChecked = H.div $ do
-    markChecked $ input ! type_ "checkbox" ! name name' ! A.id name'
+checkbox :: Html -> AttributeValue -> Bool -> Bool -> Html
+checkbox label name' isChecked isDisabled = H.div $ do
+    markDisabled $ markChecked $ input ! type_ "checkbox" ! name name' ! A.id name'
     H.label ! for name' $ label
     where
         markChecked elem = if isChecked
             then elem ! checked "checked"
             else elem
+        markDisabled elem = if isDisabled
+            then elem ! disabled "disabled"
+            else elem
 
-labelledInput :: (ToValue a) => Html -> AttributeValue -> a -> Html
-labelledInput label' name' val = H.div ! class_ "row" $ do
+-- Creates a label input pair, and fills the input with the given value
+labelledInput :: (ToValue a) => Html -> AttributeValue -> String -> Maybe a -> Html
+labelledInput label' name' holder val = H.div ! class_ "row" $ do
     H.label ! for name' $ label'
-    input ! type_ "text" ! A.id name' ! name name' ! value (toValue val)
+    addValue $ input ! type_ "text" ! A.id name' ! name name' ! placeholder (toValue holder)
+    where
+        addValue elem = maybe elem ((!) elem . value . toValue) val
 
 -- Home page helpers
 accountAndSystemParameterView :: AccountAndSystemParameterConfig -> Html
@@ -120,75 +148,76 @@ accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig sy
             H.div ! class_ "uid" $ "UID"
             H.div ! class_ "accountName" $ "Name"
         accountsView accountsConfig
+        a ! href "/addAccount" $ button "Add Account"
     H.div ! A.id "systemParamsView" $ systemParamsView systemParams
 
 accountsView :: M.Map UserID Account -> Html
 accountsView accountsConfig = mapM_ accountView $ M.toList accountsConfig
-    -- H.div $ "Accounts View Here"
 
 accountView :: (UserID, Account) -> Html
 accountView (uid, acc) = H.div ! class_ "row" $ do
     H.div ! class_ "uid" $ a ! href (toValue $ "/account/" ++ str) $ toHtml str
     H.div ! class_ "accountName" $ toHtml $ accountName acc
     where str = show uid
-    -- toHtml $ "Account for" ++ (show uid)
 
 -- Account Page Helpers
-accountDetailedView :: Account -> Html
-accountDetailedView (Account accountPassword accountName accountACR accountAOC) = H.form ! A.id "accountForm" ! class_ "form" $ do
-    labelledInput "Account Name" "accountName" accountName
+accountDetailedView :: Maybe Account -> Html
+accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
+    labelledInput "Account Name" "accountName" "Enter Account Name here" $ accountName <$> account
 
-    labelledInput "Account Password" "accountPassword" accountPassword
+    labelledInput "Account Password" "accountPassword" "Enter Account Password here" $ accountPassword <$> account
 
     H.div ! class_ "row" $ do
         H.label ! for "accountACR" $ "Account ACR"
-        H.div ! A.id "accountACR" $ mapM_ acrView (assocs accountACR)
+        H.div ! A.id "accountACR" $ mapM_ acrView $ acrList
 
     H.div ! class_ "row" $ do
         H.label ! for "accountAOC" $ "Account AOC"
-        H.div ! A.id "accountAOC" $ areaOfControlView accountAOC
+        H.div ! A.id "accountAOC" $ areaOfControlView $ accountAOC <$> account
 
     -- TODO VALIDATION
-    button ! class_ "submit" ! A.id "submit" $ "Edit Account"
+    button ! class_ "submit" ! A.id "submit" $ maybe "Add Account" (const "Edit Account") account
+    where
+        acrList = maybe (zip [OC801 ..] $ repeat False) Prelude.id (assocs <$> accountACR <$> account)
 
 acrView :: (OC_ID, Bool) -> Html
-acrView (ocId, isAllowed) = checkbox (toHtml ocIdStr) (toValue ocIdStr) isAllowed
+acrView (ocId, isAllowed) = checkbox (toHtml ocIdStr) (toValue ocIdStr) isAllowed False
     where
         ocIdStr = show ocId
 
-areaOfControlView :: AreaOfControl -> Html
-areaOfControlView (AreaOfControl aocLineOverview aocMaintenanceMonitor aocTimetableManagement aocRollingStockController aocCrewController aocRollingStockManagement) = do
-    lineOverviewConfigView aocLineOverview
-    checkbox "AOC Maintenance Monitor" "aocMaintenanceMonitor" aocMaintenanceMonitor
-    checkbox "AOC Timetable Management" "aocTimetableManagement" aocTimetableManagement
-    checkbox "AOC Rolling Stock Controller" "aocRollingStockController" aocRollingStockController
-    checkbox "AOC Crew Controller" "aocCrewController" aocCrewController
-    checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" aocRollingStockManagement
+areaOfControlView :: Maybe AreaOfControl -> Html
+areaOfControlView areaOfControl = do
+    lineOverviewConfigView $ aocLineOverview <$> areaOfControl
+    checkbox "AOC Maintenance Monitor" "aocMaintenanceMonitor" (toBool aocMaintenanceMonitor) False
+    checkbox "AOC Timetable Management" "aocTimetableManagement" (toBool aocTimetableManagement) False
+    checkbox "AOC Rolling Stock Controller" "aocRollingStockController" (toBool aocRollingStockController) False
+    checkbox "AOC Crew Controller" "aocCrewController" (toBool aocCrewController) False
+    checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" (toBool aocRollingStockManagement) False
+    where
+        toBool f = maybe False Prelude.id (f <$> areaOfControl)
 
-lineOverviewConfigView :: Maybe LineOverviewConfig -> Html
-lineOverviewConfigView Nothing = H.div ! A.id "aocLineOverviewDiv" $ do
-    checkbox "Line Overview Config" "aocLineOverview" False
-    H.div $ do
-        checkbox "Enable Global Command" "enableGlobalCommand" False ! disabled "disabled"
-        checkbox "Enable Regulation" "enableEnableRegulation" False ! disabled "disabled"
-lineOverviewConfigView (Just (LineOverviewConfig enableGlobalCommand enableEnableRegulation)) = H.div ! A.id "aocLineOverviewDiv" $ do
-    checkbox "Line Overview Config" "aocLineOverview" True
+lineOverviewConfigView :: Maybe (Maybe LineOverviewConfig) -> Html
+lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ do
+    checkbox "Line Overview Config" "aocLineOverview" isChecked False
     H.div ! class_ "row" $ do
-        checkbox "Enable Global Command" "enableGlobalCommand" enableGlobalCommand
-        checkbox "Enable Regulation" "enableRegulation" enableEnableRegulation
+        checkbox "Enable Global Command" "enableGlobalCommand" (toBool enableGlobalCommand $ join lineOverviewConfig) (not isChecked)
+        checkbox "Enable Regulation" "enableEnableRegulation" (toBool enableEnableRegulation $ join lineOverviewConfig) (not isChecked)
+    where
+        toBool f v = maybe False Prelude.id (f <$> v)
+        isChecked = toBool isJust lineOverviewConfig
 
 -- System Parameter Page Helpers
 systemParamsView :: SystemParameter -> Html
 systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwellTime delayDetectionThreshHold intestationStopDetectionTime tunnelLimit runningTimeList dwellTimeSet alarmLevel) = H.div $ do
     h1 "System Parameters View Here"
 
-    labelledInput "Departure Offset" "departureOffset" departureOffset
-    labelledInput "Route Trigger Offset" "routeTriggerOffset" routeTriggerOffset
-    labelledInput "Minimum Dwell Time" "minimumDwellTime" minimumDwellTime
-    labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" delayDetectionThreshHold
+    labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just departureOffset
+    labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just routeTriggerOffset
+    labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just minimumDwellTime
+    labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just delayDetectionThreshHold
     -- TODO intestationStopDetectionTime should be interstationStopDetectionTime
-    labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" intestationStopDetectionTime
-    labelledInput "Tunnel Limit" "tunnelLimit" tunnelLimit
+    labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just intestationStopDetectionTime
+    labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
 
     a ! href "/runningTimeLists" $ "Running Time Lists"
     br
@@ -209,7 +238,7 @@ runningTimeListView :: M.Map (StopPointCode, StopPointCode) NominalDiffTime -> H
 runningTimeListView rtl = mapM_ runningTimeView $ M.toList rtl
 
 runningTimeView :: ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
-runningTimeView ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) (show diffTime)
+runningTimeView ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) "Enter Running Time here" (Just $ show diffTime)
     where
         stc1Str = show stc1
         stc2Str = show stc2
@@ -227,11 +256,11 @@ dwellTimeSetView :: M.Map StopPointCode NominalDiffTime -> Html
 dwellTimeSetView dts = mapM_ dwellTimeView $ M.toList dts
 
 dwellTimeView :: (StopPointCode, NominalDiffTime) -> Html
-dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) (show diffTime)
+dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) "Enter Dwell Time here" (Just $ show diffTime)
     where spcStr = show spc
 
 -- Alarm Levels Page Helpers
 -- TODO Create a select drop down for alarm level
 alarmLevelView :: (EventTag, AlarmLevel) -> Html
-alarmLevelView (eTag, aLevel) = labelledInput (toHtml $ eTagStr) (toValue $ eTagStr) (show aLevel)
+alarmLevelView (eTag, aLevel) = labelledInput (toHtml $ eTagStr) (toValue $ eTagStr) "Enter Alarm Level here" (Just $ show aLevel)
     where eTagStr = show eTag

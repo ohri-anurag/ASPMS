@@ -57,7 +57,7 @@ account = show $ renderJs [jmacro|
                     obj.accountAOC.aocLineOverview.enableEnableRegulation = aocLineOverviewList[2].checked;
                 }
                 else{
-                    obj.accountAOC.aocLineOverview = "null";
+                    obj.accountAOC.aocLineOverview = null;
                 }
 
                 // AOC Inputs, other than Line Overview Config Inputs
