@@ -38,7 +38,9 @@ import Data.Array.Unboxed(assocs)
 login :: T.Text
 login = LT.toStrict $ renderHtml $ H.docTypeHtml $ do
     H.head $ H.title "Login"
-    H.body $ H.form ! action "login" ! method "post" $ input ! type_ "password" ! placeholder "Password" ! name "password"
+    H.body $ H.form ! action "login" ! method "post" $ do
+        input ! type_ "password" ! placeholder "Password" ! name "password"
+        input ! type_ "submit" ! value "Login"
 
 -- TODO Logout Button
 -- Home Page HTML
@@ -53,7 +55,19 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
                 H.div ! A.id "systemParamsViewButton" ! class_ "button" $ "System Parameters"
+                a ! href "/changePassword" ! A.id "changePassword" ! class_ "button" $ "Change Password"
+                br
+                a ! href "/logout" ! A.id "logout" ! class_ "button" $ "Logout"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
+
+-- Change Password Page HTML
+changePassword :: T.Text
+changePassword = LT.toStrict $ renderHtml $ docTypeHtml $ do
+    H.head $ do
+        H.title "Change Password"
+    H.body $ H.form ! action "changePassword" ! method "post" $ do
+        input ! type_ "password" ! placeholder "Password" ! name "password"
+        input ! type_ "submit" ! value "Save Changes"
 
 -- Account Page HTML
 editAccount :: UserID -> AccountAndSystemParameterConfig -> T.Text

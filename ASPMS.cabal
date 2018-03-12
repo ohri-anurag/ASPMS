@@ -20,6 +20,7 @@ library
                       , Css
                       , Js
                       , Types
+                      , Credentials
   build-depends:        base
                       , containers
                       , VDU

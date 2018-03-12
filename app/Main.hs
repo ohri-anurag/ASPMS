@@ -14,6 +14,7 @@ import qualified Html as H
 
 -- Data Source
 import AccountDataSource
+import Credentials
 import Text.Read(readMaybe)
 
 data MyAppState = MyAppState
@@ -35,11 +36,6 @@ main = do
     spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref dataRef)
     runSpock 8080 (spock spockCfg app)
 
-validatePassword :: [(T.Text, T.Text)] -> Bool
-validatePassword parameters = case lookup "password" parameters of
-    Nothing -> False
-    Just pw -> pw == "simple"
-
 app :: SpockM () UserSession MyAppState ()
 app = do
     get root $
@@ -47,16 +43,31 @@ app = do
 
     get "login" $
         userAuthenticated (redirect "/home") (html H.login)
-    post "login" $ paramsPost >>= \ps ->
-        if validatePassword ps
-            then login >> redirect "/home"
-            else redirect "/login"
+    post "login" $
+        userAuthenticated (redirect "/home") (paramsPost >>= \ps ->
+            case lookup "password" ps of
+                Nothing -> redirect "/login"
+                Just pwd -> (runQuery $ \_ -> do
+                    validatePassword pwd) >>= \b -> if b
+                        then login >> redirect "/home"
+                        else redirect "/login"
+        )
 
     get "logout" $
         logout >> redirect "/login"
 
     get "home" $
         userAuthenticated (withData H.home) (redirect "/login")
+
+    get "changePassword" $
+        userAuthenticated (html H.changePassword) (redirect "/login")
+    post "changePassword" $
+        userAuthenticated (paramsPost >>= \ps ->
+            case lookup "password" ps of
+                Nothing -> redirect "/home"
+                Just pwd -> (runQuery $ \_ -> do
+                    storePassword pwd)
+        ) (redirect "/login")
 
     get ("account" <//> var) $ \uid ->
         -- TODO This will have to be changed when the UserID type changes.
