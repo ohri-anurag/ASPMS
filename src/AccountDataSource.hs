@@ -5,6 +5,7 @@ module AccountDataSource (
     updateAccount,
     updateSystemParams,
     updateRunningTimeLists,
+    updateDwellTimeSets,
     AccountAndSystemParameterConfig
 ) where
 
@@ -33,6 +34,8 @@ instance FromJSON LineOverviewConfig
 instance Hashable OC_ID
 instance FromJSONKey OC_ID
 
+instance FromJSONKey StopPointCode
+
 instance FromJSON Account where
     parseJSON = withObject "Account" $ \o -> do
         pwd <- o .: "accountPassword"
@@ -49,6 +52,13 @@ instance FromJSON RunningTimeLists where
         energySaving <- o .: "energySaving"
         fullCoasting <- o .: "fullCoasting"
         pure $ RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting
+
+instance FromJSON DwellTimeSets where
+    parseJSON = withObject "Dwell Time Sets" $ \o -> do
+        dwellTimeSet1 <- o .: "dwellTimeSet1"
+        dwellTimeSet2 <- o .: "dwellTimeSet2"
+        dwellTimeSet3 <- o .: "dwellTimeSet3"
+        pure $ DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3
 
 getData :: IO AccountAndSystemParameterConfig
 getData = (f . S.decode) <$> B.readFile "data/AccountData"
@@ -121,6 +131,15 @@ updateRunningTimeLists ps accConfSysParam = do
         }
     }
 
+updateDwellTimeSets :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
+updateDwellTimeSets ps accConfSysParam = do
+    json <- lookup "data" ps
+    dwellTimeSet <- decodeStrict' $ TE.encodeUtf8 json
+    Just $ accConfSysParam {
+        systemParameter = (systemParameter accConfSysParam) {
+            dwellTimeSet = dwellTimeSet
+        }
+    }
     -- FOR DEBUGGING
     -- case createAccount ps of
     --     Nothing -> error "Could not create account"

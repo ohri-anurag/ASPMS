@@ -93,7 +93,6 @@ runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
     H.head $ do
         H.title "Running Time Lists"
         script ! type_ "text/javascript" $ toHtml $ JS.runningTimeLists
-
     H.body $ do
         h1 "Running Time Lists"
         -- TODO Do this using lenses
@@ -105,10 +104,12 @@ dwellTimeSets :: AccountAndSystemParameterConfig -> T.Text
 dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Dwell Time Sets"
+        script ! type_ "text/javascript" $ toHtml $ JS.dwellTimeSets
     H.body $ do
         h1 "Dwell Time Sets"
         -- TODO Do this using lenses
         dwellTimeSetsView $ dwellTimeSet $ systemParameter accountAndSystemParameterConfig
+        button ! A.id "saveButton" $ "Save Changes"
 
 -- Alarm Levels HTML
 alarmLevels :: AccountAndSystemParameterConfig -> T.Text
@@ -263,15 +264,21 @@ runningTimeView ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue
 -- Dwell Time Sets Page Helpers
 dwellTimeSetsView :: DwellTimeSets -> Html
 dwellTimeSetsView (DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3) = do
-    dwellTimeSetView dwellTimeSet1
-    dwellTimeSetView dwellTimeSet2
-    dwellTimeSetView dwellTimeSet3
+    H.div ! A.id "dwellTimeSet1" ! class_ "dwellTimeSet" $ do
+        h2 "Dwell Time Set 1"
+        dwellTimeSetView dwellTimeSet1
+    H.div ! A.id "dwellTimeSet2" ! class_ "dwellTimeSet" $ do
+        h2 "Dwell Time Set 2"
+        dwellTimeSetView dwellTimeSet2
+    H.div ! A.id "dwellTimeSet3" ! class_ "dwellTimeSet" $ do
+        h2 "Dwell Time Set 3"
+        dwellTimeSetView dwellTimeSet3
 
 dwellTimeSetView :: M.Map StopPointCode NominalDiffTime -> Html
 dwellTimeSetView dts = mapM_ dwellTimeView $ M.toList dts
 
 dwellTimeView :: (StopPointCode, NominalDiffTime) -> Html
-dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) "Enter Dwell Time here" (Just $ show diffTime)
+dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
     where spcStr = show spc
 
 -- Alarm Levels Page Helpers

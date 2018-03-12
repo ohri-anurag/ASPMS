@@ -83,6 +83,8 @@ app = do
 
     get "dwellTimeSets" $
         userAuthenticated (withData H.dwellTimeSets) (redirect "/login")
+    post "dwellTimeSets" $
+        userAuthenticated (updateCacheWith updateDwellTimeSets) (redirect "/login")
 
     get "alarmLevels" $
         userAuthenticated (withData H.alarmLevels) (redirect "/login")
