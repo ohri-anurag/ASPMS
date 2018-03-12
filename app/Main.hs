@@ -88,6 +88,8 @@ app = do
 
     get "alarmLevels" $
         userAuthenticated (withData H.alarmLevels) (redirect "/login")
+    post "alarmLevels" $
+        userAuthenticated (updateCacheWith updateAlarmLevels) (redirect "/login")
 
     post "login" $ paramsPost >>= \ps ->
         if validatePassword ps

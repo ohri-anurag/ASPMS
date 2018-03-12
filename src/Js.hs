@@ -217,3 +217,32 @@ dwellTimeSets = show $ renderJs [jmacro|
             };
         };
     |]
+
+alarmLevels :: String
+alarmLevels = show $ renderJs [jmacro|
+        window.onload = \ {
+            var saveButton = document.getElementById('saveButton');
+            saveButton.onclick = \ {
+                var i, obj = [],
+                    selects = document.querySelectorAll('select');
+                for (i=0; i<selects.length; ++i) {
+                    obj.push([[], selects[i].value]);
+                }
+
+                var xhttp = new XMLHttpRequest();
+                xhttp.onload = function() {
+                    if (this.status == 200) {
+                       if (this.responseText === "1") {
+                           location.reload();
+                       }
+                       else {
+                           // Error Handling
+                       }
+                    }
+                };
+                xhttp.open("POST", "/alarmLevels", true);
+                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+                xhttp.send("data=" + JSON.stringify(obj));
+            };
+        };
+    |]

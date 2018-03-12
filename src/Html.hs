@@ -116,10 +116,12 @@ alarmLevels :: AccountAndSystemParameterConfig -> T.Text
 alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Alarm Levels"
+        script ! type_ "text/javascript" $ toHtml $ JS.alarmLevels
     H.body $ do
         h1 "Alarm Levels"
         -- TODO Do this using lenses
         mapM_ alarmLevelView $ M.toList $ alarmLevel $ systemParameter accountAndSystemParameterConfig
+        button ! A.id "saveButton" $ "Save Changes"
 
 --- Helpers ---
 -- General Helpers
@@ -282,7 +284,15 @@ dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) "
     where spcStr = show spc
 
 -- Alarm Levels Page Helpers
--- TODO Create a select drop down for alarm level
 alarmLevelView :: (EventTag, AlarmLevel) -> Html
-alarmLevelView (eTag, aLevel) = labelledInput (toHtml $ eTagStr) (toValue $ eTagStr) "Enter Alarm Level here" (Just $ show aLevel)
-    where eTagStr = show eTag
+alarmLevelView (eTag, aLevel) = do
+    H.label ! for (toValue eTagStr) $ toHtml eTagStr
+    selectList
+    where
+        eTagStr = show eTag
+        selectList = select ! A.id (toValue eTagStr) $ mapM_ optionify [ALevel1 ..]
+        optionify level = markSelected level $ option ! A.value (toValue lstr) $ (toHtml lstr)
+            where lstr = show level
+        markSelected level elem = if aLevel == level
+            then elem ! selected "selected"
+            else elem

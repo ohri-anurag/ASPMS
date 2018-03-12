@@ -6,6 +6,7 @@ module AccountDataSource (
     updateSystemParams,
     updateRunningTimeLists,
     updateDwellTimeSets,
+    updateAlarmLevels,
     AccountAndSystemParameterConfig
 ) where
 
@@ -33,8 +34,9 @@ instance FromJSON LineOverviewConfig
 
 instance Hashable OC_ID
 instance FromJSONKey OC_ID
-
 instance FromJSONKey StopPointCode
+instance FromJSON EventTag
+instance FromJSONKey EventTag
 
 instance FromJSON Account where
     parseJSON = withObject "Account" $ \o -> do
@@ -140,6 +142,17 @@ updateDwellTimeSets ps accConfSysParam = do
             dwellTimeSet = dwellTimeSet
         }
     }
+
+updateAlarmLevels :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
+updateAlarmLevels ps accConfSysParam = do
+    json <- lookup "data" ps
+    alarmLevel <- decodeStrict' $ TE.encodeUtf8 json
+    Just $ accConfSysParam {
+        systemParameter = (systemParameter accConfSysParam) {
+            alarmLevel = alarmLevel
+        }
+    }
+
     -- FOR DEBUGGING
     -- case createAccount ps of
     --     Nothing -> error "Could not create account"
