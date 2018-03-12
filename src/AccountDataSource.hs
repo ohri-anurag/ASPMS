@@ -4,6 +4,7 @@ module AccountDataSource (
     putData,
     updateAccount,
     updateSystemParams,
+    updateRunningTimeLists,
     AccountAndSystemParameterConfig
 ) where
 
@@ -39,6 +40,15 @@ instance FromJSON Account where
         acr <- o .: "accountACR"
         aoc <- o .: "accountAOC"
         pure $ Account pwd name (A.array (OC801, OC808) $ HM.toList acr) aoc
+
+instance FromJSON RunningTimeLists where
+    parseJSON = withObject "Running Time Lists" $ \o -> do
+        maximumPerformance <- o .: "maximumPerformance"
+        fivePercentCoasting <- o .: "fivePercentCoasting"
+        eightPercentCoasting <- o .: "eightPercentCoasting"
+        energySaving <- o .: "energySaving"
+        fullCoasting <- o .: "fullCoasting"
+        pure $ RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting
 
 getData :: IO AccountAndSystemParameterConfig
 getData = (f . S.decode) <$> B.readFile "data/AccountData"
@@ -98,6 +108,16 @@ updateSystemParams ps accConfSysParam = do
             delayDetectionThreshHold = delayDetectionThreshHold,
             intestationStopDetectionTime = intestationStopDetectionTime,
             tunnelLimit = tunnelLimit
+        }
+    }
+
+updateRunningTimeLists :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
+updateRunningTimeLists ps accConfSysParam = do
+    json <- lookup "data" ps
+    runningTimeList <- decodeStrict' $ TE.encodeUtf8 json
+    Just $ accConfSysParam {
+        systemParameter = (systemParameter accConfSysParam) {
+            runningTimeList = runningTimeList
         }
     }
 

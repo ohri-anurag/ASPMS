@@ -92,10 +92,13 @@ runningTimeLists :: AccountAndSystemParameterConfig -> T.Text
 runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Running Time Lists"
+        script ! type_ "text/javascript" $ toHtml $ JS.runningTimeLists
+
     H.body $ do
         h1 "Running Time Lists"
         -- TODO Do this using lenses
         runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
+        button ! A.id "saveButton" $ "Save Changes"
 
 -- Dwell Time Set HTML
 dwellTimeSets :: AccountAndSystemParameterConfig -> T.Text
@@ -175,7 +178,7 @@ accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
         H.div ! A.id "accountAOC" $ areaOfControlView $ accountAOC <$> account
 
     -- TODO VALIDATION
-    button ! class_ "submit" ! A.id "submit" $ maybe "Add Account" (const "Edit Account") account
+    button ! class_ "submit" ! A.id "submit" $ maybe "Add Account" (const "Save Changes") account
     where
         acrList = maybe (zip [OC801 ..] $ repeat False) Prelude.id (assocs <$> accountACR <$> account)
 
@@ -230,17 +233,27 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
 -- Running Time Lists Page Helpers
 runningTimeListsView :: RunningTimeLists -> Html
 runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting) = do
-    runningTimeListView maximumPerformance
-    runningTimeListView fivePercentCoasting
-    runningTimeListView eightPercentCoasting
-    runningTimeListView energySaving
-    runningTimeListView fullCoasting
+    H.div ! A.id "maximumPerformance" ! class_ "runningTimeList" $ do
+        h2 "Maximum Performance"
+        runningTimeListView maximumPerformance
+    H.div ! A.id "fivePercentCoasting" ! class_ "runningTimeList" $ do
+        h2 "Five Percent Coasting"
+        runningTimeListView fivePercentCoasting
+    H.div ! A.id "eightPercentCoasting" ! class_ "runningTimeList" $ do
+        h2 "Eight Percent Coasting"
+        runningTimeListView eightPercentCoasting
+    H.div ! A.id "energySaving" ! class_ "runningTimeList" $ do
+        h2 "Energy Saving"
+        runningTimeListView energySaving
+    H.div ! A.id "fullCoasting" ! class_ "runningTimeList" $ do
+        h2 "Full Coasting"
+        runningTimeListView fullCoasting
 
 runningTimeListView :: M.Map (StopPointCode, StopPointCode) NominalDiffTime -> Html
 runningTimeListView rtl = mapM_ runningTimeView $ M.toList rtl
 
 runningTimeView :: ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
-runningTimeView ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) "Enter Running Time here" (Just $ show diffTime)
+runningTimeView ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
     where
         stc1Str = show stc1
         stc2Str = show stc2

@@ -78,6 +78,8 @@ app = do
 
     get "runningTimeLists" $
         userAuthenticated (withData H.runningTimeLists) (redirect "/login")
+    post "runningTimeLists" $
+        userAuthenticated (updateCacheWith updateRunningTimeLists) (redirect "/login")
 
     get "dwellTimeSets" $
         userAuthenticated (withData H.dwellTimeSets) (redirect "/login")

@@ -149,3 +149,37 @@ account mode = show $ renderJs [jmacro|
         redirect = if mode == EDIT
             then [jmacro|location.reload();|]
             else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"));|]
+
+runningTimeLists :: String
+runningTimeLists = show $ renderJs [jmacro|
+        window.onload = \ {
+            var saveButton = document.getElementById('saveButton');
+            saveButton.onclick = \ {
+                var i, j, inputs, obj = {}, arr,
+                    lists = document.querySelectorAll('.runningTimeList');
+                for (i=0; i<lists.length; ++i) {
+                    inputs = lists[i].querySelectorAll('input');
+                    arr = [];
+                    for (j=0; j<inputs.length; ++j) {
+                        arr.push([inputs[j].getAttribute('id').split(','), parseFloat(inputs[j].value)]);
+                    }
+                    obj[lists[i].getAttribute('id')] = arr;
+                }
+
+                var xhttp = new XMLHttpRequest();
+                xhttp.onload = function() {
+                    if (this.status == 200) {
+                       if (this.responseText === "1") {
+                           location.reload();
+                       }
+                       else {
+                           // Error Handling
+                       }
+                    }
+                };
+                xhttp.open("POST", "/runningTimeLists", true);
+                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+                xhttp.send("data=" + JSON.stringify(obj));
+            };
+        };
+    |]
