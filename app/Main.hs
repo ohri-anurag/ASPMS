@@ -21,16 +21,11 @@ data MyAppState = MyAppState
     , cache :: IORef AccountAndSystemParameterConfig
     }
 
-
 data AppState = InUse | Free
     deriving Show
 
 data UserSession = UserLoggedIn | UserLoggedOut
     deriving Show
-
-toggle :: AppState -> (AppState, AppState)
-toggle Free = (InUse, InUse)
-toggle InUse = (Free, Free)
 
 -- TODO Change the port
 main :: IO ()
@@ -52,9 +47,13 @@ app = do
 
     get "login" $
         userAuthenticated (redirect "/home") (html H.login)
+    post "login" $ paramsPost >>= \ps ->
+        if validatePassword ps
+            then login >> redirect "/home"
+            else redirect "/login"
 
     get "logout" $
-        toggleAppState >> writeSession UserLoggedOut >> redirect "/login"
+        logout >> redirect "/login"
 
     get "home" $
         userAuthenticated (withData H.home) (redirect "/login")
@@ -91,10 +90,6 @@ app = do
     post "alarmLevels" $
         userAuthenticated (updateCacheWith updateAlarmLevels) (redirect "/login")
 
-    post "login" $ paramsPost >>= \ps ->
-        if validatePassword ps
-            then toggleAppState >> writeSession UserLoggedIn >> redirect "/home"
-            else redirect "/login"
     where
         -- Read account data from the cache, and run the action with that data
         withData :: (AccountAndSystemParameterConfig -> T.Text) -> SpockAction () UserSession MyAppState ()
@@ -124,9 +119,10 @@ app = do
                         InUse -> text "The account management system is in use by another user. Kindly login at a later time."
                         Free -> actionFalse
 
-        toggleAppState = do
-            (MyAppState ref _) <- getState
-            liftIO $ atomicModifyIORef' ref toggle
+        login = writeAppState InUse >> writeSession UserLoggedIn
+        logout = writeAppState Free >> writeSession UserLoggedOut
 
--- TODO
--- Fix toggleAppState, state should not be toggled, instead it should be set to whatever is apt
+        writeAppState :: AppState -> SpockAction () UserSession MyAppState ()
+        writeAppState state = do
+            (MyAppState ref _) <- getState
+            liftIO $ atomicModifyIORef' ref (\_ -> (state, ()))
