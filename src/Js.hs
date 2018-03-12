@@ -15,28 +15,34 @@ home = show $ renderJs [jmacro|
                 SYSTEM_PARAMS: 2
             },
             currentView = VIEW.ACCOUNTS;
-        fun toggleTabView {
+        fun toggleTabView view {
             var accountsView = document.getElementById('accountsView'),
                 systemParamsView = document.getElementById('systemParamsView'),
                 toHide, toShow;
-            if (currentView === VIEW.ACCOUNTS) {
-                toHide = accountsView;
-                toShow = systemParamsView;
-                currentView = VIEW.SYSTEM_PARAMS;
+            if (currentView !== view) {
+                if (view === VIEW.SYSTEM_PARAMS) {
+                    toHide = accountsView;
+                    toShow = systemParamsView;
+                    currentView = VIEW.SYSTEM_PARAMS;
+                }
+                else {
+                    toHide = systemParamsView;
+                    toShow = accountsView;
+                    currentView = VIEW.ACCOUNTS;
+                }
+                toHide.style.visibility = 'hidden';
+                toShow.style.visibility = 'visible';
             }
-            else {
-                toHide = systemParamsView;
-                toShow = accountsView;
-                currentView = VIEW.ACCOUNTS;
-            }
-            toHide.style.visibility = 'hidden';
-            toShow.style.visibility = 'visible';
         };
         window.onload = \ {
             var accountsViewButton = document.getElementById('accountsViewButton'),
                 systemParamsViewButton = document.getElementById('systemParamsViewButton');
-            accountsViewButton.onclick = toggleTabView;
-            systemParamsViewButton.onclick = toggleTabView;
+            accountsViewButton.onclick = \ {
+                toggleTabView(VIEW.ACCOUNTS);
+            };
+            systemParamsViewButton.onclick = \ {
+                toggleTabView(VIEW.SYSTEM_PARAMS);
+            };
 
             var saveButton = document.getElementById('saveButton'),
                 formDiv =  document.getElementById('form');
