@@ -8,6 +8,62 @@ import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
+home :: String
+home = show $ renderJs [jmacro|
+        var VIEW = {
+                ACCOUNTS: 1,
+                SYSTEM_PARAMS: 2
+            },
+            currentView = VIEW.ACCOUNTS;
+        fun toggleTabView {
+            var accountsView = document.getElementById('accountsView'),
+                systemParamsView = document.getElementById('systemParamsView'),
+                toHide, toShow;
+            if (currentView === VIEW.ACCOUNTS) {
+                toHide = accountsView;
+                toShow = systemParamsView;
+                currentView = VIEW.SYSTEM_PARAMS;
+            }
+            else {
+                toHide = systemParamsView;
+                toShow = accountsView;
+                currentView = VIEW.ACCOUNTS;
+            }
+            toHide.style.visibility = 'hidden';
+            toShow.style.visibility = 'visible';
+        };
+        window.onload = \ {
+            var accountsViewButton = document.getElementById('accountsViewButton'),
+                systemParamsViewButton = document.getElementById('systemParamsViewButton');
+            accountsViewButton.onclick = toggleTabView;
+            systemParamsViewButton.onclick = toggleTabView;
+
+            var saveButton = document.getElementById('saveButton'),
+                formDiv =  document.getElementById('form');
+            saveButton.onclick = \ {
+                var i, str = [],
+                    inputs = formDiv.querySelectorAll('input');
+                for(i=0; i<inputs.length; ++i) {
+                    str.push(inputs[i].getAttribute('id') + "=" + inputs[i].value);
+                }
+                var xhttp = new XMLHttpRequest();
+                xhttp.onload = function() {
+                    if (this.status == 200) {
+                       if (this.responseText === "1") {
+                           location.reload();
+                       }
+                       else {
+                           // Error Handling
+                       }
+                    }
+                };
+                xhttp.open("POST", "/systemParams", true);
+                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+                xhttp.send(str.join('&'));
+            };
+        };
+    |]
+
 account :: AccountMode -> String
 account mode = show $ renderJs [jmacro|
         window.onload = \ {
@@ -71,9 +127,6 @@ account mode = show $ renderJs [jmacro|
                 var xhttp = new XMLHttpRequest();
                 xhttp.onload = function() {
                     if (this.status == 200) {
-                       // Typical action to be performed when the document is ready:
-                       // document.getElementById("demo").innerHTML = xhttp.responseText;
-                       // alert(this.responseText);
                        if (this.responseText === "1") {
                            `(redirect)`
                        }

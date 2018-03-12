@@ -22,6 +22,13 @@ homeCss = render $ do
         width $ pct 15
         borderRight solid (px 2) black
     "#main" ?  width (pct 85)
+    ".tab" ? do
+        position absolute
+        height $ pct 100
+        width $ pct 100
+    "#accountsView" ? visibility visible
+    "#systemParamsView" ? visibility hidden
+    ".button" # hover ? cursor pointer
     ".row" ? do
         width $ pct 100
         display flex

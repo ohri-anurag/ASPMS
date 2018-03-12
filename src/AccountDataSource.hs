@@ -3,6 +3,7 @@ module AccountDataSource (
     getData,
     putData,
     updateAccount,
+    updateSystemParams,
     AccountAndSystemParameterConfig
 ) where
 
@@ -73,7 +74,32 @@ modifyAccount :: (UserID, Account) -> AccountAndSystemParameterConfig -> Account
 modifyAccount (uid, acc) (AccountAndSystemParameterConfig accConf sysParam) = AccountAndSystemParameterConfig (M.insert uid acc accConf) sysParam
 
 updateAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
-updateAccount ps accConf = createAccount ps >>= Just . flip modifyAccount accConf
+updateAccount ps accConfSysParam = createAccount ps >>= Just . flip modifyAccount accConfSysParam
+
+updateSystemParams :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
+updateSystemParams ps accConfSysParam = do
+    departureOffsetStr <- lookup "departureOffset" ps
+    departureOffset <- readMaybe $ T.unpack departureOffsetStr
+    routeTriggerOffsetStr <- lookup "routeTriggerOffset" ps
+    routeTriggerOffset <- readMaybe $ T.unpack routeTriggerOffsetStr
+    minimumDwellTimeStr <- lookup "minimumDwellTime" ps
+    minimumDwellTime <- readMaybe $ T.unpack minimumDwellTimeStr
+    delayDetectionThreshHoldStr <- lookup "delayDetectionThreshHold" ps
+    delayDetectionThreshHold <- readMaybe $ T.unpack delayDetectionThreshHoldStr
+    intestationStopDetectionTimeStr <- lookup "interstationStopDetectionTime" ps
+    intestationStopDetectionTime <- readMaybe $ T.unpack intestationStopDetectionTimeStr
+    tunnelLimitStr <- lookup "tunnelLimit" ps
+    tunnelLimit <- readMaybe $ T.unpack tunnelLimitStr
+    Just $ accConfSysParam {
+        systemParameter = (systemParameter accConfSysParam) {
+            departureOffset = departureOffset,
+            routeTriggerOffset = routeTriggerOffset,
+            minimumDwellTime = minimumDwellTime,
+            delayDetectionThreshHold = delayDetectionThreshHold,
+            intestationStopDetectionTime = intestationStopDetectionTime,
+            tunnelLimit = tunnelLimit
+        }
+    }
 
     -- FOR DEBUGGING
     -- case createAccount ps of

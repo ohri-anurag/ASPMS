@@ -40,17 +40,19 @@ login = LT.toStrict $ renderHtml $ H.docTypeHtml $ do
     H.head $ H.title "Login"
     H.body $ H.form ! action "login" ! method "post" $ input ! type_ "password" ! placeholder "Password" ! name "password"
 
+-- TODO Logout Button
 -- Home Page HTML
 home :: AccountAndSystemParameterConfig -> T.Text
 home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Home"
         H.style $ toHtml CSS.homeCss
+        script ! type_ "text/javascript" $ toHtml $ JS.home
     H.body $
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
-                H.div ! A.id "accountsViewButton" $ "Accounts"
-                H.div ! A.id "systemParamsViewButton" $ "System Parameters"
+                H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
+                H.div ! A.id "systemParamsViewButton" ! class_ "button" $ "System Parameters"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
 -- Account Page HTML
@@ -140,13 +142,13 @@ labelledInput label' name' holder val = H.div ! class_ "row" $ do
 -- Home page helpers
 accountAndSystemParameterView :: AccountAndSystemParameterConfig -> Html
 accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig systemParams) = do
-    H.div ! A.id "accountsView" $ do
+    H.div ! A.id "accountsView" ! class_ "tab" $ do
         H.div ! class_ "row header" $ do
             H.div ! class_ "uid" $ "UID"
             H.div ! class_ "accountName" $ "Name"
         accountsView accountsConfig
         a ! href "/addAccount" $ button "Add Account"
-    H.div ! A.id "systemParamsView" $ systemParamsView systemParams
+    H.div ! A.id "systemParamsView" ! class_ "tab" $ systemParamsView systemParams
 
 accountsView :: M.Map UserID Account -> Html
 accountsView accountsConfig = mapM_ accountView $ M.toList accountsConfig
@@ -208,13 +210,16 @@ systemParamsView :: SystemParameter -> Html
 systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwellTime delayDetectionThreshHold intestationStopDetectionTime tunnelLimit runningTimeList dwellTimeSet alarmLevel) = H.div $ do
     h1 "System Parameters View Here"
 
-    labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just departureOffset
-    labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just routeTriggerOffset
-    labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just minimumDwellTime
-    labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just delayDetectionThreshHold
-    -- TODO intestationStopDetectionTime should be interstationStopDetectionTime
-    labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just intestationStopDetectionTime
-    labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
+    H.div ! A.id "form" $ do
+        labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just departureOffset
+        labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just routeTriggerOffset
+        labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just minimumDwellTime
+        labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just delayDetectionThreshHold
+        -- TODO intestationStopDetectionTime should be interstationStopDetectionTime
+        labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just intestationStopDetectionTime
+        labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
+        button ! A.id "saveButton" $ "Save"
+
 
     a ! href "/runningTimeLists" $ "Running Time Lists"
     br

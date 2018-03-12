@@ -32,6 +32,7 @@ toggle :: AppState -> (AppState, AppState)
 toggle Free = (InUse, InUse)
 toggle InUse = (Free, Free)
 
+-- TODO Change the port
 main :: IO ()
 main = do
     ref <- newIORef Free
@@ -65,30 +66,15 @@ app = do
             Nothing -> error "Invalid UserID"
 
     post "account" $
-        userAuthenticated (
-            paramsPost >>= \ps -> do
-                (MyAppState _ cache) <- getState
-                acData <- liftIO (readIORef cache)
-                case updateAccount ps acData of
-                    Just acData' -> (runQuery $ \_ -> do
-                        putData acData'
-                        atomicModifyIORef' cache (\_ -> ( acData',() ))) >> text "1"
-                    Nothing -> text "0"
-        ) (redirect "/login")
+        userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
 
     get "addAccount" $
         userAuthenticated (withData $ H.addAccount) (redirect "/login")
     post "addAccount" $
-        userAuthenticated (
-            paramsPost >>= \ps -> do
-                (MyAppState _ cache) <- getState
-                acData <- liftIO (readIORef cache)
-                case updateAccount ps acData of
-                    Just acData' -> (runQuery $ \_ -> do
-                        putData acData'
-                        atomicModifyIORef' cache (\_ -> ( acData',() ))) >> text "1"
-                    Nothing -> text "0"
-        ) (redirect "/login")
+        userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
+
+    post "systemParams" $
+        userAuthenticated (updateCacheWith updateSystemParams) (redirect "/login")
 
     get "runningTimeLists" $
         userAuthenticated (withData H.runningTimeLists) (redirect "/login")
@@ -109,6 +95,17 @@ app = do
         withData action = do
             (MyAppState _ cache) <- getState
             liftIO (readIORef cache) >>= html . action
+
+        updateCacheWith :: ([(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig)
+            -> SpockAction () UserSession MyAppState ()
+        updateCacheWith update = paramsPost >>= \ps -> do
+            (MyAppState _ cache) <- getState
+            acData <- liftIO (readIORef cache)
+            case update ps acData of
+                Just acData' -> (runQuery $ \_ -> do
+                    putData acData'
+                    atomicModifyIORef' cache (\_ -> ( acData',() ))) >> text "1"
+                Nothing -> text "0"
 
         -- Check if this user is logged in. If yes, perform the given action, otherwise redirect to the login page.
         userAuthenticated actionTrue actionFalse = readSession >>= \session ->
