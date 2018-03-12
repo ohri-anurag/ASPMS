@@ -23,6 +23,7 @@ import qualified Data.Text as T
 import qualified Data.Map.Strict as M
 
 -- Account Data Types
+import Types
 import SP6.Data.Account
 import SP6.Data.ID
 import SP6.Data.Command
@@ -30,10 +31,6 @@ import Data.Time.Clock(NominalDiffTime)
 
 import Text.Read(readMaybe)
 import Data.Array.Unboxed(assocs)
-
--- Account Mode
-data AccountMode = ADD | EDIT
-    deriving Eq
 
 --- Web Pages ---
 
@@ -68,7 +65,7 @@ account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
     H.head $ do
         H.title accountTitle
         H.style $ toHtml CSS.accountDetailsCss
-        script ! type_ "text/javascript" $ toHtml $ JS.account
+        script ! type_ "text/javascript" $ toHtml $ JS.account mode
     H.body $ do
         userIdDisplay
         accountDetails

@@ -78,6 +78,17 @@ app = do
 
     get "addAccount" $
         userAuthenticated (withData $ H.addAccount) (redirect "/login")
+    post "addAccount" $
+        userAuthenticated (
+            paramsPost >>= \ps -> do
+                (MyAppState _ cache) <- getState
+                acData <- liftIO (readIORef cache)
+                case updateAccount ps acData of
+                    Just acData' -> (runQuery $ \_ -> do
+                        putData acData'
+                        atomicModifyIORef' cache (\_ -> ( acData',() ))) >> text "1"
+                    Nothing -> text "0"
+        ) (redirect "/login")
 
     get "runningTimeLists" $
         userAuthenticated (withData H.runningTimeLists) (redirect "/login")

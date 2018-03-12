@@ -2,12 +2,14 @@
 
 module Js where
 
+import Types
+
 import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
-account :: String
-account = show $ renderJs [jmacro|
+account :: AccountMode -> String
+account mode = show $ renderJs [jmacro|
         window.onload = \ {
             var checkbox = document.getElementById('aocLineOverview'),
                 child1 = document.getElementById('enableGlobalCommand'),
@@ -37,7 +39,7 @@ account = show $ renderJs [jmacro|
                     acrList = document.getElementById('accountACR').querySelectorAll('input'),
                     aocList = document.getElementById('accountAOC').querySelectorAll('input'),
                     aocLineOverviewList = document.getElementById('aocLineOverviewDiv').querySelectorAll('input'),
-                    userID = document.getElementById('userID').innerHTML;
+                    userID = `(userIDExp)`;
 
                 obj.accountPassword = password.value;
                 obj.accountName = name.value;
@@ -73,7 +75,7 @@ account = show $ renderJs [jmacro|
                        // document.getElementById("demo").innerHTML = xhttp.responseText;
                        // alert(this.responseText);
                        if (this.responseText === "1") {
-                           location.reload();
+                           `(redirect)`
                        }
                        else {
                            // Error Handling
@@ -83,7 +85,14 @@ account = show $ renderJs [jmacro|
                 xhttp.open("POST", "/account", true);
                 xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
                 xhttp.send("userID=" + userID + "&data=" + JSON.stringify(obj));
-                // window.location = window.location;
             };
         };
     |]
+    where
+        -- userID :: JExp
+        userIDExp = if mode == EDIT
+            then [jmacroE|document.getElementById('userID').innerHTML|]
+            else [jmacroE|document.getElementById('userID').value|]
+        redirect = if mode == EDIT
+            then [jmacro|location.reload();|]
+            else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"));|]

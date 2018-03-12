@@ -19,6 +19,7 @@ library
                       , Html
                       , Css
                       , Js
+                      , Types
   build-depends:        base
                       , containers
                       , VDU
