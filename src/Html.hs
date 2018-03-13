@@ -323,7 +323,7 @@ alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
     selectList
     where
         eTagStr = show eTag
-        selectList = select ! class_ "rowElem" ! A.id (toValue eTagStr) $ mapM_ optionify [ALevel1 ..]
+        selectList = select ! class_ "rowElem" ! A.id (toValue eTagStr) $ mapM_ optionify [minBound ..]
         optionify level = markSelected level $ option ! A.value (toValue lstr) $ (toHtml lstr)
             where lstr = show level
         markSelected level elem = if aLevel == level
