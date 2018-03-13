@@ -214,7 +214,7 @@ accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
     -- TODO VALIDATION
     button ! class_ "submit" ! A.id "submit" $ maybe "Add Account" (const "Save Changes") account
     where
-        acrList = maybe (zip [OC801 ..] $ repeat False) Prelude.id (assocs <$> accountACR <$> account)
+        acrList = maybe (zip [minBound..maxBound] $ repeat False) Prelude.id (assocs <$> accountACR <$> account)
 
 acrView :: (OC_ID, Bool) -> Html
 acrView (ocId, isAllowed) = checkbox (toHtml ocIdStr) (toValue ocIdStr) isAllowed False
@@ -323,7 +323,7 @@ alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
     selectList
     where
         eTagStr = show eTag
-        selectList = select ! class_ "rowElem" ! A.id (toValue eTagStr) $ mapM_ optionify [minBound ..]
+        selectList = select ! class_ "rowElem" ! A.id (toValue eTagStr) $ mapM_ optionify [minBound..maxBound]
         optionify level = markSelected level $ option ! A.value (toValue lstr) $ (toHtml lstr)
             where lstr = show level
         markSelected level elem = if aLevel == level
