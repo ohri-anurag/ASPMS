@@ -48,11 +48,14 @@ validation = [jmacro|
                 return regex.test(val)
             }) "Field must have a non-zero positive integer."
         }
+        fun noMoreThan10 id {
+            return validate id (\ val -> val.length <= 10) "Field cannot have more than 10 characters."
+        }
         fun positiveFloat id {
             return validate id (\ val {
                 var regex = /^([1-9]\d*(\.\d*[1-9])?|0\.\d*[1-9])$/;
                 return regex.test(val)
-            }) "Field must have a non-zero positive integer."
+            }) "Field must have a non-zero positive number."
         }
     |]
 
@@ -175,7 +178,7 @@ account mode = show $ renderJs $ sendXHRExp <>
                     aocLineOverviewList = document.getElementById('aocLineOverviewDiv').querySelectorAll('input'),
                     userID = `(userIDExp)`;
 
-                var check = notEmpty('accountName') && notEmpty('accountPassword');
+                var check = notEmpty('accountName') && noMoreThan10('accountName') && notEmpty('accountPassword') & noMoreThan10('accountPassword');
                 if(!check)
                     return;
 
@@ -265,7 +268,7 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
                         check = check && notEmpty(inputs[j].getAttribute('id')) && positiveFloat(inputs[j].getAttribute('id'));
-                        arr.push([inputs[j].getAttribute('id').split(','), parseFloat(inputs[j].value)]);
+                        arr.push([inputs[j].getAttribute('id').substr(3).split(','), parseFloat(inputs[j].value)]);
                     }
                     obj[lists[i].getAttribute('id')] = arr;
                 }
@@ -289,20 +292,48 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
     |]
 
 dwellTimeSets :: String
-dwellTimeSets = show $ renderJs $ sendXHRExp <> [jmacro|
+dwellTimeSets = show $ renderJs $ sendXHRExp <>
+    validation <>
+    [jmacro|
+        var currentView;
+        fun display id {
+            var elem = document.getElementById(id);
+            if (currentView === elem)
+                return;
+            currentView.style.visibility = 'hidden';
+            elem.style.visibility = 'visible';
+            currentView = elem;
+        };
         window.onload = \ {
+            currentView = document.getElementById('dwellTimeSet1');
+            document.getElementById('dwellTimeSet1Button').onclick = \ {
+                display 'dwellTimeSet1'
+            };
+            document.getElementById('dwellTimeSet2Button').onclick = \ {
+                display 'dwellTimeSet2'
+            };
+            document.getElementById('dwellTimeSet3Button').onclick = \ {
+                display 'dwellTimeSet3'
+            };
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
-                var i, j, inputs, obj = {}, arr,
+                var i, j, inputs, obj = {}, arr, check = true,
                     lists = document.querySelectorAll('.dwellTimeSet');
                 for (i=0; i<lists.length; ++i) {
                     inputs = lists[i].querySelectorAll('input');
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
-                        arr.push([inputs[j].getAttribute('id'), parseFloat(inputs[j].value)]);
+                        check = check && notEmpty(inputs[j].getAttribute('id')) && positiveInt(inputs[j].getAttribute('id'));
+                        arr.push([inputs[j].getAttribute('id').substr(2), parseFloat(inputs[j].value)]);
                     }
                     obj[lists[i].getAttribute('id')] = arr;
                 }
+
+                if (!check) {
+                    document.getElementById('cumulativeError').style.visibility = 'visible';
+                    return;
+                }
+                document.getElementById('cumulativeError').style.visibility = 'hidden';
 
                 sendXHR("/dwellTimeSets", "data=" + JSON.stringify(obj), {
                     success: \ {

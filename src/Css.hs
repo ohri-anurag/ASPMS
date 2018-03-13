@@ -139,6 +139,41 @@ dwellTimeSetsCss = render $ do
         background $ grayish 220
         padding (px 10) (px 10) (px 10) (px 10)
         margin (px 3) (px 3) (px 3) (px 3)
+    "#container" ? do
+        position absolute
+        height $ pct 100
+        width $ pct 100
+        display flex
+    "#sidebar" ? do
+        position fixed
+        width $ pct 15
+        height $ pct 100
+        borderRight solid (px 2) black
+    "#main" ? do
+        position absolute
+        width $ pct 84
+        height $ pct 100
+        right $ px 0
+    ".dwellTimeSet" ? do
+        position absolute
+        width $ pct 100
+        height $ pct 100
+    ".dwellTimeSet label" ? width (pct 20)
+    ".dwellTimeSet input" ? width (pct 20)
+    "#dwellTimeSet1" ? visibility visible
+    "#dwellTimeSet2" ? visibility hidden
+    "#dwellTimeSet3" ? visibility hidden
+    ".button" # hover ? cursor pointer
+    "#saveButton" ? do
+        position fixed
+        bottom $ px 10
+        left $ px 10
+    "#cumulativeError" ? do
+        position fixed
+        bottom $ px 50
+        left $ px 10
+        width $ pct 10
+        visibility hidden
 
 alarmLevelsCss :: T.Text
 alarmLevelsCss = render $ do

@@ -132,8 +132,14 @@ dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTy
     H.body $ do
         h1 "Dwell Time Sets"
         -- TODO Do this using lenses
-        dwellTimeSetsView $ dwellTimeSet $ systemParameter accountAndSystemParameterConfig
-        button ! A.id "saveButton" $ "Save Changes"
+        H.div ! A.id "container" $ do
+            H.div ! A.id "sidebar" $ do
+                H.div ! A.id "dwellTimeSet1Button" ! class_ "button" $ "Dwell Time Set 1"
+                H.div ! A.id "dwellTimeSet2Button" ! class_ "button" $ "Dwell Time Set 2"
+                H.div ! A.id "dwellTimeSet3Button" ! class_ "button" $ "Dwell Time Set 3"
+                button ! A.id "saveButton" $ "Save Changes"
+                H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
+        H.div ! A.id "main" $ dwellTimeSetsView $ dwellTimeSet $ systemParameter accountAndSystemParameterConfig
 
 -- Alarm Levels HTML
 alarmLevels :: AccountAndSystemParameterConfig -> T.Text
@@ -263,7 +269,7 @@ runningTimeListsView :: RunningTimeLists -> Html
 runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting) = do
     H.div ! A.id "maximumPerformance" ! class_ "runningTimeList" $ do
         h2 "Maximum Performance"
-        runningTimeListView "mp" maximumPerformance
+        runningTimeListView "mpf" maximumPerformance
     H.div ! A.id "fivePercentCoasting" ! class_ "runningTimeList" $ do
         h2 "Five Percent Coasting"
         runningTimeListView "fpc" fivePercentCoasting
@@ -272,11 +278,12 @@ runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting ei
         runningTimeListView "epc" eightPercentCoasting
     H.div ! A.id "energySaving" ! class_ "runningTimeList" $ do
         h2 "Energy Saving"
-        runningTimeListView "es" energySaving
+        runningTimeListView "esg" energySaving
     H.div ! A.id "fullCoasting" ! class_ "runningTimeList" $ do
         h2 "Full Coasting"
-        runningTimeListView "fc" fullCoasting
+        runningTimeListView "fcg" fullCoasting
 
+-- ASSUMPTION - Code must have only 3 letters
 runningTimeListView :: String -> M.Map (StopPointCode, StopPointCode) NominalDiffTime -> Html
 runningTimeListView code rtl = mapM_ (runningTimeView code) $ M.toList rtl
 
@@ -293,19 +300,20 @@ dwellTimeSetsView :: DwellTimeSets -> Html
 dwellTimeSetsView (DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3) = do
     H.div ! A.id "dwellTimeSet1" ! class_ "dwellTimeSet" $ do
         h2 "Dwell Time Set 1"
-        dwellTimeSetView dwellTimeSet1
+        dwellTimeSetView "d1" dwellTimeSet1
     H.div ! A.id "dwellTimeSet2" ! class_ "dwellTimeSet" $ do
         h2 "Dwell Time Set 2"
-        dwellTimeSetView dwellTimeSet2
+        dwellTimeSetView "d2" dwellTimeSet2
     H.div ! A.id "dwellTimeSet3" ! class_ "dwellTimeSet" $ do
         h2 "Dwell Time Set 3"
-        dwellTimeSetView dwellTimeSet3
+        dwellTimeSetView "d3" dwellTimeSet3
 
-dwellTimeSetView :: M.Map StopPointCode NominalDiffTime -> Html
-dwellTimeSetView dts = mapM_ dwellTimeView $ M.toList dts
+-- ASSUMPTION - Code must have only 2 letters
+dwellTimeSetView :: String -> M.Map StopPointCode NominalDiffTime -> Html
+dwellTimeSetView code dts = mapM_ (dwellTimeView code) $ M.toList dts
 
-dwellTimeView :: (StopPointCode, NominalDiffTime) -> Html
-dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
+dwellTimeView :: String -> (StopPointCode, NominalDiffTime) -> Html
+dwellTimeView code (spc, diffTime) = labelledInput (toHtml spcStr) (toValue $ code ++ spcStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
     where spcStr = show spc
 
 -- Alarm Levels Page Helpers
