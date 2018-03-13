@@ -1,15 +1,42 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Js where
+module Js(
+    home,
+    account,
+    runningTimeLists,
+    dwellTimeSets,
+    alarmLevels
+) where
 
 import Types
-
+import Data.Monoid((<>))
 import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
+sendXHRExp :: JStat
+sendXHRExp = [jmacro|
+        fun sendXHR url postData callback {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onload = function() {
+                if (this.status == 200) {
+                   if (this.responseText === "1") {
+                       callback.success();
+                   }
+                   else {
+                       // Error Handling
+                       callback.failure();
+                   }
+                }
+            };
+            xhttp.open("POST", url, true);
+            xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+            xhttp.send(postData);
+        };
+    |]
+
 home :: String
-home = show $ renderJs [jmacro|
+home = show $ renderJs $ sendXHRExp <> [jmacro|
         var VIEW = {
                 ACCOUNTS: 1,
                 SYSTEM_PARAMS: 2
@@ -52,26 +79,20 @@ home = show $ renderJs [jmacro|
                 for(i=0; i<inputs.length; ++i) {
                     str.push(inputs[i].getAttribute('id') + "=" + inputs[i].value);
                 }
-                var xhttp = new XMLHttpRequest();
-                xhttp.onload = function() {
-                    if (this.status == 200) {
-                       if (this.responseText === "1") {
-                           location.reload();
-                       }
-                       else {
-                           // Error Handling
-                       }
+                sendXHR("/systemParams", str.join('&'), {
+                    success: \ {
+                        location.reload();
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
                     }
-                };
-                xhttp.open("POST", "/systemParams", true);
-                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-                xhttp.send(str.join('&'));
+                });
             };
         };
     |]
 
 account :: AccountMode -> String
-account mode = show $ renderJs [jmacro|
+account mode = show $ renderJs $ sendXHRExp <> [jmacro|
         window.onload = \ {
             var checkbox = document.getElementById('aocLineOverview'),
                 child1 = document.getElementById('enableGlobalCommand'),
@@ -130,20 +151,14 @@ account mode = show $ renderJs [jmacro|
                     obj.accountAOC[elem.getAttribute('id')] = elem.checked;
                 }
 
-                var xhttp = new XMLHttpRequest();
-                xhttp.onload = function() {
-                    if (this.status == 200) {
-                       if (this.responseText === "1") {
-                           `(redirect)`
-                       }
-                       else {
-                           // Error Handling
-                       }
+                sendXHR("/account", "userID=" + userID + "&data=" + JSON.stringify(obj), {
+                    success: \ {
+                        `(redirect)`;
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
                     }
-                };
-                xhttp.open("POST", "/account", true);
-                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-                xhttp.send("userID=" + userID + "&data=" + JSON.stringify(obj));
+                });
             };
         };
     |]
@@ -153,11 +168,11 @@ account mode = show $ renderJs [jmacro|
             then [jmacroE|document.getElementById('userID').innerHTML|]
             else [jmacroE|document.getElementById('userID').value|]
         redirect = if mode == EDIT
-            then [jmacro|location.reload();|]
-            else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"));|]
+            then [jmacro|location.reload()|]
+            else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"))|]
 
 runningTimeLists :: String
-runningTimeLists = show $ renderJs [jmacro|
+runningTimeLists = show $ renderJs $ sendXHRExp <> [jmacro|
         window.onload = \ {
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
@@ -172,26 +187,20 @@ runningTimeLists = show $ renderJs [jmacro|
                     obj[lists[i].getAttribute('id')] = arr;
                 }
 
-                var xhttp = new XMLHttpRequest();
-                xhttp.onload = function() {
-                    if (this.status == 200) {
-                       if (this.responseText === "1") {
-                           location.reload();
-                       }
-                       else {
-                           // Error Handling
-                       }
+                sendXHR("/runningTimeLists", "data=" + JSON.stringify(obj), {
+                    success: \ {
+                        location.reload();
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
                     }
-                };
-                xhttp.open("POST", "/runningTimeLists", true);
-                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-                xhttp.send("data=" + JSON.stringify(obj));
+                });
             };
         };
     |]
 
 dwellTimeSets :: String
-dwellTimeSets = show $ renderJs [jmacro|
+dwellTimeSets = show $ renderJs $ sendXHRExp <> [jmacro|
         window.onload = \ {
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
@@ -206,26 +215,20 @@ dwellTimeSets = show $ renderJs [jmacro|
                     obj[lists[i].getAttribute('id')] = arr;
                 }
 
-                var xhttp = new XMLHttpRequest();
-                xhttp.onload = function() {
-                    if (this.status == 200) {
-                       if (this.responseText === "1") {
-                           location.reload();
-                       }
-                       else {
-                           // Error Handling
-                       }
+                sendXHR("/dwellTimeSets", "data=" + JSON.stringify(obj), {
+                    success: \ {
+                        location.reload();
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
                     }
-                };
-                xhttp.open("POST", "/dwellTimeSets", true);
-                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-                xhttp.send("data=" + JSON.stringify(obj));
+                })
             };
         };
     |]
 
 alarmLevels :: String
-alarmLevels = show $ renderJs [jmacro|
+alarmLevels = show $ renderJs $ sendXHRExp <> [jmacro|
         window.onload = \ {
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
@@ -235,20 +238,14 @@ alarmLevels = show $ renderJs [jmacro|
                     obj.push([[], selects[i].value]);
                 }
 
-                var xhttp = new XMLHttpRequest();
-                xhttp.onload = function() {
-                    if (this.status == 200) {
-                       if (this.responseText === "1") {
-                           location.reload();
-                       }
-                       else {
-                           // Error Handling
-                       }
+                sendXHR("/alarmLevels", "data=" + JSON.stringify(obj), {
+                    success: \ {
+                        location.reload();
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
                     }
-                };
-                xhttp.open("POST", "/alarmLevels", true);
-                xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-                xhttp.send("data=" + JSON.stringify(obj));
+                })
             };
         };
     |]

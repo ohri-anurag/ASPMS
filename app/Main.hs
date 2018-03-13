@@ -66,7 +66,7 @@ app = do
             case lookup "password" ps of
                 Nothing -> redirect "/home"
                 Just pwd -> (runQuery $ \_ -> do
-                    storePassword pwd)
+                    storePassword pwd) >> redirect "/home"
         ) (redirect "/login")
 
     get ("account" <//> var) $ \uid ->
