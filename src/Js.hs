@@ -14,6 +14,48 @@ import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
+validation :: JStat
+validation = [jmacro|
+        fun displayError parent errorMsg {
+            if(parent.querySelectorAll('.error').length > 0)
+                return;
+            var errorDiv = document.createElement('div');
+            errorDiv.appendChild(document.createTextNode(errorMsg));
+            errorDiv.setAttribute('class', 'error');
+            parent.appendChild(errorDiv);
+        }
+        fun removeError parent {
+            if(parent.querySelectorAll('.error').length === 0)
+                return;
+            var errorDiv = parent.querySelector('.error');
+            parent.removeChild(errorDiv);
+        }
+        fun validate id predicate errorMsg {
+            var elem = document.getElementById(id);
+            if(predicate(elem.value)) {
+                removeError elem.parentElement
+                return true;
+            }
+            displayError elem.parentElement errorMsg
+            return false;
+        }
+        fun notEmpty id {
+            return validate id (\ val -> val !== "") "Field cannot be left empty."
+        }
+        fun positiveInt id {
+            return validate id (\ val {
+                var regex = /^[1-9]\d*$/;
+                return regex.test(val)
+            }) "Field must have a non-zero positive integer."
+        }
+        fun positiveFloat id {
+            return validate id (\ val {
+                var regex = /^([1-9]\d*(\.\d*[1-9])?|0\.\d*[1-9])$/;
+                return regex.test(val)
+            }) "Field must have a non-zero positive integer."
+        }
+    |]
+
 sendXHRExp :: JStat
 sendXHRExp = [jmacro|
         fun sendXHR url postData callback {
@@ -36,7 +78,9 @@ sendXHRExp = [jmacro|
     |]
 
 home :: String
-home = show $ renderJs $ sendXHRExp <> [jmacro|
+home = show $ renderJs $ sendXHRExp <>
+    validation <>
+    [jmacro|
         var VIEW = {
                 ACCOUNTS: 1,
                 SYSTEM_PARAMS: 2
@@ -74,11 +118,16 @@ home = show $ renderJs $ sendXHRExp <> [jmacro|
             var saveButton = document.getElementById('saveButton'),
                 formDiv =  document.getElementById('form');
             saveButton.onclick = \ {
-                var i, str = [],
+                var i, str = [], check = true,
                     inputs = formDiv.querySelectorAll('input');
                 for(i=0; i<inputs.length; ++i) {
+                    check = check && notEmpty(inputs[i].getAttribute('id')) && positiveInt(inputs[i].getAttribute('id'));
                     str.push(inputs[i].getAttribute('id') + "=" + inputs[i].value);
                 }
+
+                if (!check)
+                    return;
+
                 sendXHR("/systemParams", str.join('&'), {
                     success: \ {
                         location.reload();
@@ -92,7 +141,9 @@ home = show $ renderJs $ sendXHRExp <> [jmacro|
     |]
 
 account :: AccountMode -> String
-account mode = show $ renderJs $ sendXHRExp <> [jmacro|
+account mode = show $ renderJs $ sendXHRExp <>
+    validation <>
+    [jmacro|
         window.onload = \ {
             var checkbox = document.getElementById('aocLineOverview'),
                 child1 = document.getElementById('enableGlobalCommand'),
@@ -123,6 +174,10 @@ account mode = show $ renderJs $ sendXHRExp <> [jmacro|
                     aocList = document.getElementById('accountAOC').querySelectorAll('input'),
                     aocLineOverviewList = document.getElementById('aocLineOverviewDiv').querySelectorAll('input'),
                     userID = `(userIDExp)`;
+
+                var check = notEmpty('accountName') && notEmpty('accountPassword');
+                if(!check)
+                    return;
 
                 obj.accountPassword = password.value;
                 obj.accountName = name.value;
@@ -172,20 +227,54 @@ account mode = show $ renderJs $ sendXHRExp <> [jmacro|
             else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"))|]
 
 runningTimeLists :: String
-runningTimeLists = show $ renderJs $ sendXHRExp <> [jmacro|
+runningTimeLists = show $ renderJs $ sendXHRExp <>
+    validation <>
+    [jmacro|
+        var currentView;
+        fun display id {
+            var elem = document.getElementById(id);
+            if (currentView === elem)
+                return;
+            currentView.style.visibility = 'hidden';
+            elem.style.visibility = 'visible';
+            currentView = elem;
+        };
         window.onload = \ {
+            currentView = document.getElementById('maximumPerformance');
+            document.getElementById('maximumPerformanceButton').onclick = \ {
+                display 'maximumPerformance'
+            };
+            document.getElementById('fivePercentCoastingButton').onclick = \ {
+                display 'fivePercentCoasting'
+            };
+            document.getElementById('eightPercentCoastingButton').onclick = \ {
+                display 'eightPercentCoasting'
+            };
+            document.getElementById('energySavingButton').onclick = \ {
+                display 'energySaving'
+            };
+            document.getElementById('fullCoastingButton').onclick = \ {
+                display 'fullCoasting'
+            };
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
-                var i, j, inputs, obj = {}, arr,
+                var i, j, inputs, obj = {}, arr, check = true,
                     lists = document.querySelectorAll('.runningTimeList');
                 for (i=0; i<lists.length; ++i) {
                     inputs = lists[i].querySelectorAll('input');
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
+                        check = check && notEmpty(inputs[j].getAttribute('id')) && positiveFloat(inputs[j].getAttribute('id'));
                         arr.push([inputs[j].getAttribute('id').split(','), parseFloat(inputs[j].value)]);
                     }
                     obj[lists[i].getAttribute('id')] = arr;
                 }
+
+                if (!check) {
+                    document.getElementById('cumulativeError').style.visibility = 'visible';
+                    return;
+                }
+                document.getElementById('cumulativeError').style.visibility = 'hidden';
 
                 sendXHR("/runningTimeLists", "data=" + JSON.stringify(obj), {
                     success: \ {

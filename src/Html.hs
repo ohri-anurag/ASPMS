@@ -106,18 +106,28 @@ runningTimeLists :: AccountAndSystemParameterConfig -> T.Text
 runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Running Time Lists"
+        H.style $ toHtml CSS.runningTimeListsCss
         script ! type_ "text/javascript" $ toHtml $ JS.runningTimeLists
     H.body $ do
         h1 "Running Time Lists"
         -- TODO Do this using lenses
-        runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
-        button ! A.id "saveButton" $ "Save Changes"
+        H.div ! A.id "container" $ do
+            H.div ! A.id "sidebar" $ do
+                H.div ! A.id "maximumPerformanceButton" ! class_ "button" $ "Maximum Performance"
+                H.div ! A.id "fivePercentCoastingButton" ! class_ "button" $ "Five Percent Coasting"
+                H.div ! A.id "eightPercentCoastingButton" ! class_ "button" $ "Eight Percent Coasting"
+                H.div ! A.id "energySavingButton" ! class_ "button" $ "Energy Saving"
+                H.div ! A.id "fullCoastingButton" ! class_ "button" $ "Full Coasting"
+                button ! A.id "saveButton" $ "Save Changes"
+                H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
+            H.div ! A.id "main" $ runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
 
 -- Dwell Time Set HTML
 dwellTimeSets :: AccountAndSystemParameterConfig -> T.Text
 dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Dwell Time Sets"
+        H.style $ toHtml CSS.dwellTimeSetsCss
         script ! type_ "text/javascript" $ toHtml $ JS.dwellTimeSets
     H.body $ do
         h1 "Dwell Time Sets"
@@ -130,6 +140,7 @@ alarmLevels :: AccountAndSystemParameterConfig -> T.Text
 alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Alarm Levels"
+        H.style $ toHtml CSS.alarmLevelsCss
         script ! type_ "text/javascript" $ toHtml $ JS.alarmLevels
     H.body $ do
         h1 "Alarm Levels"
@@ -154,8 +165,8 @@ checkbox label name' isChecked isDisabled = H.div $ do
 -- Creates a label input pair, and fills the input with the given value
 labelledInput :: (ToValue a) => Html -> AttributeValue -> String -> Maybe a -> Html
 labelledInput label' name' holder val = H.div ! class_ "row" $ do
-    H.label ! for name' $ label'
-    addValue $ input ! type_ "text" ! A.id name' ! name name' ! placeholder (toValue holder)
+    H.label ! class_ "rowElem" ! for name' $ label'
+    addValue $ input ! class_ "rowElem" ! type_ "text" ! A.id name' ! name name' ! placeholder (toValue holder)
     where
         addValue elem = maybe elem ((!) elem . value . toValue) val
 
@@ -164,8 +175,8 @@ accountAndSystemParameterView :: AccountAndSystemParameterConfig -> Html
 accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig systemParams) = do
     H.div ! A.id "accountsView" ! class_ "tab" $ do
         H.div ! class_ "row header" $ do
-            H.div ! class_ "uid" $ "UID"
-            H.div ! class_ "accountName" $ "Name"
+            H.div ! class_ "uid rowElem" $ "UID"
+            H.div ! class_ "accountName rowElem" $ "Name"
         accountsView accountsConfig
         a ! href "/addAccount" $ button "Add Account"
     H.div ! A.id "systemParamsView" ! class_ "tab" $ systemParamsView systemParams
@@ -175,8 +186,8 @@ accountsView accountsConfig = mapM_ accountView $ M.toList accountsConfig
 
 accountView :: (UserID, Account) -> Html
 accountView (uid, acc) = H.div ! class_ "row" $ do
-    H.div ! class_ "uid" $ a ! href (toValue $ "/account/" ++ str) $ toHtml str
-    H.div ! class_ "accountName" $ toHtml $ accountName acc
+    H.div ! class_ "rowElem uid" $ a ! href (toValue $ "/account/" ++ str) $ toHtml str
+    H.div ! class_ "rowElem accountName" $ toHtml $ accountName acc
     where str = show uid
 
 -- Account Page Helpers
@@ -187,12 +198,12 @@ accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
     labelledInput "Account Password" "accountPassword" "Enter Account Password here" $ accountPassword <$> account
 
     H.div ! class_ "row" $ do
-        H.label ! for "accountACR" $ "Account ACR"
-        H.div ! A.id "accountACR" $ mapM_ acrView $ acrList
+        H.label ! for "accountACR" ! class_ "rowElem" $ "Account ACR"
+        H.div ! A.id "accountACR" ! class_ "rowElem" $ mapM_ acrView $ acrList
 
     H.div ! class_ "row" $ do
-        H.label ! for "accountAOC" $ "Account AOC"
-        H.div ! A.id "accountAOC" $ areaOfControlView $ accountAOC <$> account
+        H.label ! for "accountAOC" ! class_ "rowElem" $ "Account AOC"
+        H.div ! A.id "accountAOC" ! class_ "rowElem" $ areaOfControlView $ accountAOC <$> account
 
     -- TODO VALIDATION
     button ! class_ "submit" ! A.id "submit" $ maybe "Add Account" (const "Save Changes") account
@@ -252,30 +263,30 @@ runningTimeListsView :: RunningTimeLists -> Html
 runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting) = do
     H.div ! A.id "maximumPerformance" ! class_ "runningTimeList" $ do
         h2 "Maximum Performance"
-        runningTimeListView maximumPerformance
+        runningTimeListView "mp" maximumPerformance
     H.div ! A.id "fivePercentCoasting" ! class_ "runningTimeList" $ do
         h2 "Five Percent Coasting"
-        runningTimeListView fivePercentCoasting
+        runningTimeListView "fpc" fivePercentCoasting
     H.div ! A.id "eightPercentCoasting" ! class_ "runningTimeList" $ do
         h2 "Eight Percent Coasting"
-        runningTimeListView eightPercentCoasting
+        runningTimeListView "epc" eightPercentCoasting
     H.div ! A.id "energySaving" ! class_ "runningTimeList" $ do
         h2 "Energy Saving"
-        runningTimeListView energySaving
+        runningTimeListView "es" energySaving
     H.div ! A.id "fullCoasting" ! class_ "runningTimeList" $ do
         h2 "Full Coasting"
-        runningTimeListView fullCoasting
+        runningTimeListView "fc" fullCoasting
 
-runningTimeListView :: M.Map (StopPointCode, StopPointCode) NominalDiffTime -> Html
-runningTimeListView rtl = mapM_ runningTimeView $ M.toList rtl
+runningTimeListView :: String -> M.Map (StopPointCode, StopPointCode) NominalDiffTime -> Html
+runningTimeListView code rtl = mapM_ (runningTimeView code) $ M.toList rtl
 
-runningTimeView :: ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
-runningTimeView ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
+runningTimeView :: String -> ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
+runningTimeView code ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
     where
         stc1Str = show stc1
         stc2Str = show stc2
         label = stc1Str ++ " -> " ++ stc2Str
-        name = stc1Str ++ "," ++ stc2Str
+        name = code ++ stc1Str ++ "," ++ stc2Str
 
 -- Dwell Time Sets Page Helpers
 dwellTimeSetsView :: DwellTimeSets -> Html
@@ -299,12 +310,12 @@ dwellTimeView (spc, diffTime) = labelledInput (toHtml spcStr) (toValue spcStr) "
 
 -- Alarm Levels Page Helpers
 alarmLevelView :: (EventTag, AlarmLevel) -> Html
-alarmLevelView (eTag, aLevel) = do
-    H.label ! for (toValue eTagStr) $ toHtml eTagStr
+alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
+    H.label ! class_ "rowElem" ! for (toValue eTagStr) $ toHtml eTagStr
     selectList
     where
         eTagStr = show eTag
-        selectList = select ! A.id (toValue eTagStr) $ mapM_ optionify [ALevel1 ..]
+        selectList = select ! class_ "rowElem" ! A.id (toValue eTagStr) $ mapM_ optionify [ALevel1 ..]
         optionify level = markSelected level $ option ! A.value (toValue lstr) $ (toHtml lstr)
             where lstr = show level
         markSelected level elem = if aLevel == level
