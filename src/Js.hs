@@ -59,18 +59,46 @@ validation = [jmacro|
         }
     |]
 
+
+
 sendXHRExp :: JStat
 sendXHRExp = [jmacro|
+        fun toggleDialog bool text callback {
+            var dialog = document.getElementById('dialog'),
+                dialogText = document.getElementById('dialogText'),
+                dialogButton = document.getElementById('dialogButton'),
+                screen = document.getElementById('screen');
+            if (bool) {
+                screen.style.opacity = 0.7;
+                screen.style.zIndex = 1;
+                dialog.style.opacity = 1;
+                dialog.style.zIndex = 2;
+
+                while (dialogText.hasChildNodes()) {
+                    dialogText.removeChild(dialogText.firstChild);
+                }
+                var textNode = document.createTextNode(text);
+                dialogText.appendChild(textNode);
+            }
+            else {
+                screen.style.opacity = 0;
+                screen.style.zIndex = -1;
+                dialog.style.opacity = 0;
+                dialog.style.zIndex = -1;
+            }
+
+            dialogButton.onclick = callback;
+        }
         fun sendXHR url postData callback {
             var xhttp = new XMLHttpRequest();
             xhttp.onload = function() {
                 if (this.status == 200) {
                    if (this.responseText === "1") {
-                       callback.success();
+                       toggleDialog(true, "Changes saved successfully.", callback.success);
                    }
                    else {
                        // Error Handling
-                       callback.failure();
+                       toggleDialog(true, "Could not save changes.", callback.failure);
                    }
                 }
             };

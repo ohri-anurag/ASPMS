@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Css(
+    loginCss,
     homeCss,
     accountDetailsCss,
     runningTimeListsCss,
@@ -9,22 +10,83 @@ module Css(
 ) where
 
 import Clay as C
-
+import Prelude hiding ((**))
+import Data.Monoid((<>))
 import qualified Data.Text.Lazy as T
 
+-- HELPER CSS --
 validation :: Css
 validation = ".error" ? do
     color red
     padding (px 10) (px 10) (px 10) (px 10)
     margin (px 3) (px 3) (px 3) (px 3)
 
--- TODO Try a little refactoring
+dialogCss :: Css
+dialogCss = do
+    "#screen" ? do
+        position fixed
+        width $ pct 100
+        height $ pct 100
+        backgroundColor black
+        opacity 0
+        zIndex (-1)
+    "#dialog" ? do
+        position fixed
+        width $ pct 16
+        height $ pct 10
+        top $ pct 45
+        left $ pct 42
+        zIndex (-1)
+        opacity 0
+        backgroundColor gray
+    "#dialogText" ? do
+        fontSize $ px 18
+        textAlign center
+        position absolute
+        padding (px 10) (px 10) (px 10) (px 10)
+        margin (px 0) auto (px 0) auto
+        top $ px 0
+        width $ pct 100
+    "#dialogButton" ? do
+        position absolute
+        padding (px 2) (px 2) (px 2) (px 2)
+        margin (px 0) auto (px 0) auto
+        bottom $ px 10
+        left $ pct 45
+        width $ pct 10
+
+zeroPM :: Css
+zeroPM = star ? do
+    margin (px 0) (px 0) (px 0) (px 0)
+    padding (px 0) (px 0) (px 0) (px 0)
+
+-- PAGE CSS --
+loginCss :: T.Text
+loginCss = render $ do
+    body ? backgroundColor grey
+    "input[type=password]" ? do
+        position absolute
+        width $ pct 10
+        height $ px 30
+        top $ pct 45
+        left $ pct 45
+        textAlign center
+    "input[type=submit]" ? do
+        position absolute
+        width $ pct 4
+        height $ px 30
+        top $ pct 50
+        left $ pct 48
+
 homeCss :: T.Text
 homeCss = render $ do
     validation
-    star ? do
-        margin (px 0) (px 0) (px 0) (px 0)
-        padding (px 0) (px 0) (px 0) (px 0)
+    dialogCss
+    zeroPM
+    a ? textDecoration none
+    a # visited ? color black
+    a # active ? color black
+    a # hover ? color black
     "#container" ? do
         position absolute
         height $ pct 100
@@ -33,6 +95,8 @@ homeCss = render $ do
     "#sidebar" ? do
         width $ pct 15
         borderRight solid (px 2) black
+    "#sidebar" ** star # hover ? backgroundColor grey
+
     "#main" ?  do
         position absolute
         width $ pct 84
@@ -61,9 +125,8 @@ homeCss = render $ do
 accountDetailsCss :: T.Text
 accountDetailsCss = render $ do
     validation
-    star ? do
-        margin (px 0) (px 0) (px 0) (px 0)
-        padding (px 0) (px 0) (px 0) (px 0)
+    dialogCss
+    zeroPM
     ".row" ? do
         width $ pct 100
         display flex
@@ -78,9 +141,8 @@ accountDetailsCss = render $ do
 runningTimeListsCss :: T.Text
 runningTimeListsCss = render $ do
     validation
-    star ? do
-        margin (px 0) (px 0) (px 0) (px 0)
-        padding (px 0) (px 0) (px 0) (px 0)
+    dialogCss
+    zeroPM
     ".row" ? do
         width $ pct 100
         display flex
@@ -129,9 +191,8 @@ runningTimeListsCss = render $ do
 dwellTimeSetsCss :: T.Text
 dwellTimeSetsCss = render $ do
     validation
-    star ? do
-        margin (px 0) (px 0) (px 0) (px 0)
-        padding (px 0) (px 0) (px 0) (px 0)
+    dialogCss
+    zeroPM
     ".row" ? do
         width $ pct 100
         display flex
@@ -177,9 +238,8 @@ dwellTimeSetsCss = render $ do
 
 alarmLevelsCss :: T.Text
 alarmLevelsCss = render $ do
-    star ? do
-        margin (px 0) (px 0) (px 0) (px 0)
-        padding (px 0) (px 0) (px 0) (px 0)
+    dialogCss
+    zeroPM
     ".row" ? do
         width $ pct 100
         display flex

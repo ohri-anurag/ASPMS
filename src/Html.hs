@@ -34,15 +34,24 @@ import Data.Array.Unboxed(assocs)
 
 --- Web Pages ---
 
+--Dialog Box HTML
+dialog :: Html
+dialog = do
+    H.div ! A.id "screen" $ ""
+    H.div ! A.id "dialog" $ do
+        H.span ! A.id "dialogText" $ ""
+        button ! A.id "dialogButton" $ "OK"
+
 -- Login Page HTML
 login :: T.Text
 login = LT.toStrict $ renderHtml $ H.docTypeHtml $ do
-    H.head $ H.title "Login"
+    H.head $ do
+        H.title "Login"
+        H.style $ toHtml CSS.loginCss
     H.body $ H.form ! action "login" ! method "post" $ do
         input ! type_ "password" ! placeholder "Password" ! name "password"
         input ! type_ "submit" ! value "Login"
 
--- TODO Logout Button
 -- Home Page HTML
 home :: AccountAndSystemParameterConfig -> T.Text
 home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
@@ -50,7 +59,8 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
         H.title "Home"
         H.style $ toHtml CSS.homeCss
         script ! type_ "text/javascript" $ toHtml $ JS.home
-    H.body $
+    H.body $ do
+        dialog
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
@@ -83,6 +93,7 @@ account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
         H.style $ toHtml CSS.accountDetailsCss
         script ! type_ "text/javascript" $ toHtml $ JS.account mode
     H.body $ do
+        dialog
         userIdDisplay
         accountDetails
     where
@@ -109,8 +120,8 @@ runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
         H.style $ toHtml CSS.runningTimeListsCss
         script ! type_ "text/javascript" $ toHtml $ JS.runningTimeLists
     H.body $ do
+        dialog
         h1 "Running Time Lists"
-        -- TODO Do this using lenses
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "maximumPerformanceButton" ! class_ "button" $ "Maximum Performance"
@@ -130,8 +141,8 @@ dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTy
         H.style $ toHtml CSS.dwellTimeSetsCss
         script ! type_ "text/javascript" $ toHtml $ JS.dwellTimeSets
     H.body $ do
+        dialog
         h1 "Dwell Time Sets"
-        -- TODO Do this using lenses
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "dwellTimeSet1Button" ! class_ "button" $ "Dwell Time Set 1"
@@ -149,8 +160,8 @@ alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docType
         H.style $ toHtml CSS.alarmLevelsCss
         script ! type_ "text/javascript" $ toHtml $ JS.alarmLevels
     H.body $ do
+        dialog
         h1 "Alarm Levels"
-        -- TODO Do this using lenses
         mapM_ alarmLevelView $ M.toList $ alarmLevel $ systemParameter accountAndSystemParameterConfig
         button ! A.id "saveButton" $ "Save Changes"
 
@@ -210,7 +221,6 @@ accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
         H.label ! for "accountAOC" ! class_ "rowElem" $ "Account AOC"
         H.div ! A.id "accountAOC" ! class_ "rowElem" $ areaOfControlView $ accountAOC <$> account
 
-    -- TODO VALIDATION
     button ! class_ "submit" ! A.id "submit" $ maybe "Add Account" (const "Save Changes") account
     where
         acrList = maybe (zip [minBound..maxBound] $ repeat False) Prelude.id (assocs <$> accountACR <$> account)
@@ -251,7 +261,6 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
         labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just routeTriggerOffset
         labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just minimumDwellTime
         labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just delayDetectionThreshHold
-        -- TODO intestationStopDetectionTime should be interstationStopDetectionTime
         labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just intestationStopDetectionTime
         labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
         button ! A.id "saveButton" $ "Save"
