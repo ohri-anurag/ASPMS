@@ -70,13 +70,13 @@ changePassword = LT.toStrict $ renderHtml $ docTypeHtml $ do
         input ! type_ "submit" ! value "Save Changes"
 
 -- Account Page HTML
-editAccount :: UserID -> AccountAndSystemParameterConfig -> T.Text
-editAccount uid = account EDIT (Just uid)
+editAccount :: T.Text -> AccountAndSystemParameterConfig -> T.Text
+editAccount uid = account EDIT (Just $ UserID2 $ T.unpack uid)
 
 addAccount :: AccountAndSystemParameterConfig -> T.Text
 addAccount = account ADD Nothing
 
-account :: AccountMode -> Maybe UserID -> AccountAndSystemParameterConfig -> T.Text
+account :: AccountMode -> Maybe UserID2 -> AccountAndSystemParameterConfig -> T.Text
 account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title accountTitle
@@ -86,16 +86,16 @@ account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
         userIdDisplay
         accountDetails
     where
-        uid' = fromJust uid
+        (UserID2 uid') = fromJust uid
         invalidMsg = toHtml ("Invalid User ID" :: String)
         accountTitle = if mode == EDIT then "Account Details" else "Add Account"
         userIdDisplay = if mode == EDIT
             then do
                 toHtml ("Individual Account Details" :: String)
-                H.span ! A.id "userID" $ toHtml $ show uid'
+                H.span ! A.id "userID" $ toHtml uid'
             else labelledInput "User Id" "userID" "Enter User ID here" (Nothing :: Maybe String)
         accountDetails = if mode == EDIT
-            then H.div $ case M.lookup uid' (accountConfig accountAndSystemParameterConfig) of
+            then H.div $ case M.lookup (UserID2 uid') (accountConfig accountAndSystemParameterConfig) of
                 Nothing -> invalidMsg
                 Just acc -> accountDetailedView (Just acc)
             else accountDetailedView Nothing
@@ -187,14 +187,13 @@ accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig sy
         a ! href "/addAccount" $ button "Add Account"
     H.div ! A.id "systemParamsView" ! class_ "tab" $ systemParamsView systemParams
 
-accountsView :: M.Map UserID Account -> Html
+accountsView :: M.Map UserID2 Account -> Html
 accountsView accountsConfig = mapM_ accountView $ M.toList accountsConfig
 
-accountView :: (UserID, Account) -> Html
-accountView (uid, acc) = H.div ! class_ "row" $ do
-    H.div ! class_ "rowElem uid" $ a ! href (toValue $ "/account/" ++ str) $ toHtml str
+accountView :: (UserID2, Account) -> Html
+accountView (UserID2 uid, acc) = H.div ! class_ "row" $ do
+    H.div ! class_ "rowElem uid" $ a ! href (toValue $ "/account/" ++ uid) $ toHtml uid
     H.div ! class_ "rowElem accountName" $ toHtml $ accountName acc
-    where str = show uid
 
 -- Account Page Helpers
 accountDetailedView :: Maybe Account -> Html
@@ -237,7 +236,7 @@ lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ 
     checkbox "Line Overview Config" "aocLineOverview" isChecked False
     H.div ! class_ "row" $ do
         checkbox "Enable Global Command" "enableGlobalCommand" (toBool enableGlobalCommand $ join lineOverviewConfig) (not isChecked)
-        checkbox "Enable Regulation" "enableEnableRegulation" (toBool enableEnableRegulation $ join lineOverviewConfig) (not isChecked)
+        checkbox "Enable Regulation" "enableRegulation" (toBool enableRegulation $ join lineOverviewConfig) (not isChecked)
     where
         toBool f v = maybe False Prelude.id (f <$> v)
         isChecked = toBool isJust lineOverviewConfig

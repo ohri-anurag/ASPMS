@@ -187,3 +187,5 @@ alarmLevelsCss = render $ do
         background $ grayish 220
         padding (px 10) (px 10) (px 10) (px 10)
         margin (px 3) (px 3) (px 3) (px 3)
+    ".row label" ? width (pct 20)
+    ".row select" ? width (pct 10)

@@ -150,7 +150,7 @@ account mode = show $ renderJs $ sendXHRExp <>
         window.onload = \ {
             var checkbox = document.getElementById('aocLineOverview'),
                 child1 = document.getElementById('enableGlobalCommand'),
-                child2 = document.getElementById('enableEnableRegulation');
+                child2 = document.getElementById('enableRegulation');
             checkbox.onchange = \ {
                 if (checkbox.checked) {
                     child1.removeAttribute('disabled');
@@ -197,7 +197,7 @@ account mode = show $ renderJs $ sendXHRExp <>
                 if (aocLineOverviewList[0].checked) {
                     obj.accountAOC.aocLineOverview = {};
                     obj.accountAOC.aocLineOverview.enableGlobalCommand = aocLineOverviewList[1].checked;
-                    obj.accountAOC.aocLineOverview.enableEnableRegulation = aocLineOverviewList[2].checked;
+                    obj.accountAOC.aocLineOverview.enableRegulation = aocLineOverviewList[2].checked;
                 }
                 else{
                     obj.accountAOC.aocLineOverview = null;
@@ -355,7 +355,7 @@ alarmLevels = show $ renderJs $ sendXHRExp <> [jmacro|
                 var i, obj = [],
                     selects = document.querySelectorAll('select');
                 for (i=0; i<selects.length; ++i) {
-                    obj.push([[], selects[i].value]);
+                    obj.push([selects[i].getAttribute('id'), selects[i].value]);
                 }
 
                 sendXHR("/alarmLevels", "data=" + JSON.stringify(obj), {

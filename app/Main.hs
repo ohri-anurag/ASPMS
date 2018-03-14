@@ -71,10 +71,7 @@ app = do
 
     get ("account" <//> var) $ \uid ->
         -- TODO This will have to be changed when the UserID type changes.
-        case readMaybe uid of
-            Just x -> userAuthenticated (withData $ H.editAccount x) (redirect "/login")
-            Nothing -> error "Invalid UserID"
-
+        userAuthenticated (withData $ H.editAccount uid) (redirect "/login")
     post "account" $
         userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
 

@@ -73,13 +73,12 @@ putData :: AccountAndSystemParameterConfig -> IO ()
 putData accountData = B.writeFile "data/AccountData" (S.encode accountData)
 
 -- Assumption that JSON data is being sent to the server.
-createAccount :: [(T.Text, T.Text)] -> Maybe (UserID, Account)
+createAccount :: [(T.Text, T.Text)] -> Maybe (UserID2, Account)
 createAccount paramList = do
     text <- lookup "userID" paramList
-    uid <- readMaybe $ T.unpack text
     json <- lookup "data" paramList
     acc <- decodeStrict' $ TE.encodeUtf8 json
-    Just (uid, acc)
+    Just (UserID2 $ T.unpack text, acc)
 
     -- FOR DEBUGGING
     -- case lookup "userID" paramList of
@@ -92,7 +91,7 @@ createAccount paramList = do
     --                 Nothing -> error "Invalid JSON"
     --                 Just acc -> Just (uid, acc)
 
-modifyAccount :: (UserID, Account) -> AccountAndSystemParameterConfig -> AccountAndSystemParameterConfig
+modifyAccount :: (UserID2, Account) -> AccountAndSystemParameterConfig -> AccountAndSystemParameterConfig
 modifyAccount (uid, acc) (AccountAndSystemParameterConfig accConf sysParam) = AccountAndSystemParameterConfig (M.insert uid acc accConf) sysParam
 
 updateAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
@@ -100,18 +99,12 @@ updateAccount ps accConfSysParam = createAccount ps >>= Just . flip modifyAccoun
 
 updateSystemParams :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateSystemParams ps accConfSysParam = do
-    departureOffsetStr <- lookup "departureOffset" ps
-    departureOffset <- readMaybe $ T.unpack departureOffsetStr
-    routeTriggerOffsetStr <- lookup "routeTriggerOffset" ps
-    routeTriggerOffset <- readMaybe $ T.unpack routeTriggerOffsetStr
-    minimumDwellTimeStr <- lookup "minimumDwellTime" ps
-    minimumDwellTime <- readMaybe $ T.unpack minimumDwellTimeStr
-    delayDetectionThreshHoldStr <- lookup "delayDetectionThreshHold" ps
-    delayDetectionThreshHold <- readMaybe $ T.unpack delayDetectionThreshHoldStr
-    intestationStopDetectionTimeStr <- lookup "interstationStopDetectionTime" ps
-    intestationStopDetectionTime <- readMaybe $ T.unpack intestationStopDetectionTimeStr
-    tunnelLimitStr <- lookup "tunnelLimit" ps
-    tunnelLimit <- readMaybe $ T.unpack tunnelLimitStr
+    departureOffset <- get "departureOffset"
+    routeTriggerOffset <- get "routeTriggerOffset"
+    minimumDwellTime <- get "minimumDwellTime"
+    delayDetectionThreshHold <- get "delayDetectionThreshHold"
+    intestationStopDetectionTime <- get "interstationStopDetectionTime"
+    tunnelLimit <- get "tunnelLimit"
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
             departureOffset = departureOffset,
@@ -122,6 +115,8 @@ updateSystemParams ps accConfSysParam = do
             tunnelLimit = tunnelLimit
         }
     }
+    where
+        get key = lookup key ps >>= readMaybe . T.unpack
 
 updateRunningTimeLists :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateRunningTimeLists ps accConfSysParam = do
@@ -166,10 +161,10 @@ updateAlarmLevels ps accConfSysParam = do
 --         systemParameter = fakeSystemParameter
 --     }
 --
--- fakeAccountConfig :: M.Map UserID Account
+-- fakeAccountConfig :: M.Map UserID2 Account
 -- fakeAccountConfig = M.fromList [
---         (TTM_OFF, Account { accountPassword = "pass1", accountName = "name1", accountACR = fakeAccountACR, accountAOC = fakeAccountAOC }),
---         (TTM_OFF_BCC, Account { accountPassword = "pass2", accountName = "name2", accountACR = fakeAccountACR, accountAOC = fakeAccountAOC })
+--         (UserID2 "User 1", Account { accountPassword = "pass1", accountName = "name1", accountACR = fakeAccountACR, accountAOC = fakeAccountAOC }),
+--         (UserID2 "User 2", Account { accountPassword = "pass2", accountName = "name2", accountACR = fakeAccountACR, accountAOC = fakeAccountAOC })
 --     ]
 --
 -- fakeAccountACR :: A.UArray OC_ID Bool
@@ -186,7 +181,7 @@ updateAlarmLevels ps accConfSysParam = do
 --
 -- fakeLineOverviewConfig = LineOverviewConfig{
 --         enableGlobalCommand     = False
---         , enableEnableRegulation  = False
+--         , enableRegulation  = False
 --     }
 --
 -- fakeSystemParameter = SystemParameter
@@ -328,4 +323,156 @@ updateAlarmLevels ps accConfSysParam = do
 --     , (SP_D9, 30)
 --     ]
 --
--- fakeAlarmLevel = M.fromList [(EventTagUndefined, ALevel1)]
+-- fakeAlarmLevel = M.fromList
+--     [ (TagEventTrainDelayed, ALevel1) -- Setting JourneyID (Maybe RakeID) [SC_ID]
+--     , (TagEventTrainControlledByTimetable, ALevel1) -- Setting RakeID (Maybe JourneyID) [SC_ID]
+--     , (TagEventNoOneControlArea, ALevel1) -- OC_ID
+--     , (TagEventPSDIsolated, ALevel1) -- Setting (StationCode, PlatformNumber) PlatformDoorID
+--     , (TagEventPSDBypassed, ALevel1) -- Setting (StationCode, PlatformNumber) PlatformDoorID
+--     , (TagEventTrainPassengerEmergencyAlarm, ALevel1) -- RakeID CarIndex [SC_ID]
+--     , (TagEventTrainFireDetected, ALevel1) -- Setting RakeID CarIndex [SC_ID]
+--     -- SCStatusEvent
+--         -- SCBlockEvent SCBlockEvent BlockID
+--     , (TagEventNoEntry, ALevel1) -- Setting
+--     , (TagEventTSR, ALevel1) -- (Maybe Int)
+--     , (TagEventLowAdhesion, ALevel1) -- Setting
+--         -- SCTrainEvent SCTrainEvent [SC_ID] (RakeID, Maybe Location)
+--     , (TagEventTrainDoorOpened, ALevel1)
+--     , (TagEventTrainDoorClosed, ALevel1)
+--     , (TagEventTrainShortStopped, ALevel1)
+--     , (TagEventTrainSkipStop, ALevel1) -- Setting
+--     , (TagEventTrainOverrun, ALevel1)
+--     , (TagEventVOBCReset, ALevel1)
+--     , (TagEventTrainATODeparture, ALevel1)
+--     , (TagEventTrainReadyRequestIssued, ALevel1)
+--     , (TagEventTrainDocked, ALevel1)
+--     , (TagEventTrainPassedP0, ALevel1)
+--     , (TagEventTrainDeparted, ALevel1)
+--     , (TagEventTrainStaticTestCompleted, ALevel1)     -- Word16
+--     , (TagEventTrainDynamicTestCompleted, ALevel1)    -- Word16
+--     , (TagEventTrainDrivingModeChanged, ALevel1)      -- (Maybe DrivingMode)
+--     , (TagEventTrainSleepStatusChanged, ALevel1)      -- (Maybe SleepModeStatus)
+--     , (TagEventTrainEBStatusChangedSC, ALevel1)       -- (Maybe EBReasonSC)
+--     , (TagEventTrainEBStatusChangedVOBC, ALevel1)     -- (Maybe EBReasonVOBC)
+--     , (TagEventTrainFrontBlockChanged, ALevel1)       -- (Either BlockID PointID)
+--     , (TagEventTrainLost, ALevel1)
+--     , (TagEventTrainEmerged, ALevel1)
+--     , (TagEventTrainRemoved, ALevel1)
+--     , (TagEventTrainEnterMainline, ALevel1)
+--     , (TagEventTrainLeaveMainline, ALevel1)
+--     , (TagEventTrainInterstationStopped, ALevel1)
+--         -- SCStationEvent SCStationEvent StopPointCode
+--     , (TagEventPlatformHold, ALevel1) -- Setting
+--         -- Other
+--     , (TagEventZoneHold, ALevel1) -- Setting SC_ID
+--     -- OCStatusEvent
+--         -- OCPlatformEvent OCPlatformEvent StopPointCode
+--     , (TagEventPSDOpened, ALevel1)
+--     , (TagEventPSDClosed, ALevel1)
+--     , (TagEventESP, ALevel1) -- Setting
+--         -- OCTrackEvent OCTrackEvent TrackID
+--     , (TagEventTrackOccupied, ALevel1) -- Setting
+--     , (TagEventMaintenanceBlock, ALevel1) -- Setting
+--     , (TagEventTrackCETROccupied, ALevel1) -- Setting
+--         -- OCSignalEvent OCSignalEvent SignalID
+--     , (TagEventSignalAspectChanged, ALevel1) -- Aspect
+--     , (TagEventSignalLampFailured, ALevel1)  -- Aspect
+--     , (TagEventSignalBlock, ALevel1) -- Setting
+--         -- OCPointEvent OCPointEvent PointID
+--     , (TagEventPointControlledToNormal, ALevel1)
+--     , (TagEventPointControlledToReverse, ALevel1)
+--     , (TagEventPointSwitchedToNormal, ALevel1)
+--     , (TagEventPointSwitchedToReverse, ALevel1)
+--     , (TagEventPointBlock, ALevel1) -- Setting
+--     , (TagEventPointSelfNormalizationInhibition, ALevel1) -- Setting
+--     , (TagEventPointManualAuthorization, ALevel1) -- Setting
+--     , (TagEventEKTKeyInsertion, ALevel1) -- Setting
+--         -- OCRouteEvent OCRouteEvent RouteID
+--     , (TagEventSignalFleeting, ALevel1) -- Setting
+--     , (TagEventRouteControl, ALevel1)   -- Setting
+--     , (TagEventRouteBlock, ALevel1)     -- Setting
+--         -- Other
+--     , (TagEventOverlapLocking, ALevel1) -- Setting VL_ID
+--     , (TagEventCycle, ALevel1) -- Setting CycleID
+--     , (TagEventEmergencyMode, ALevel1) -- Setting EMSectionID
+--     , (TagEventVDUMode, ALevel1) -- Setting OC_ID
+--     , (TagEventSPKAuthorized, ALevel1) -- Setting SPK_ID
+--     , (TagEventSPKRemoved, ALevel1) -- Setting SPK_ID
+--         -- , (TagOCEMRouteEvent, ALevel1) OCEMRouteEvent EMRouteID
+--     , (TagEventEMRouteControl, ALevel1)   -- Setting
+--     , (TagEventEMRouteProceed, ALevel1)   -- Setting
+--     -- FailureEvent
+--         -- CBIFailureEvent CBIFailureEvent
+--     , (TagEventMinorFailure_OC, ALevel1)  -- ExOC_ID
+--     , (TagEventFailure_AM_LAN, ALevel1)   -- ExOC_ID SystemID
+--     , (TagEventFailure_Backup_L, ALevel1) -- ExOC_ID SystemID
+--     , (TagEventFailure_Backup_R, ALevel1) -- ExOC_ID SystemID
+--     , (TagEventFailure_5V2ALM, ALevel1)   -- ExOC_ID SystemID
+--     , (TagEventFailure_5V1ALM, ALevel1)   -- ExOC_ID SystemID
+--     , (TagEventFailure_24V2ALM, ALevel1)  -- ExOC_ID SystemID
+--     , (TagEventFailure_24V1ALM, ALevel1)  -- ExOC_ID SystemID
+--     , (TagEventFailure_ACEHFB, ALevel1)   -- ExOC_ID SystemID
+--     , (TagEventFailure_API1, ALevel1)     -- ExOC_ID SystemID
+--     , (TagEventFailure_API2, ALevel1)     -- ExOC_ID SystemID
+--     , (TagEventFailure_API3, ALevel1)     -- ExOC_ID SystemID
+--     , (TagEventFailure_APO1, ALevel1)     -- ExOC_ID SystemID
+--     , (TagEventFailure_APO2, ALevel1)     -- ExOC_ID SystemID
+--     , (TagEventFailure_APO3, ALevel1)     -- ExOC_ID SystemID
+--     , (TagEventFailure_CE, ALevel1)       -- CE_ID
+--     , (TagEventFailure_FAN, ALevel1)      -- ExOC_ID
+--     , (TagEventMajorFailure_OC, ALevel1)  -- ExOC_ID
+--     , (TagEventFailure_HRUnableToDeEnergized, ALevel1) -- SignalID
+--     , (TagEventFailure_HRUnableToEnergized, ALevel1) -- SignalID
+--     , (TagEventFailure_WLRUnlocked, ALevel1) -- PointID
+--     , (TagEventFailure_WLRLocked, ALevel1) -- PointID
+--     , (TagEventFailure_PointUnableToSwitch, ALevel1) -- PointID
+--     , (TagEventFailure_PointAbnormalPosition00, ALevel1) -- PointID
+--     , (TagEventFailure_PointAbnormalPosition11, ALevel1) -- PointID
+--     , (TagEventFailure_EKTFailure, ALevel1) -- MA_ID
+--     , (TagEventFailure_SPKFailure, ALevel1) -- SPK_ID
+--     , (TagEventFailure_PSDFailure1, ALevel1) -- StopPointCode
+--     , (TagEventFailure_PSDFailure2, ALevel1) -- StopPointCode
+--         -- ATPGroundFailureEvent ATPGroundFailureEvent SC_ID
+--     , (TagEventMinorFailure_SC, ALevel1)
+--     , (TagEventFailure_100MLAN_R, ALevel1) -- SystemID
+--     , (TagEventFailure_100MLAN_L, ALevel1) -- SystemID
+--     , (TagEventFailure_SRAM, ALevel1) -- SystemID
+--     , (TagEventFailure_NeighbouringSC, ALevel1) -- SystemID
+--     , (TagEventFailure_ASIOCommLoss, ALevel1) -- SystemID
+--     , (TagEventFailure_ACEHCommLoss, ALevel1) -- SystemID
+--     , (TagEventFailure_100MLAN, ALevel1) -- SystemID
+--     , (TagEventFailure_SRS, ALevel1) -- SystemID
+--     , (TagEventFailure_5V2ALM1, ALevel1) -- SystemID
+--     , (TagEventFailure_5V1ALM1, ALevel1) -- SystemID
+--     , (TagEventFailure_24V2ALM1, ALevel1) -- SystemID
+--     , (TagEventFailure_24V1ALM1, ALevel1) -- SystemID
+--     , (TagEventFailure_WRS, ALevel1) -- WRS_ID
+--     , (TagEventMajorFailure_SC, ALevel1)        -- SC_ID
+--         -- ATPOnBoardFailureEvent ATPOnBoardFailureEvent (RakeID, Maybe Location) [SC_ID]
+--     , (TagEventMinorFailure_VOBC, ALevel1)
+--     , (TagEventFailure_LogicBlock, ALevel1) -- SystemID
+--     , (TagEventFailure_IFBlock, ALevel1) -- SystemID
+--     , (TagEventFailure_RelayBlock, ALevel1) -- SystemID
+--     , (TagEventFailure_PWM, ALevel1) -- SystemID
+--     , (TagEventFailure_TCMS, ALevel1) -- SystemID
+--     , (TagEventFailure_VRS, ALevel1) -- VRSErrorCode SystemID
+--     , (TagEventFailure_PG, ALevel1) -- SystemID
+--     , (TagEventFailure_DMI, ALevel1) -- SystemID
+--     , (TagEventFailure_BaliseAntenna, ALevel1) -- SystemID
+--     , (TagEventMajorFailure_VOBC, ALevel1)
+--         -- NetworkFailureEvent NetworkFailureEvent
+--     , (TagEventNoCommunicationSingleNetworkWithServer, ALevel1) -- ServerID NetworkID
+--     , (TagEventNoCommunicationSingleNetworkWithSC, ALevel1) -- SC_ID SystemID NetworkID
+--     , (TagEventNoCommunicationSingleNetworkWithOC, ALevel1) -- OC_ID SystemID NetworkID
+--     , (TagEventNoCommunicationSingleNetworkWithWorkstation, ALevel1) -- WorkstationID NetworkID
+--     -- ATS Network Major Failure
+--     , (TagEventNoCommunicationWithServer, ALevel1) -- ServerID
+--     , (TagEventNoCommunicationWithSC, ALevel1) -- SC_ID SystemID
+--     , (TagEventNoCommunicationWithOC, ALevel1) -- OC_ID SystemID
+--     , (TagEventNoCommunicationWithWorkstation, ALevel1) -- WorkstationID
+--     , (TagEventNoCommunicationWithPA, ALevel1)
+--     , (TagEventNoCommunicationWithTrainRadio, ALevel1)
+--     , (TagEventNoCommunicationWithPSD, ALevel1) -- (StationCode, PlatformNumber)
+--     , (TagEventNoCommunicationWithUPS, ALevel1) -- StationCode
+--     , (TagEventNoCommunicationWithTCMS, ALevel1) -- RakeID
+--     , (TagEventNoCommunicationWithTVS, ALevel1)]
