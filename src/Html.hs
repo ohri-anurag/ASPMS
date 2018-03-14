@@ -65,9 +65,8 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
                 H.div ! A.id "systemParamsViewButton" ! class_ "button" $ "System Parameters"
-                a ! href "/changePassword" ! A.id "changePassword" ! class_ "button" $ "Change Password"
-                br
-                a ! href "/logout" ! A.id "logout" ! class_ "button" $ "Logout"
+                a ! href "/changePassword" ! class_ "button" $ H.div ! A.id "changePassword" $ "Change Password"
+                a ! href "/logout" ! class_ "button" $ H.div ! A.id "logout" $ "Logout"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
 -- Change Password Page HTML

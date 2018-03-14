@@ -10,7 +10,7 @@ module Css(
 ) where
 
 import Clay as C
-import Prelude hiding ((**))
+import Prelude hiding ((**),div)
 import Data.Monoid((<>))
 import qualified Data.Text.Lazy as T
 
@@ -83,10 +83,6 @@ homeCss = render $ do
     validation
     dialogCss
     zeroPM
-    a ? textDecoration none
-    a # visited ? color black
-    a # active ? color black
-    a # hover ? color black
     "#container" ? do
         position absolute
         height $ pct 100
@@ -95,8 +91,18 @@ homeCss = render $ do
     "#sidebar" ? do
         width $ pct 15
         borderRight solid (px 2) black
-    "#sidebar" ** star # hover ? backgroundColor grey
-
+    "#sidebar" ** div ? do
+        padding (px 5) (px 5) (px 5) (px 5)
+    "#sidebar" ** div # hover ? do
+        cursor pointer
+        backgroundColor grey
+    a ? do
+        textDecoration none
+        padding (px 0) (px 0) (px 0) (px 0)
+        color black
+    a # visited ? color black
+    a # active ? color black
+    a # hover ? color black
     "#main" ?  do
         position absolute
         width $ pct 84
@@ -108,7 +114,7 @@ homeCss = render $ do
         width $ pct 100
     "#accountsView" ? visibility visible
     "#systemParamsView" ? visibility hidden
-    ".button" # hover ? cursor pointer
+    -- ".button" # hover ? cursor pointer
     ".row" ? do
         width $ pct 100
         display flex
