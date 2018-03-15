@@ -3,6 +3,7 @@ module AccountDataSource (
     getData,
     putData,
     updateAccount,
+    deleteAccount,
     updateSystemParams,
     updateRunningTimeLists,
     updateDwellTimeSets,
@@ -95,7 +96,12 @@ modifyAccount :: (UserID2, Account) -> AccountAndSystemParameterConfig -> Accoun
 modifyAccount (uid, acc) (AccountAndSystemParameterConfig accConf sysParam) = AccountAndSystemParameterConfig (M.insert uid acc accConf) sysParam
 
 updateAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
-updateAccount ps accConfSysParam = createAccount ps >>= Just . flip modifyAccount accConfSysParam
+updateAccount ps accConfSysParam = flip modifyAccount accConfSysParam <$> createAccount ps
+
+deleteAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
+deleteAccount ps (AccountAndSystemParameterConfig accConf sysParam) = do
+    uid <- lookup "userID" ps
+    Just $ AccountAndSystemParameterConfig (M.delete (UserID2 $ T.unpack uid) accConf) sysParam
 
 updateSystemParams :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateSystemParams ps accConfSysParam = do
