@@ -45,6 +45,7 @@ dialogCss = do
         padding (px 10) (px 10) (px 10) (px 10)
         margin (px 0) auto (px 0) auto
         top $ px 0
+        left $ px 0
         width $ pct 100
     "#dialogButton" ? do
         position absolute
@@ -177,6 +178,7 @@ runningTimeListsCss = render $ do
     validation
     dialogCss
     zeroPM
+    common
     ".row" ? do
         width $ pct 100
         display flex

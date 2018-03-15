@@ -198,7 +198,7 @@ accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig sy
     H.div ! A.id "accountsView" ! class_ "tab" $ do
         h1 "Accounts"
         H.div ! class_ "row header" $ do
-            H.div ! class_ "uid rowElem" $ "UID"
+            H.div ! class_ "uid rowElem" $ "User ID"
             H.div ! class_ "accountName rowElem" $ "Name"
         accountsView accountsConfig
         -- a ! href "/addAccount" $ button "Add Account"

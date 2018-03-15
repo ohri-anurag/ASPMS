@@ -23,12 +23,24 @@ validation = [jmacro|
             errorDiv.appendChild(document.createTextNode(errorMsg));
             errorDiv.setAttribute('class', 'error');
             parent.appendChild(errorDiv);
+            var label = parent.querySelector('label'),
+                input = parent.querySelector('input');
+            label.style.width = '33%';
+            input.style.width = '33%';
+            errorDiv.style.width = '33%';
+            parent.style.width = '60%';
         }
         fun removeError parent {
             if(parent.querySelectorAll('.error').length === 0)
                 return;
             var errorDiv = parent.querySelector('.error');
             parent.removeChild(errorDiv);
+            var label = parent.querySelector('label'),
+                input = parent.querySelector('input');
+            label.style = {};
+            input.style = {};
+            errorDiv.style = {};
+            parent.style = {};
         }
         fun validate id predicate errorMsg {
             var elem = document.getElementById(id);
