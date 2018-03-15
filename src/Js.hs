@@ -120,17 +120,29 @@ home = show $ renderJs $ sendXHRExp <>
         fun toggleTabView view {
             var accountsView = document.getElementById('accountsView'),
                 systemParamsView = document.getElementById('systemParamsView'),
+                runningTimeListsLink = document.getElementById('runningTimeLists'),
+                dwellTimeSetsLink = document.getElementById('dwellTimeSets'),
+                alarmLevelsLink = document.getElementById('alarmLevels'),
+                addAccountLink = document.getElementById('addAccount'),
                 toHide, toShow;
             if (currentView !== view) {
                 if (view === VIEW.SYSTEM_PARAMS) {
                     toHide = accountsView;
                     toShow = systemParamsView;
                     currentView = VIEW.SYSTEM_PARAMS;
+                    runningTimeListsLink.style.visibility = 'visible';
+                    dwellTimeSetsLink.style.visibility = 'visible';
+                    alarmLevelsLink.style.visibility = 'visible';
+                    addAccountLink.style.visibility = 'hidden';
                 }
                 else {
                     toHide = systemParamsView;
                     toShow = accountsView;
                     currentView = VIEW.ACCOUNTS;
+                    runningTimeListsLink.style.visibility = 'hidden';
+                    dwellTimeSetsLink.style.visibility = 'hidden';
+                    alarmLevelsLink.style.visibility = 'hidden';
+                    addAccountLink.style.visibility = 'visible';
                 }
                 toHide.style.visibility = 'hidden';
                 toShow.style.visibility = 'visible';
@@ -145,6 +157,21 @@ home = show $ renderJs $ sendXHRExp <>
             systemParamsViewButton.onclick = \ {
                 toggleTabView(VIEW.SYSTEM_PARAMS);
             };
+
+            var i, deleteButtons = document.querySelectorAll('.deleteButton');
+            for(i=0; i<deleteButtons.length; ++i) {
+                deleteButtons[i].onclick = \ {
+                    var id = this.getAttribute('id');
+                    sendXHR("/deleteAccount", "userID=" + id,{
+                        success: \ {
+                            location.reload();
+                        },
+                        failure: \ {
+                            console.log("Encountered an error");
+                        }
+                    });
+                }
+            }
 
             var saveButton = document.getElementById('saveButton'),
                 formDiv =  document.getElementById('form');

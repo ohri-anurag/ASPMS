@@ -63,10 +63,16 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
         dialog
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
-                H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
-                H.div ! A.id "systemParamsViewButton" ! class_ "button" $ "System Parameters"
-                a ! href "/changePassword" ! class_ "button" $ H.div ! A.id "changePassword" $ "Change Password"
-                a ! href "/logout" ! class_ "button" $ H.div ! A.id "logout" $ "Logout"
+                H.div ! A.id "tabContainer" $ do
+                    H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
+                    H.div ! A.id "systemParamsViewButton" ! class_ "button" $ "System Parameters"
+                H.div ! A.id "linkContainer" $ do
+                    a ! href "/runningTimeLists" $ H.div ! A.id "runningTimeLists" $ "Running Time Lists"
+                    a ! href "/dwellTimeSets" $ H.div ! A.id "dwellTimeSets" $ "Dwell Time Sets"
+                    a ! href "/alarmLevels" $ H.div ! A.id "alarmLevels" $ "Alarm Levels"
+                    a ! href "/addAccount" $ H.div ! A.id "addAccount" $ "Add Account"
+                    a ! href "/changePassword" $ H.div ! A.id "changePassword" $ "Change Password"
+                    a ! href "/logout" $ H.div ! A.id "logout" $ "Logout"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
 -- Change Password Page HTML
@@ -190,11 +196,12 @@ labelledInput label' name' holder val = H.div ! class_ "row" $ do
 accountAndSystemParameterView :: AccountAndSystemParameterConfig -> Html
 accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig systemParams) = do
     H.div ! A.id "accountsView" ! class_ "tab" $ do
+        h1 "Accounts"
         H.div ! class_ "row header" $ do
             H.div ! class_ "uid rowElem" $ "UID"
             H.div ! class_ "accountName rowElem" $ "Name"
         accountsView accountsConfig
-        a ! href "/addAccount" $ button "Add Account"
+        -- a ! href "/addAccount" $ button "Add Account"
     H.div ! A.id "systemParamsView" ! class_ "tab" $ systemParamsView systemParams
 
 accountsView :: M.Map UserID2 Account -> Html
@@ -204,6 +211,7 @@ accountView :: (UserID2, Account) -> Html
 accountView (UserID2 uid, acc) = H.div ! class_ "row" $ do
     H.div ! class_ "rowElem uid" $ a ! href (toValue $ "/account/" ++ uid) $ toHtml uid
     H.div ! class_ "rowElem accountName" $ toHtml $ accountName acc
+    H.div ! class_ "rowElem delete" $ button ! A.id (toValue uid) ! class_ "deleteButton" $ "Delete Account"
 
 -- Account Page Helpers
 accountDetailedView :: Maybe Account -> Html
@@ -253,7 +261,7 @@ lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ 
 -- System Parameter Page Helpers
 systemParamsView :: SystemParameter -> Html
 systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwellTime delayDetectionThreshHold intestationStopDetectionTime tunnelLimit runningTimeList dwellTimeSet alarmLevel) = H.div $ do
-    h1 "System Parameters View Here"
+    h1 "System Parameters"
 
     H.div ! A.id "form" $ do
         labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just departureOffset
@@ -263,13 +271,6 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
         labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just intestationStopDetectionTime
         labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
         button ! A.id "saveButton" $ "Save"
-
-
-    a ! href "/runningTimeLists" $ "Running Time Lists"
-    br
-    a ! href "/dwellTimeSets" $ "Dwell Time Sets"
-    br
-    a ! href "alarmLevels" $ "Alarm Levels"
 
 -- Running Time Lists Page Helpers
 runningTimeListsView :: RunningTimeLists -> Html

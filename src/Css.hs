@@ -41,7 +41,6 @@ dialogCss = do
         backgroundColor gray
     "#dialogText" ? do
         fontSize $ px 18
-        textAlign center
         position absolute
         padding (px 10) (px 10) (px 10) (px 10)
         margin (px 0) auto (px 0) auto
@@ -60,17 +59,24 @@ zeroPM = star ? do
     margin (px 0) (px 0) (px 0) (px 0)
     padding (px 0) (px 0) (px 0) (px 0)
 
+common :: Css
+common = body ? do
+    fontFamily ["arial", "helvetica"] [sansSerif]
+    backgroundColor grey
+    star ? do
+        boxSizing borderBox
+        textAlign center
+
 -- PAGE CSS --
 loginCss :: T.Text
 loginCss = render $ do
-    body ? backgroundColor grey
+    common
     "input[type=password]" ? do
         position absolute
         width $ pct 10
         height $ px 30
         top $ pct 45
         left $ pct 45
-        textAlign center
     "input[type=submit]" ? do
         position absolute
         width $ pct 4
@@ -83,26 +89,29 @@ homeCss = render $ do
     validation
     dialogCss
     zeroPM
+    common
     "#container" ? do
         position absolute
         height $ pct 100
         width $ pct 100
         display flex
     "#sidebar" ? do
+        position fixed
         width $ pct 15
+        height $ pct 100
         borderRight solid (px 2) black
     "#sidebar" ** div ? do
-        padding (px 5) (px 5) (px 5) (px 5)
-    "#sidebar" ** div # hover ? do
+        fontSize $ px 18
+    "#tabContainer" <> "#linkContainer" ? do
+        position fixed
+        width $ pct 15
+    "#tabContainer" ? top (px 20)
+    "#linkContainer" ? bottom (px 20)
+    (".button" <> "#linkContainer" ** div) ? padding (px 5) (px 5) (px 5) (px 5)
+    ".button" # hover ? do
         cursor pointer
-        backgroundColor grey
-    a ? do
-        textDecoration none
-        padding (px 0) (px 0) (px 0) (px 0)
-        color black
-    a # visited ? color black
-    a # active ? color black
-    a # hover ? color black
+        backgroundColor $ grayish 96
+        textDecoration underline
     "#main" ?  do
         position absolute
         width $ pct 84
@@ -115,18 +124,37 @@ homeCss = render $ do
     "#accountsView" ? visibility visible
     "#systemParamsView" ? visibility hidden
     -- ".button" # hover ? cursor pointer
-    ".row" ? do
-        width $ pct 100
+    "#accountsView .row" ? do
+        marginLeft $ pct 30
+        width $ pct 60
+        display flex
+    "#systemParamsView .row" ? do
+        marginLeft $ pct 30
+        width $ pct 40
         display flex
     ".header" ? fontWeight bold
+    ".header" <> "#form" ? marginTop (px 30)
+    ".header" ** ".accountName" ? marginRight (pct 33)
     ".rowElem" ? do
         background $ grayish 220
         padding (px 10) (px 10) (px 10) (px 10)
+    ".uid" <> ".accountName" <> ".delete" ? do
+        width (pct 33)
+    ".uid" ? do
+        margin (px 3) (px 3) (px 3) (px 0)
+    ".accountName" ? do
+        margin (px 3) (px 0) (px 3) (px 3)
+    ".delete" ? background grey
+    "#form label" <> "#form input" ? do
+        width (pct 50)
         margin (px 3) (px 3) (px 3) (px 3)
-    ".uid" ? width (pct 20)
-    ".accountName" ? width (pct 20)
-    "#form label" ? width (pct 20)
-    "#form input" ? width (pct 20)
+    "#saveButton" ? do
+        marginTop $ px 10
+        fontSize $ px 15
+        padding (px 2) (px 2) (px 2) (px 2)
+    "#runningTimeLists" ? visibility hidden
+    "#dwellTimeSets" ? visibility hidden
+    "#alarmLevels" ? visibility hidden
 
 accountDetailsCss :: T.Text
 accountDetailsCss = render $ do

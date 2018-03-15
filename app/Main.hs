@@ -80,6 +80,9 @@ app = do
     post "addAccount" $
         userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
 
+    post "deleteAccount" $
+        userAuthenticated (updateCacheWith deleteAccount) (redirect "/login")
+
     post "systemParams" $
         userAuthenticated (updateCacheWith updateSystemParams) (redirect "/login")
 
