@@ -80,9 +80,18 @@ changePassword :: T.Text
 changePassword = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Change Password"
-    H.body $ H.form ! action "changePassword" ! method "post" $ do
-        input ! type_ "password" ! placeholder "Password" ! name "password"
-        input ! type_ "submit" ! value "Save Changes"
+        H.style $ toHtml CSS.changePasswordCss
+        script ! type_ "text/javascript" $ toHtml $ JS.changePassword
+    H.body $ do
+        dialog
+        H.div ! A.id "container" $ do
+            H.div ! A.id "sidebar" $ do
+                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+        H.div ! A.id "main" $ do
+            H.div ! A.id "passwordDiv" $ do
+                H.label ! for "password" ! class_ "rowElem" $ "Enter new Password"
+                input ! type_ "password" ! class_ "rowElem" ! placeholder "Password" ! name "password" ! A.id "password"
+            input ! type_ "submit" ! A.id "saveButton" ! value "Save Changes"
 
 -- Account Page HTML
 editAccount :: T.Text -> AccountAndSystemParameterConfig -> T.Text
@@ -99,15 +108,20 @@ account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
         script ! type_ "text/javascript" $ toHtml $ JS.account mode
     H.body $ do
         dialog
-        userIdDisplay
-        accountDetails
+        H.div ! A.id "container" $ do
+            H.div ! A.id "sidebar" $ do
+                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+            H.div ! A.id "main" $ do
+                h1 accountTitle
+                userIdDisplay
+                accountDetails
     where
         (UserID2 uid') = fromJust uid
         invalidMsg = toHtml ("Invalid User ID" :: String)
         accountTitle = if mode == EDIT then "Account Details" else "Add Account"
         userIdDisplay = if mode == EDIT
-            then do
-                toHtml ("Individual Account Details" :: String)
+            then b $ do
+                "Individual Account Details for "
                 H.span ! A.id "userID" $ toHtml uid'
             else labelledInput "User Id" "userID" "Enter User ID here" (Nothing :: Maybe String)
         accountDetails = if mode == EDIT
@@ -138,7 +152,7 @@ runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
                     H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
                     button ! A.id "saveButton" $ "Save Changes"
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
-            H.div ! A.id "main" $do
+            H.div ! A.id "main" $ do
                 h1 "Running Time Lists"
                 runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
 
@@ -173,11 +187,9 @@ alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docType
         script ! type_ "text/javascript" $ toHtml $ JS.alarmLevels
     H.body $ do
         dialog
-
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "saveAndError" $ do
-                    H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
                     button ! A.id "saveButton" $ "Save Changes"
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
@@ -264,7 +276,7 @@ areaOfControlView areaOfControl = do
 lineOverviewConfigView :: Maybe (Maybe LineOverviewConfig) -> Html
 lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ do
     checkbox "Line Overview Config" "aocLineOverview" isChecked False
-    H.div ! class_ "row" $ do
+    H.div ! class_ "form" $ do
         checkbox "Enable Global Command" "enableGlobalCommand" (toBool enableGlobalCommand $ join lineOverviewConfig) (not isChecked)
         checkbox "Enable Regulation" "enableRegulation" (toBool enableRegulation $ join lineOverviewConfig) (not isChecked)
     where

@@ -6,7 +6,8 @@ module Css(
     accountDetailsCss,
     runningTimeListsCss,
     dwellTimeSetsCss,
-    alarmLevelsCss
+    alarmLevelsCss,
+    changePasswordCss
 ) where
 
 import Clay as C
@@ -15,6 +16,7 @@ import Data.Monoid((<>))
 import qualified Data.Text.Lazy as T
 
 -- HELPER CSS --
+-- TODO Change the color of error message
 validation :: Css
 validation = ".error" ? do
     color red
@@ -92,7 +94,7 @@ sidebar = do
         width $ pct 15
     "#tabContainer" ? top (px 20)
     "#linkContainer" ? bottom (px 20)
-    (".button" <> "#linkContainer" ** div) ? padding (px 5) (px 5) (px 5) (px 5)
+    ".button" <> "#linkContainer" ** div ? padding (px 5) (px 5) (px 5) (px 5)
     ".button" # hover ? do
         cursor pointer
         backgroundColor $ grayish 96
@@ -110,7 +112,7 @@ labelledInputCss = do
     ".rowElem" ? do
         background $ grayish 220
         padding (px 10) (px 10) (px 10) (px 10)
-    ".header" |> div <> label <> input ? do
+    ".header" |> div <> ".row" |> label <> ".row" |> input ? do
         width (pct 50)
         margin (px 3) (px 3) (px 3) (px 3)
 
@@ -192,16 +194,24 @@ accountDetailsCss = render $ do
     validation
     dialogCss
     zeroPM
-    ".row" ? do
-        width $ pct 100
-        display flex
+    common
+    sidebar
+    labelledInputCss
     ".rowElem" ? do
-        background $ grayish 220
-        padding (px 10) (px 10) (px 10) (px 10)
+        width (pct 50)
         margin (px 3) (px 3) (px 3) (px 3)
     ".form" ? do
         display flex
         flexDirection column
+    "#accountAOC" ** div ? textAlign (alignSide sideLeft)
+    "#accountAOC" |> div ? marginLeft (px 40)
+    "#aocLineOverviewDiv .form" ? do
+        marginLeft $ px 30
+    "#submit" ? do
+        width $ px 150
+        padding (px 5) (px 5) (px 5) (px 5)
+        margin (px 10) auto (px 0) auto
+        fontSize $ px 15
 
 runningTimeListsCss :: T.Text
 runningTimeListsCss = render $ do
@@ -263,3 +273,27 @@ alarmLevelsCss = render $ do
         margin (px 3) (px 3) (px 3) (px 3)
     label # ".rowElem" ? width (pct 70)
 
+changePasswordCss :: T.Text
+changePasswordCss = render $ do
+    common
+    validation
+    dialogCss
+    sidebar
+    ".rowElem" ? do
+        background $ grayish 220
+        padding (px 10) (px 10) (px 10) (px 10)
+    "#passwordDiv" ? do
+        position absolute
+        width $ pct 40
+        top $ pct 45
+        left $ pct 30
+        display flex
+    "#passwordDiv" ** star ? do
+        width $ pct 50
+        margin (px 3) (px 3) (px 3) (px 3)
+    "input[type=submit]" ? do
+        position absolute
+        width $ pct 8
+        height $ px 30
+        top $ pct 55
+        left $ pct 46

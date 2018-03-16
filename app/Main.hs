@@ -64,9 +64,9 @@ app = do
     post "changePassword" $
         userAuthenticated (paramsPost >>= \ps ->
             case lookup "password" ps of
-                Nothing -> redirect "/home"
+                Nothing -> text "0"
                 Just pwd -> (runQuery $ \_ -> do
-                    storePassword pwd) >> redirect "/home"
+                    storePassword pwd) >> text "1"
         ) (redirect "/login")
 
     get ("account" <//> var) $ \uid ->

@@ -5,7 +5,8 @@ module Js(
     account,
     runningTimeLists,
     dwellTimeSets,
-    alarmLevels
+    alarmLevels,
+    changePassword
 ) where
 
 import Types
@@ -25,9 +26,9 @@ validation = [jmacro|
             parent.appendChild(errorDiv);
             var label = parent.querySelector('label'),
                 input = parent.querySelector('input');
-            label.style.width = '33%';
-            input.style.width = '33%';
-            errorDiv.style.width = '33%';
+            label.style.width = '33.33%';
+            input.style.width = '33.33%';
+            errorDiv.style.width = '33.33%';
             parent.style.width = '60%';
         }
         fun removeError parent {
@@ -251,7 +252,7 @@ account mode = show $ renderJs $ sendXHRExp <>
                     aocLineOverviewList = document.getElementById('aocLineOverviewDiv').querySelectorAll('input'),
                     userID = `(userIDExp)`;
 
-                var check = notEmpty('accountName') && noMoreThan10('accountName') && notEmpty('accountPassword') & noMoreThan10('accountPassword');
+                var check = `(userIDCheck)` && notEmpty('accountName') && noMoreThan10('accountName') && notEmpty('accountPassword') & noMoreThan10('accountPassword');
                 if(!check)
                     return;
 
@@ -298,6 +299,9 @@ account mode = show $ renderJs $ sendXHRExp <>
         userIDExp = if mode == EDIT
             then [jmacroE|document.getElementById('userID').innerHTML|]
             else [jmacroE|document.getElementById('userID').value|]
+        userIDCheck = if mode == EDIT
+            then [jmacroE|true|]
+            else [jmacroE|notEmpty('userID') && noMoreThan10('userID')|]
         redirect = if mode == EDIT
             then [jmacro|location.reload()|]
             else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"))|]
@@ -432,6 +436,31 @@ alarmLevels = show $ renderJs $ sendXHRExp <> [jmacro|
                 }
 
                 sendXHR("/alarmLevels", "data=" + JSON.stringify(obj), {
+                    success: \ {
+                        location.reload();
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
+                    }
+                })
+            };
+        };
+    |]
+
+changePassword :: String
+changePassword = show $ renderJs $ sendXHRExp <> 
+    validation <>
+    [jmacro|
+        window.onload = \ {
+            var saveButton = document.getElementById('saveButton');
+            saveButton.onclick = \ {
+                var input = document.getElementById('password').value, check = true;
+                check = notEmpty('password') && noMoreThan10('password');
+
+                if (!check)
+                    return;
+
+                sendXHR("/changePassword", "password=" + input, {
                     success: \ {
                         location.reload();
                     },
