@@ -10,7 +10,7 @@ module Css(
 ) where
 
 import Clay as C
-import Prelude hiding ((**),div)
+import Prelude hiding ((**),div,span)
 import Data.Monoid((<>))
 import qualified Data.Text.Lazy as T
 
@@ -68,6 +68,53 @@ common = body ? do
         boxSizing borderBox
         textAlign center
 
+sidebar :: Css
+sidebar = do
+    "#sidebar" ? do
+        position fixed
+        width $ pct 15
+        height $ pct 100
+        borderRight solid (px 2) black
+    "#sidebar" ** div ? do
+        fontSize $ px 18
+    "#tabContainer" <> "#linkContainer" ? do
+        position fixed
+        width $ pct 15
+    "#tabContainer" ? top (px 20)
+    "#linkContainer" ? bottom (px 20)
+    (".button" <> "#linkContainer" ** div) ? padding (px 5) (px 5) (px 5) (px 5)
+    ".button" # hover ? do
+        cursor pointer
+        backgroundColor $ grayish 96
+        textDecoration underline
+
+labelledInputCss :: Css
+labelledInputCss = do
+    ".row" ? do
+        marginLeft $ pct 30
+        width $ pct 40
+        display flex
+    ".header" ? do
+        fontWeight bold
+        marginTop (px 30)
+    ".rowElem" ? do
+        background $ grayish 220
+        padding (px 10) (px 10) (px 10) (px 10)
+    ".header" |> div <> label <> input ? do
+        width (pct 50)
+        margin (px 3) (px 3) (px 3) (px 3)
+
+saveAndError :: Css
+saveAndError = do
+    "#saveAndError" ? do
+        position fixed
+        height $ pct 20
+        width $ pct 15
+        top $ pct 40
+    "#saveButton" ? padding (px 5) (px 5) (px 5) (px 5)
+    "#cumulativeError" ? do
+        visibility hidden
+
 -- PAGE CSS --
 loginCss :: T.Text
 loginCss = render $ do
@@ -91,28 +138,12 @@ homeCss = render $ do
     dialogCss
     zeroPM
     common
+    sidebar
     "#container" ? do
         position absolute
         height $ pct 100
         width $ pct 100
         display flex
-    "#sidebar" ? do
-        position fixed
-        width $ pct 15
-        height $ pct 100
-        borderRight solid (px 2) black
-    "#sidebar" ** div ? do
-        fontSize $ px 18
-    "#tabContainer" <> "#linkContainer" ? do
-        position fixed
-        width $ pct 15
-    "#tabContainer" ? top (px 20)
-    "#linkContainer" ? bottom (px 20)
-    (".button" <> "#linkContainer" ** div) ? padding (px 5) (px 5) (px 5) (px 5)
-    ".button" # hover ? do
-        cursor pointer
-        backgroundColor $ grayish 96
-        textDecoration underline
     "#main" ?  do
         position absolute
         width $ pct 84
@@ -124,7 +155,6 @@ homeCss = render $ do
         width $ pct 100
     "#accountsView" ? visibility visible
     "#systemParamsView" ? visibility hidden
-    -- ".button" # hover ? cursor pointer
     "#accountsView .row" ? do
         marginLeft $ pct 30
         width $ pct 60
@@ -179,23 +209,25 @@ runningTimeListsCss = render $ do
     dialogCss
     zeroPM
     common
-    ".row" ? do
-        width $ pct 100
+    sidebar
+    label # ".rowElem" <> "#fromTo" ? do
+        backgroundColor grey
         display flex
-    ".rowElem" ? do
-        background $ grayish 220
+        padding (px 0) (px 0) (px 0) (px 0)
+    ".from" <> ".to" ? do
+        backgroundColor (grayish 220)
+        width $ pct 50
         padding (px 10) (px 10) (px 10) (px 10)
-        margin (px 3) (px 3) (px 3) (px 3)
+        margin (px 0) (px 0) (px 0) (px 0)
+    ".from" ? marginRight (px 3)
+    ".to" ? marginLeft (px 3)
+    labelledInputCss
+    saveAndError
     "#container" ? do
         position absolute
         height $ pct 100
         width $ pct 100
         display flex
-    "#sidebar" ? do
-        position fixed
-        width $ pct 15
-        height $ pct 100
-        borderRight solid (px 2) black
     "#main" ? do
         position absolute
         width $ pct 84
@@ -205,24 +237,12 @@ runningTimeListsCss = render $ do
         position absolute
         width $ pct 100
         height $ pct 100
-    ".runningTimeList label" ? width (pct 20)
-    ".runningTimeList input" ? width (pct 20)
     "#maximumPerformance" ? visibility visible
     "#fivePercentCoasting" ? visibility hidden
     "#eightPercentCoasting" ? visibility hidden
     "#energySaving" ? visibility hidden
     "#fullCoasting" ? visibility hidden
     ".button" # hover ? cursor pointer
-    "#saveButton" ? do
-        position fixed
-        bottom $ px 10
-        left $ px 10
-    "#cumulativeError" ? do
-        position fixed
-        bottom $ px 50
-        left $ px 10
-        width $ pct 10
-        visibility hidden
 
 dwellTimeSetsCss :: T.Text
 dwellTimeSetsCss = render $ do

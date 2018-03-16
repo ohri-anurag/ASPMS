@@ -126,17 +126,21 @@ runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
         script ! type_ "text/javascript" $ toHtml $ JS.runningTimeLists
     H.body $ do
         dialog
-        h1 "Running Time Lists"
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
-                H.div ! A.id "maximumPerformanceButton" ! class_ "button" $ "Maximum Performance"
-                H.div ! A.id "fivePercentCoastingButton" ! class_ "button" $ "Five Percent Coasting"
-                H.div ! A.id "eightPercentCoastingButton" ! class_ "button" $ "Eight Percent Coasting"
-                H.div ! A.id "energySavingButton" ! class_ "button" $ "Energy Saving"
-                H.div ! A.id "fullCoastingButton" ! class_ "button" $ "Full Coasting"
-                button ! A.id "saveButton" $ "Save Changes"
-                H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
-            H.div ! A.id "main" $ runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
+                H.div ! A.id "tabContainer" $ do
+                    H.div ! A.id "maximumPerformanceButton" ! class_ "button" $ "Maximum Performance"
+                    H.div ! A.id "fivePercentCoastingButton" ! class_ "button" $ "Five Percent Coasting"
+                    H.div ! A.id "eightPercentCoastingButton" ! class_ "button" $ "Eight Percent Coasting"
+                    H.div ! A.id "energySavingButton" ! class_ "button" $ "Energy Saving"
+                    H.div ! A.id "fullCoastingButton" ! class_ "button" $ "Full Coasting"
+                H.div ! A.id "saveAndError" $ do
+                    H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
+                    button ! A.id "saveButton" $ "Save Changes"
+                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+            H.div ! A.id "main" $do
+                h1 "Running Time Lists"
+                runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
 
 -- Dwell Time Set HTML
 dwellTimeSets :: AccountAndSystemParameterConfig -> T.Text
@@ -201,7 +205,6 @@ accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig sy
             H.div ! class_ "uid rowElem" $ "User ID"
             H.div ! class_ "accountName rowElem" $ "Name"
         accountsView accountsConfig
-        -- a ! href "/addAccount" $ button "Add Account"
     H.div ! A.id "systemParamsView" ! class_ "tab" $ systemParamsView systemParams
 
 accountsView :: M.Map UserID2 Account -> Html
@@ -270,7 +273,7 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
         labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just delayDetectionThreshHold
         labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just intestationStopDetectionTime
         labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
-        button ! A.id "saveButton" $ "Save"
+        button ! A.id "saveButton" $ "Save Changes"
 
 -- Running Time Lists Page Helpers
 runningTimeListsView :: RunningTimeLists -> Html
@@ -293,14 +296,22 @@ runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting ei
 
 -- ASSUMPTION - Code must have only 3 letters
 runningTimeListView :: String -> M.Map (StopPointCode, StopPointCode) NominalDiffTime -> Html
-runningTimeListView code rtl = mapM_ (runningTimeView code) $ M.toList rtl
+runningTimeListView code rtl = do
+    H.div ! class_ "header row" $ do
+        H.div ! A.id "fromTo" ! class_ "rowElem" $ do
+            H.div ! class_ "from" $ "From"
+            H.div ! class_ "to" $ "To"
+        H.div ! class_ "rowElem" $ "Running Time"
+    mapM_ (runningTimeView code) $ M.toList rtl
 
 runningTimeView :: String -> ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
-runningTimeView code ((stc1, stc2), diffTime) = labelledInput (toHtml label) (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
+runningTimeView code ((stc1, stc2), diffTime) = labelledInput label (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
     where
         stc1Str = show stc1
         stc2Str = show stc2
-        label = stc1Str ++ " -> " ++ stc2Str
+        label = do
+            H.div ! class_ "from" $ (toHtml stc1Str)
+            H.div ! class_ "to" $ (toHtml stc2Str)
         name = code ++ stc1Str ++ "," ++ stc2Str
 
 -- Dwell Time Sets Page Helpers
