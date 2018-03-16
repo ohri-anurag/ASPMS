@@ -254,12 +254,12 @@ alarmLevelsCss :: T.Text
 alarmLevelsCss = render $ do
     dialogCss
     zeroPM
-    ".row" ? do
-        width $ pct 100
-        display flex
-    ".rowElem" ? do
-        background $ grayish 220
-        padding (px 10) (px 10) (px 10) (px 10)
+    common
+    sidebar
+    labelledInputCss
+    saveAndError
+    select ? do
+        width $ pct 30
         margin (px 3) (px 3) (px 3) (px 3)
-    ".row label" ? width (pct 20)
-    ".row select" ? width (pct 10)
+    label # ".rowElem" ? width (pct 70)
+

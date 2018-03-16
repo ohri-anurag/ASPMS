@@ -75,11 +75,19 @@ validation = [jmacro|
 
 sendXHRExp :: JStat
 sendXHRExp = [jmacro|
+        var firstCall = true;
         fun toggleDialog bool text callback {
             var dialog = document.getElementById('dialog'),
                 dialogText = document.getElementById('dialogText'),
                 dialogButton = document.getElementById('dialogButton'),
                 screen = document.getElementById('screen');
+            if (firstCall) {
+                dialogButton.onclick = \ {
+                    toggleDialog false null null
+                    callback();
+                };
+                firstCall = false;
+            }
             if (bool) {
                 screen.style.opacity = 0.7;
                 screen.style.zIndex = 1;
@@ -98,8 +106,6 @@ sendXHRExp = [jmacro|
                 dialog.style.opacity = 0;
                 dialog.style.zIndex = -1;
             }
-
-            dialogButton.onclick = callback;
         }
         fun sendXHR url postData callback {
             var xhttp = new XMLHttpRequest();

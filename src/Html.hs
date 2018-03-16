@@ -158,7 +158,6 @@ dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTy
                     H.div ! A.id "dwellTimeSet2Button" ! class_ "button" $ "Dwell Time Set 2"
                     H.div ! A.id "dwellTimeSet3Button" ! class_ "button" $ "Dwell Time Set 3"
                 H.div ! A.id "saveAndError" $ do
-                    H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
                     button ! A.id "saveButton" $ "Save Changes"
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
@@ -174,9 +173,16 @@ alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docType
         script ! type_ "text/javascript" $ toHtml $ JS.alarmLevels
     H.body $ do
         dialog
-        h1 "Alarm Levels"
-        mapM_ alarmLevelView $ M.toList $ alarmLevel $ systemParameter accountAndSystemParameterConfig
-        button ! A.id "saveButton" $ "Save Changes"
+
+        H.div ! A.id "container" $ do
+            H.div ! A.id "sidebar" $ do
+                H.div ! A.id "saveAndError" $ do
+                    H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
+                    button ! A.id "saveButton" $ "Save Changes"
+                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+        H.div ! A.id "main" $ do
+            h1 "Alarm Levels"
+            mapM_ alarmLevelView $ M.toList $ alarmLevel $ systemParameter accountAndSystemParameterConfig
 
 --- Helpers ---
 -- General Helpers
@@ -346,11 +352,11 @@ dwellTimeView code (spc, diffTime) = labelledInput (toHtml spcStr) (toValue $ co
 -- Alarm Levels Page Helpers
 alarmLevelView :: (EventTag, AlarmLevel) -> Html
 alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
-    H.label ! class_ "rowElem" ! for (toValue eTagStr) $ toHtml eTagStr
+    H.label ! class_ "rowElem" ! for (toValue eTag') $ toHtml (drop 8 eTag')
     selectList
     where
-        eTagStr = show eTag
-        selectList = select ! class_ "rowElem" ! A.id (toValue eTagStr) $ mapM_ optionify [minBound..maxBound]
+        eTag' = show eTag
+        selectList = select ! class_ "rowElem" ! A.id (toValue eTag') $ mapM_ optionify [minBound..maxBound]
         optionify level = markSelected level $ option ! A.value (toValue lstr) $ (toHtml lstr)
             where lstr = show level
         markSelected level elem = if aLevel == level
