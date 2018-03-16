@@ -275,6 +275,7 @@ alarmLevelsCss = render $ do
 
 changePasswordCss :: T.Text
 changePasswordCss = render $ do
+    zeroPM
     common
     validation
     dialogCss
