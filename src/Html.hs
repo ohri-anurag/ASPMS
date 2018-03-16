@@ -151,15 +151,19 @@ dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTy
         script ! type_ "text/javascript" $ toHtml $ JS.dwellTimeSets
     H.body $ do
         dialog
-        h1 "Dwell Time Sets"
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
-                H.div ! A.id "dwellTimeSet1Button" ! class_ "button" $ "Dwell Time Set 1"
-                H.div ! A.id "dwellTimeSet2Button" ! class_ "button" $ "Dwell Time Set 2"
-                H.div ! A.id "dwellTimeSet3Button" ! class_ "button" $ "Dwell Time Set 3"
-                button ! A.id "saveButton" $ "Save Changes"
-                H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
-        H.div ! A.id "main" $ dwellTimeSetsView $ dwellTimeSet $ systemParameter accountAndSystemParameterConfig
+                H.div ! A.id "tabContainer" $ do
+                    H.div ! A.id "dwellTimeSet1Button" ! class_ "button" $ "Dwell Time Set 1"
+                    H.div ! A.id "dwellTimeSet2Button" ! class_ "button" $ "Dwell Time Set 2"
+                    H.div ! A.id "dwellTimeSet3Button" ! class_ "button" $ "Dwell Time Set 3"
+                H.div ! A.id "saveAndError" $ do
+                    H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
+                    button ! A.id "saveButton" $ "Save Changes"
+                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+        H.div ! A.id "main" $ do
+            h1 "Dwell Time Sets"
+            dwellTimeSetsView $ dwellTimeSet $ systemParameter accountAndSystemParameterConfig
 
 -- Alarm Levels HTML
 alarmLevels :: AccountAndSystemParameterConfig -> T.Text
@@ -329,7 +333,11 @@ dwellTimeSetsView (DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3) = do
 
 -- ASSUMPTION - Code must have only 2 letters
 dwellTimeSetView :: String -> M.Map StopPointCode NominalDiffTime -> Html
-dwellTimeSetView code dts = mapM_ (dwellTimeView code) $ M.toList dts
+dwellTimeSetView code dts = do
+    H.div ! class_ "header row" $ do
+        H.div ! class_ "rowElem" $ "Stop Point"
+        H.div ! class_ "rowElem" $ "Dwell Time"
+    mapM_ (dwellTimeView code) $ M.toList dts
 
 dwellTimeView :: String -> (StopPointCode, NominalDiffTime) -> Html
 dwellTimeView code (spc, diffTime) = labelledInput (toHtml spcStr) (toValue $ code ++ spcStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
