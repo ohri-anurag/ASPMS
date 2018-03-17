@@ -21,6 +21,7 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Array.Unboxed as A
 
 import Text.Read(readMaybe)
+import Data.Either(either)
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -63,12 +64,11 @@ instance FromJSON DwellTimeSets where
         dwellTimeSet3 <- o .: "dwellTimeSet3"
         pure $ DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3
 
+-- TODO Convert the exception being thrown here into default data.
 getData :: IO AccountAndSystemParameterConfig
-getData = (f . S.decode) <$> B.readFile "data/AccountData"
-    where
-        f x = case x of
-            Left _ -> error "Could not read account data."
-            Right val -> val
+getData = either (const $ error "Could not read account data.") id
+    <$> S.decode
+    <$> B.readFile "data/AccountData"
 
 putData :: AccountAndSystemParameterConfig -> IO ()
 putData accountData = B.writeFile "data/AccountData" (S.encode accountData)
@@ -100,8 +100,11 @@ updateAccount ps accConfSysParam = flip modifyAccount accConfSysParam <$> create
 
 deleteAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 deleteAccount ps (AccountAndSystemParameterConfig accConf sysParam) = do
-    uid <- lookup "userID" ps
-    Just $ AccountAndSystemParameterConfig (M.delete (UserID2 $ T.unpack uid) accConf) sysParam
+    flip AccountAndSystemParameterConfig sysParam
+    <$> delete
+    <$> lookup "userID" ps
+    where
+        delete uid = M.delete (UserID2 $ T.unpack uid) accConf
 
 updateSystemParams :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateSystemParams ps accConfSysParam = do

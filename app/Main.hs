@@ -32,7 +32,8 @@ data UserSession = UserLoggedIn | UserLoggedOut
 main :: IO ()
 main = do
     ref <- newIORef Free
-    dataRef <- getData >>= newIORef
+    acData <- getData
+    dataRef <- newIORef acData
     spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref dataRef)
     runSpock 8080 (spock spockCfg app)
 
@@ -44,14 +45,15 @@ app = do
     get "login" $
         userAuthenticated (redirect "/home") (html H.login)
     post "login" $
-        userAuthenticated (redirect "/home") (paramsPost >>= \ps ->
-            case lookup "password" ps of
-                Nothing -> redirect "/login"
-                Just pwd -> (runQuery $ \_ -> do
-                    validatePassword pwd) >>= \b -> if b
-                        then login >> redirect "/home"
-                        else redirect "/login"
-        )
+        userAuthenticated (redirect "/home") (do
+            ps <- paramsPost
+            maybe (redirect "/login") (\pwd -> do
+                b <- runQuery $ const $ validatePassword pwd
+                if b
+                    then login >> redirect "/home"
+                    else redirect "/login"
+                ) (lookup "password" ps)
+            )
 
     get "logout" $
         logout >> redirect "/login"
@@ -62,12 +64,13 @@ app = do
     get "changePassword" $
         userAuthenticated (html H.changePassword) (redirect "/login")
     post "changePassword" $
-        userAuthenticated (paramsPost >>= \ps ->
-            case lookup "password" ps of
-                Nothing -> text "0"
-                Just pwd -> (runQuery $ \_ -> do
-                    storePassword pwd) >> text "1"
-        ) (redirect "/login")
+        userAuthenticated (do
+            ps <- paramsPost
+            maybe (text "0") (\pwd -> do
+                runQuery $ const $ storePassword pwd
+                text "1"
+                ) (lookup "password" ps)
+            ) (redirect "/login")
 
     get ("account" <//> var) $ \uid ->
         -- TODO This will have to be changed when the UserID type changes.
@@ -106,27 +109,35 @@ app = do
         withData :: (AccountAndSystemParameterConfig -> T.Text) -> SpockAction () UserSession MyAppState ()
         withData action = do
             (MyAppState _ cache) <- getState
-            liftIO (readIORef cache) >>= html . action
+            acData <- liftIO (readIORef cache)
+            html $ action acData
 
         updateCacheWith :: ([(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig)
             -> SpockAction () UserSession MyAppState ()
-        updateCacheWith update = paramsPost >>= \ps -> do
+        updateCacheWith update = do
+            ps <- paramsPost
             (MyAppState _ cache) <- getState
             acData <- liftIO (readIORef cache)
-            case update ps acData of
-                Just acData' -> (runQuery $ \_ -> do
-                    putData acData'
-                    atomicModifyIORef' cache (\_ -> ( acData',() ))) >> text "1"
-                Nothing -> text "0"
+            maybe (text "0") (updateCache cache) $ update ps acData
+            where
+                updateCache :: IORef AccountAndSystemParameterConfig -> AccountAndSystemParameterConfig
+                    -> SpockAction () UserSession MyAppState ()
+                updateCache cache newData = do
+                    runQuery $ const $ do
+                        putData newData
+                        atomicModifyIORef' cache $ const (newData,())
+                    text "1"
 
         -- Check if this user is logged in. If yes, perform the given action, otherwise redirect to the login page.
-        userAuthenticated actionTrue actionFalse = readSession >>= \session ->
+        userAuthenticated actionTrue actionFalse = do
+            session <- readSession
             case session of
                 UserLoggedIn -> actionTrue
                 UserLoggedOut -> do
                   -- Check if some other user is already using the app. If yes, don't show the login page.
                     (MyAppState ref _) <- getState
-                    liftIO (readIORef ref) >>= \state -> case state of
+                    state <- liftIO (readIORef ref)
+                    case state of
                         InUse -> text "The account management system is in use by another user. Kindly login at a later time."
                         Free -> actionFalse
 
