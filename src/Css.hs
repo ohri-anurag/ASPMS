@@ -16,10 +16,9 @@ import Data.Monoid((<>))
 import qualified Data.Text.Lazy as T
 
 -- HELPER CSS --
--- TODO Change the color of error message
 validation :: Css
 validation = ".error" ? do
-    color red
+    color $ rgb 153 0 0
     padding (px 10) (px 10) (px 10) (px 10)
     margin (px 3) (px 3) (px 3) (px 3)
 
