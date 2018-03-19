@@ -66,6 +66,7 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                 H.div ! A.id "tabContainer" $ do
                     H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
                     H.div ! A.id "systemParamsViewButton" ! class_ "button" $ "System Parameters"
+                H.div ! A.id "applyDiv" $ button ! A.id "apply" $ "Apply Changes"
                 H.div ! A.id "linkContainer" $ do
                     a ! href "/runningTimeLists" $ H.div ! A.id "runningTimeLists" $ "Running Time Lists"
                     a ! href "/dwellTimeSets" $ H.div ! A.id "dwellTimeSets" $ "Dwell Time Sets"

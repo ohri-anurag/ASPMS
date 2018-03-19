@@ -6,6 +6,7 @@ import Web.Spock.Config
 
 import Data.Monoid((<>))
 import Control.Monad.Trans
+import Control.Exception.Base(catch, SomeException)
 import Data.IORef
 import qualified Data.Text as T
 
@@ -15,6 +16,7 @@ import qualified Html as H
 -- Data Source
 import AccountDataSource
 import Credentials
+import Network
 import Text.Read(readMaybe)
 
 data MyAppState = MyAppState
@@ -103,6 +105,16 @@ app = do
         userAuthenticated (withData H.alarmLevels) (redirect "/login")
     post "alarmLevels" $
         userAuthenticated (updateCacheWith updateAlarmLevels) (redirect "/login")
+
+    post "applyChanges" $
+        userAuthenticated (do
+            val <- runQuery $ const $ catch (do
+                sendFile
+                sendUpdateCommand
+                pure "1"
+                ) (const $ pure "0" :: SomeException -> IO T.Text)
+            text val
+            ) (redirect "/login")
 
     where
         -- Read account data from the cache, and run the action with that data

@@ -177,6 +177,18 @@ home = show $ renderJs $ sendXHRExp <>
                 toggleTabView(VIEW.SYSTEM_PARAMS);
             };
 
+            var apply = document.getElementById('apply');
+            apply.onclick = \ {
+                sendXHR("/applyChanges", "",{
+                    success: \ {
+                        console.log("Success!");
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
+                    }
+                });
+            };
+
             var i, deleteButtons = document.querySelectorAll('.deleteButton');
             for(i=0; i<deleteButtons.length; ++i) {
                 deleteButtons[i].onclick = \ {

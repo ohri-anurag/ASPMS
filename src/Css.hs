@@ -150,6 +150,15 @@ homeCss = render $ do
     zeroPM
     common
     sidebar
+    "#applyDiv" ? do
+        position fixed
+        width $ pct 15
+        height $ pct 10
+        top $ pct 45
+    "#apply" ? do
+        padding (px 10) (px 10) (px 10) (px 10)
+        fontSize $ px 18
+    "#apply" # hover ? cursor pointer
     ".tab" ? do
         position absolute
         height $ pct 100
