@@ -110,7 +110,7 @@ app = do
         userAuthenticated (do
             val <- runQuery $ const $ catch (do
                 sendFile
-                sendUpdateCommand
+                sendUpdateCommands
                 pure "1"
                 ) (const $ pure "0" :: SomeException -> IO T.Text)
             text val
