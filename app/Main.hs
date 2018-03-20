@@ -30,14 +30,18 @@ data AppState = InUse | Free
 data UserSession = UserLoggedIn | UserLoggedOut
     deriving Show
 
--- TODO Change the port
+-- TODO: Change the port
 main :: IO ()
 main = do
+    -- Initialize a spock instance
     ref <- newIORef Free
     acData <- getData
     dataRef <- newIORef acData
     spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref dataRef)
     runSpock 8080 (spock spockCfg app)
+
+    -- Initialize a TCP server for receiving requests for AccountConfig
+    initTCPServer
 
 app :: SpockM () UserSession MyAppState ()
 app = do
@@ -75,7 +79,7 @@ app = do
             ) (redirect "/login")
 
     get ("account" <//> var) $ \uid ->
-        -- TODO This will have to be changed when the UserID type changes.
+        -- TODO: This will have to be changed when the UserID type changes.
         userAuthenticated (withData $ H.editAccount uid) (redirect "/login")
     post "account" $
         userAuthenticated (updateCacheWith updateAccount) (redirect "/login")

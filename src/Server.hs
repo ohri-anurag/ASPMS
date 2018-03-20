@@ -29,16 +29,16 @@ sendBroadcast = withSocketsDo $ do
     loop sock = forever $ do
         (conn, peer) <- accept sock
         putStrLn $ "Connection from " ++ show peer
-        -- TODO Change the number of bytes to receive
+        -- TODO: Change the number of bytes to receive
         str <- recv conn 14
         print str
-        print $ either error match $ decode str
-        -- Send ACK
-        bytes <- send conn $ encode Acknowledgement
-        print bytes
+        -- print $ either error match $ decode str
+        -- -- Send ACK
+        -- bytes <- send conn $ encode Acknowledgement
+        -- print bytes
 
-    match Update = True
-    match _ = False
+    -- match Update = True
+    -- match _ = False
     -- talk conn = do
     --     msg <- recv conn 1024
     --     unless (S.null msg) $ do

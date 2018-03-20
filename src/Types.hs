@@ -1,8 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Types(
-    AccountMode(ADD,EDIT),
-    AccountCommand(Update, Acknowledgement)
+    AccountMode(ADD,EDIT)
 ) where
 
 import SP6.Data.Account
@@ -21,11 +20,6 @@ import GHC.Generics
 -- Account Mode
 data AccountMode = ADD | EDIT
     deriving Eq
-
-data AccountCommand = Update | Acknowledgement
-    deriving (Show, Generic)
-
-instance Serialize AccountCommand
 
 instance FromJSON AreaOfControl
 instance FromJSON LineOverviewConfig

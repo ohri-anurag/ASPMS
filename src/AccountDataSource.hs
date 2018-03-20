@@ -30,7 +30,7 @@ import qualified Data.Serialize as S
 import Data.Aeson
 
 
--- TODO Convert the exception being thrown here into default data.
+-- TODO: Convert the exception being thrown here into default data.
 getData :: IO AccountAndSystemParameterConfig
 getData = either (const $ error "Could not read account data.") id
     <$> S.decode

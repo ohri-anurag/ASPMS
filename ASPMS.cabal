@@ -21,6 +21,7 @@ library
                       , Js
                       , Types
                       , Credentials
+                      , Network
   build-depends:        base
                       , containers
                       , VDU
