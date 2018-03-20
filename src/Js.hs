@@ -45,8 +45,8 @@ validation = [jmacro|
         }
         fun validate id predicate errorMsg {
             var elem = document.getElementById(id);
+            removeError elem.parentElement
             if(predicate(elem.value)) {
-                removeError elem.parentElement
                 return true;
             }
             displayError elem.parentElement errorMsg

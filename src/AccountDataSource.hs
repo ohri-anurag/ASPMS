@@ -15,10 +15,9 @@ module AccountDataSource (
 import SP6.Data.Account
 import SP6.Data.ID
 import SP6.Data.Command
+import Types
 
 import qualified Data.Map.Strict as M
-import qualified Data.HashMap.Strict as HM
-import qualified Data.Array.Unboxed as A
 
 import Text.Read(readMaybe)
 import Data.Either(either)
@@ -29,40 +28,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString as B
 import qualified Data.Serialize as S
 import Data.Aeson
-import Data.Hashable
 
-instance FromJSON AreaOfControl
-instance FromJSON LineOverviewConfig
-
-instance Hashable OC_ID
-instance FromJSONKey OC_ID
-instance FromJSONKey StopPointCode
-instance FromJSON EventTag
-instance FromJSONKey EventTag
-
-instance FromJSON Account where
-    parseJSON = withObject "Account" $ \o -> do
-        pwd <- o .: "accountPassword"
-        name <- o .: "accountName"
-        acr <- o .: "accountACR"
-        aoc <- o .: "accountAOC"
-        pure $ Account pwd name (A.array (OC801, OC808) $ HM.toList acr) aoc
-
-instance FromJSON RunningTimeLists where
-    parseJSON = withObject "Running Time Lists" $ \o -> do
-        maximumPerformance <- o .: "maximumPerformance"
-        fivePercentCoasting <- o .: "fivePercentCoasting"
-        eightPercentCoasting <- o .: "eightPercentCoasting"
-        energySaving <- o .: "energySaving"
-        fullCoasting <- o .: "fullCoasting"
-        pure $ RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting
-
-instance FromJSON DwellTimeSets where
-    parseJSON = withObject "Dwell Time Sets" $ \o -> do
-        dwellTimeSet1 <- o .: "dwellTimeSet1"
-        dwellTimeSet2 <- o .: "dwellTimeSet2"
-        dwellTimeSet3 <- o .: "dwellTimeSet3"
-        pure $ DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3
 
 -- TODO Convert the exception being thrown here into default data.
 getData :: IO AccountAndSystemParameterConfig
