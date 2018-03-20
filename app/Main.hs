@@ -6,7 +6,7 @@ import Web.Spock.Config
 
 import Data.Monoid((<>))
 import Control.Monad.Trans
-import Control.Exception.Base(catch, SomeException)
+import Control.Exception.Base(catch, SomeException(..))
 import Data.IORef
 import qualified Data.Text as T
 
@@ -109,10 +109,11 @@ app = do
     post "applyChanges" $
         userAuthenticated (do
             val <- runQuery $ const $ catch (do
-                sendFile
                 sendUpdateCommands
                 pure "1"
-                ) (const $ pure "0" :: SomeException -> IO T.Text)
+                ) (\(SomeException e) -> do
+                    print e
+                    pure "0") -- :: SomeException -> IO T.Text)
             text val
             ) (redirect "/login")
 
