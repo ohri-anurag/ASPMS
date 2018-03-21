@@ -47,11 +47,14 @@ withHealthyWorkstations arrVCommSRV process = do
     workstationIDs <- currentHealthyWorkstationsWithNetwork arrVCommSRV
     mapM (process . uncurry workstationIDToAddr) workstationIDs
 
+svFork :: IO () -> IO ()
+svFork = withSocketsDo . void . forkIO
+
 -- This function takes a bytestring IORef and returns the same bytestring
 -- whenever it receives a request.
 -- The same IORef is updated when the user clicks on Apply Changes.
 initTCPServer :: IORef B.ByteString -> IO ()
-initTCPServer accountBytesRef = void $ forkIO $ do
+initTCPServer accountBytesRef = svFork $ do
     -- TODO: Change this port
     bracket (openSockTCPServer "port") close $ \sock -> forever $ do
         (conn, peer) <- accept sock
@@ -61,21 +64,27 @@ initTCPServer accountBytesRef = void $ forkIO $ do
             accountBytes <- readIORef accountBytesRef
             send conn accountBytes
 
+-- TODO: Change this to use addTimer
 initHeartbeatServer :: IO ()
-initHeartbeatServer = void $ forkIO $ do
-    bracket (openSockUDPServer heartbeatServerPort) close $ \sock -> forever $ do
-        -- Broadcast Heartbeat for Network 1
-        -- TODO: Change the address
-        sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,1,1)
-        -- Broadcast Heartbeat for Network 2
-        -- TODO: Change the address
-        sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,2,1)
+initHeartbeatServer = svFork $ bracket open close $ \sock -> forever $ do
+    -- Broadcast Heartbeat for Network 1
+    -- TODO: Change the address and port
+    sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,1,1)
+    -- Broadcast Heartbeat for Network 2
+    -- TODO: Change the address and port
+    sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,2,1)
 
-        -- Wait 500ms before sending next heartbeat
-        threadDelay 500000
+    -- Wait 500ms before sending next heartbeat
+    threadDelay 500000
+    where
+        open = do
+            sock <- socket AF_INET Datagram defaultProtocol
+            setSocketOption sock Broadcast 1
+            pure sock
+
 
 sendUpdateCommands :: IO ()
-sendUpdateCommands = void $ forkIO $ do
+sendUpdateCommands = svFork $ do
     handle <- newMVar stdout
     -- Get the health status for servers
     (arrServerStatus, _) <- initReceiverServerStatus handle False []

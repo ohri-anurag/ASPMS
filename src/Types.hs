@@ -3,7 +3,6 @@
 module Types(
     AccountMode(ADD,EDIT),
     accountFilePath,
-    heartbeatServerPort,
     heartbeatClientPort,
     heartbeatData
 ) where
@@ -62,10 +61,11 @@ instance FromJSON DwellTimeSets where
 
 -- Common variables
 accountFilePath = "data/AccountData"
-heartbeatServerPort = "61001"
 
+-- TODO: Remove this
 heartbeatClientPort :: PortNumber
 heartbeatClientPort = 61001
 
+-- TODO: Remove this
 heartbeatData :: [Word8]
 heartbeatData = [1]
