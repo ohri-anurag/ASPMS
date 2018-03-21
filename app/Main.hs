@@ -131,13 +131,16 @@ app accountBytesRef = do
 
                 -- Send success code
                 pure "1"
-                ) (\ (SomeException e) -> do
-                    print e
-                    pure "0")
+                ) errorHandler
             text val
             ) (redirect "/login")
 
     where
+        errorHandler :: SomeException -> IO ()
+        errorHandler e = do
+            putStrLn $ "Encountered error : " ++ show e
+            pure "0"
+
         -- Read account data from the cache, and run the action with that data
         withData :: (AccountAndSystemParameterConfig -> T.Text) -> SpockAction () UserSession MyAppState ()
         withData action = do
