@@ -42,7 +42,7 @@ packages:
 extra-deps:
 # VDU
 - git: git@github.com:wkoiking/VDU.git
-  commit: 306d9ed5bf490bf3512e5c569249f333c219758b
+  commit: af067582de0348e8ffc1b915b8f832f98baa73e6
 # VDU Dependencies
 - parsec-numbers-0.1.0
 - ftp-client-0.5.0.0
@@ -74,3 +74,6 @@ extra-deps:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+ghc-options:
+    # All packages
+    "*": -threaded -Wincomplete-patterns -msse4.2 -fwarn-missing-signatures # -W -Wall -fwarn-incomplete-patterns

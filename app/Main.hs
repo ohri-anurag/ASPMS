@@ -4,12 +4,20 @@ module Main where
 import Web.Spock
 import Web.Spock.Config
 
+import Data.Array
 import Data.Monoid((<>))
 import Control.Monad.Trans
+import Control.Concurrent
 import Control.Exception.Base(catch, SomeException(..))
 import Data.IORef
 import qualified Data.Text as T
 import qualified Data.ByteString as B
+import Text.Read(readMaybe)
+import System.IO(stdout)
+-- import Network.Socket(withSocketsDo)
+
+import SP6.Data.ID
+import SP6.CommonIO
 
 -- Provides HTML templates
 import qualified Html as H
@@ -19,7 +27,7 @@ import AccountDataSource
 import Credentials
 import Network
 import Types
-import Text.Read(readMaybe)
+import Utility
 
 data MyAppState = MyAppState
     { state :: IORef AppState
@@ -34,24 +42,44 @@ data UserSession = UserLoggedIn | UserLoggedOut
 
 -- TODO: Change the port
 main :: IO ()
-main = do
+main = withSocketsDo $ do
     -- Initialize a TCP server for receiving requests for AccountConfig data
+    printDebug "Reading account data from disk..."
     accountBytes <- getDataBytes
     accountBytesRef <- newIORef accountBytes
+
+    printDebug "Initializing TCP Server..."
     initTCPServer accountBytesRef
 
     -- Initialize a UDP server for sending heartbeat requests
+    printDebug "Initializing Heartbeat server..."
     initHeartbeatServer
 
+    -- Initialize Health receivers for both servers and workstations
+    printDebug "Receiving health info for servers and workstations..."
+    handle <- newMVar stdout
+    print "Created handle..."
+    (arrServerStatus, _) <- initReceiverServerStatus handle False []
+    print "Received server health..."
+    (arrWorkstationStatus, _) <- initReceiverWorkstationStatus handle False []
+    print "Received workstation health..."
+    -- arrServerStatus <- initMVarArray (minBound, maxBound) (-1, -1)
+    -- arrWorkstationStatus <- initMVarArray (minBound, maxBound) (-1, -1)
+
     -- Initialize a spock instance
+    printDebug "Initializing Spock Instance"
     ref <- newIORef Free
     acData <- getData
     dataRef <- newIORef acData
     spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref dataRef)
-    runSpock 8080 (spock spockCfg (app accountBytesRef))
+    runSpock 8080 $ spock spockCfg $ app accountBytesRef arrServerStatus arrWorkstationStatus
 
-app :: IORef B.ByteString -> SpockM () UserSession MyAppState ()
-app accountBytesRef = do
+app
+    :: IORef B.ByteString
+    -> Array ServerID (MVar (Int, Int))
+    -> Array WorkstationID (MVar (Int, Int))
+    -> SpockM () UserSession MyAppState ()
+app accountBytesRef arrServerStatus arrWorkstationStatus = do
     get root $
         redirect "/login"
 
@@ -121,22 +149,26 @@ app accountBytesRef = do
         userAuthenticated (do
             val <- runQuery $ const $ catch (do
                 -- Read latest account data
+                printDebug "Getting data from file..."
                 accountBytes <- getDataBytes
 
                 -- Update the accountDataRef
+                print "Updating the cache..."
                 atomicModifyIORef' accountBytesRef $ const (accountBytes, ())
 
                 -- Send update commands to all workstations and servers
-                sendUpdateCommands
+                print "Sending update command to all..."
+                sendUpdateCommands arrServerStatus arrWorkstationStatus
 
                 -- Send success code
+                print "Sending success code..."
                 pure "1"
                 ) errorHandler
             text val
             ) (redirect "/login")
 
     where
-        errorHandler :: SomeException -> IO ()
+        errorHandler :: SomeException -> IO T.Text
         errorHandler e = do
             putStrLn $ "Encountered error : " ++ show e
             pure "0"

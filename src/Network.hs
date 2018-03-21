@@ -1,12 +1,14 @@
-{-# LANGUAGE TupleSections #-}
 module Network(
     sendUpdateCommands,
     initTCPServer,
-    initHeartbeatServer
+    initHeartbeatServer,
+    withSocketsDo
 ) where
 
 import Types
-import SP6.Data.Command
+import Utility
+
+import SP6.Data.Account
 import SP6.Data.ID
 import SP6.CommonIO
 import SP6.Data.IOConfig
@@ -22,30 +24,12 @@ import Network.Socket.ByteString (send, sendTo)
 import Control.Monad(unless, forever, void, liftM, forM)
 import Control.Concurrent(forkIO, MVar, newMVar, readMVar, threadDelay)
 
+import Data.Serialize
 import qualified Data.Aeson as J
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import Data.Array
 import Data.Maybe(catMaybes)
-
--- VDU Helper Functions
-workstationIDToAddr :: WorkstationID -> NetworkID -> String
-workstationIDToAddr wrkID nwID = case nwID of
-    ATSNetwork1 -> ip1
-    ATSNetwork2 -> ip2
-    where
-        (_,_,_,ip1,ip2,_) = head $ dropWhile notUser asocUserIDToProfile
-        notUser (_,id,_,_,_,_) = id /= wrkID
-
-currentHealthyWorkstationsWithNetwork :: Array WorkstationID (MVar (Int, Int)) -> IO [(WorkstationID, NetworkID)]
-currentHealthyWorkstationsWithNetwork arrVCommWRK = liftM catMaybes $ forM allElems $ \ wrkID -> do
-    comm <- readMVar $ arrVCommWRK <! wrkID
-    return $ liftM (wrkID,) $ commToNetwork comm
-
-withHealthyWorkstations :: Array WorkstationID (MVar (Int, Int)) -> (HostName -> IO a) -> IO [a]
-withHealthyWorkstations arrVCommSRV process = do
-    workstationIDs <- currentHealthyWorkstationsWithNetwork arrVCommSRV
-    mapM (process . uncurry workstationIDToAddr) workstationIDs
 
 svFork :: IO () -> IO ()
 svFork = withSocketsDo . void . forkIO
@@ -55,27 +39,28 @@ svFork = withSocketsDo . void . forkIO
 -- The same IORef is updated when the user clicks on Apply Changes.
 initTCPServer :: IORef B.ByteString -> IO ()
 initTCPServer accountBytesRef = svFork $ do
-    -- TODO: Change this port
-    bracket (openSockTCPServer "port") close $ \sock -> forever $ do
+    printDebug "Creating socket and binding..."
+    bracket (openSockTCPServer portNumberAccountServer) close $ \sock -> forever $ do
+        printDebug $ "Opened socket, waiting for connections..."
         (conn, peer) <- accept sock
+        printDebug $ "Accepted connection from " ++ (show peer)
         forkIO $ sendAccountData conn
     where
         sendAccountData conn = void $ do
             accountBytes <- readIORef accountBytesRef
             send conn accountBytes
+            close conn
 
--- TODO: Change this to use addTimer
 initHeartbeatServer :: IO ()
-initHeartbeatServer = svFork $ bracket open close $ \sock -> forever $ do
-    -- Broadcast Heartbeat for Network 1
-    -- TODO: Change the address and port
-    sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,1,1)
-    -- Broadcast Heartbeat for Network 2
-    -- TODO: Change the address and port
-    sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,2,1)
-
-    -- Wait 500ms before sending next heartbeat
-    threadDelay 500000
+initHeartbeatServer = svFork $ bracket open close $ \sock -> do
+    let hints = defaultHints {addrSocketType = Datagram}
+    addr1:_ <- getAddrInfo (Just hints) (Just (networkToAddr ATSNetwork1)) (Just portNumberASPMHeartBeat)
+    addr2:_ <- getAddrInfo (Just hints) (Just (networkToAddr ATSNetwork2)) (Just portNumberASPMHeartBeat)
+    addTimer 500000 $ void $ do
+        -- Broadcast Heartbeat for Network 1
+        sendTo sock (encode APSMHeartBeat) $ addrAddress addr1
+        -- Broadcast Heartbeat for Network 2
+        sendTo sock (encode APSMHeartBeat) $ addrAddress addr2
     where
         open = do
             sock <- socket AF_INET Datagram defaultProtocol
@@ -83,20 +68,18 @@ initHeartbeatServer = svFork $ bracket open close $ \sock -> forever $ do
             pure sock
 
 
-sendUpdateCommands :: IO ()
-sendUpdateCommands = svFork $ do
-    handle <- newMVar stdout
-    -- Get the health status for servers
-    (arrServerStatus, _) <- initReceiverServerStatus handle False []
+sendUpdateCommands :: Array ServerID (MVar (Int, Int)) -> Array WorkstationID (MVar (Int, Int)) -> IO ()
+sendUpdateCommands arrServerStatus arrWorkstationStatus = svFork $ do
+    health <- readMVar $ arrWorkstationStatus <! WS801
+    print health
     withHealthyServers arrServerStatus sendUpdateCommandToHost
-    -- Get the health status for workstations
-    (arrWorkstationStatus, _) <- initReceiverWorkstationStatus handle False []
-    void $ withHealthyWorkstations arrWorkstationStatus sendUpdateCommandToHost
+    withHealthyWorkstations arrWorkstationStatus sendUpdateCommandToHost
+    -- sendUpdateCommandToHost "172.21.102.1"
+    pure ()
 
 sendUpdateCommandToHost :: HostName -> IO ()
-sendUpdateCommandToHost host = withSocketsDo $ do
-    -- TODO: Insert valid port number here
-    bracket (openSockTCPClient host "port") close $ \sock -> void
-        $ send sock
-        $ LB.toStrict
-        $ J.encode UpdateRequestCommand
+sendUpdateCommandToHost host = svFork $ do
+    putStrLn $ "Sending update command to " ++ host
+    bracket (openSockTCPClient host updateRequestCommandPortNumber) close $ \sock -> void $ do
+        send sock $ LB.toStrict $ J.encode UpdateRequestCommand
+        close sock

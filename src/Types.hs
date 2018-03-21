@@ -3,8 +3,7 @@
 module Types(
     AccountMode(ADD,EDIT),
     accountFilePath,
-    heartbeatClientPort,
-    heartbeatData
+    printDebug
 ) where
 
 import SP6.Data.Account
@@ -22,6 +21,10 @@ import GHC.Generics
 
 import Network.Socket(PortNumber)
 import Data.Word(Word8)
+
+import System.IO
+import Control.Concurrent
+
 -- Account Mode
 data AccountMode = ADD | EDIT
     deriving Eq
@@ -62,10 +65,11 @@ instance FromJSON DwellTimeSets where
 -- Common variables
 accountFilePath = "data/AccountData"
 
--- TODO: Remove this
-heartbeatClientPort :: PortNumber
-heartbeatClientPort = 61001
-
--- TODO: Remove this
-heartbeatData :: [Word8]
-heartbeatData = [1]
+-- Utility
+printDebug :: String -> IO ()
+printDebug = print
+-- printDebug str = do
+--     stRef <- newMVar stdout
+--     withMVar stRef $ \ h -> do
+--         hPutStrLn h str
+--         hFlush h

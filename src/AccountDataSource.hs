@@ -18,8 +18,11 @@ import SP6.Data.ID
 import SP6.Data.Command
 import Types
 
+import Data.Derive.Class.Default
+
 import qualified Data.Map.Strict as M
 
+import Control.Exception.Base(SomeException, catch)
 import Text.Read(readMaybe)
 import Data.Either(either)
 
@@ -32,11 +35,15 @@ import Data.Aeson
 
 
 getDataBytes :: IO B.ByteString
-getDataBytes = B.readFile accountFilePath
+getDataBytes = catch (B.readFile accountFilePath) handler
+    where
+    handler :: SomeException -> IO B.ByteString
+    handler e = do
+        putStrLn $ "Could not read data from file. Resorting to default values. Error : " ++ (show e)
+        pure $ S.encode (def :: AccountAndSystemParameterConfig)
 
--- TODO: Convert the exception being thrown here into default data.
 getData :: IO AccountAndSystemParameterConfig
-getData = either (const $ error "Could not read account data.") id
+getData = either (const def) id
     <$> S.decode
     <$> getDataBytes
 

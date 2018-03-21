@@ -22,6 +22,7 @@ library
                       , Types
                       , Credentials
                       , Network
+                      , Utility
   build-depends:        base
                       , containers
                       , VDU
@@ -37,6 +38,7 @@ library
                       , unordered-containers
                       , hashable
                       , network
+                      , derive
   default-language:    Haskell2010
 
 executable ASPMS
@@ -47,5 +49,8 @@ executable ASPMS
                      , Spock >= 0.11
                      , mtl
                      , text
+                     , bytestring
+                     , array
                      , ASPMS
+                     , VDU
   default-language:    Haskell2010
