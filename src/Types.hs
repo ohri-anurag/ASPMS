@@ -1,7 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Types(
-    AccountMode(ADD,EDIT)
+    AccountMode(ADD,EDIT),
+    accountFilePath,
+    heartbeatServerPort,
+    heartbeatClientPort,
+    heartbeatData
 ) where
 
 import SP6.Data.Account
@@ -17,6 +21,8 @@ import Data.Hashable
 import Data.Serialize as S
 import GHC.Generics
 
+import Network.Socket(PortNumber)
+import Data.Word(Word8)
 -- Account Mode
 data AccountMode = ADD | EDIT
     deriving Eq
@@ -53,3 +59,13 @@ instance FromJSON DwellTimeSets where
         dwellTimeSet2 <- o .: "dwellTimeSet2"
         dwellTimeSet3 <- o .: "dwellTimeSet3"
         pure $ DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3
+
+-- Common variables
+accountFilePath = "data/AccountData"
+heartbeatServerPort = "61001"
+
+heartbeatClientPort :: PortNumber
+heartbeatClientPort = 61001
+
+heartbeatData :: [Word8]
+heartbeatData = [1]

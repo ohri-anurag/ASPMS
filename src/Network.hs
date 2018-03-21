@@ -1,7 +1,8 @@
 {-# LANGUAGE TupleSections #-}
 module Network(
     sendUpdateCommands,
-    initTCPServer
+    initTCPServer,
+    initHeartbeatServer
 ) where
 
 import Types
@@ -13,13 +14,13 @@ import SP6.Data.TimetableRegulation(withHealthyServers, commToNetwork)
 import SP6.Data.Common((<!), allElems)
 
 import System.IO(stdout)
-
+import Data.IORef
 import Control.Exception
-import Network.Socket hiding (recv, send)
-import Network.Socket.ByteString (recv, send)
+import Network.Socket hiding (send, sendTo)
+import Network.Socket.ByteString (send, sendTo)
 
 import Control.Monad(unless, forever, void, liftM, forM)
-import Control.Concurrent(forkIO, MVar, newMVar, readMVar)
+import Control.Concurrent(forkIO, MVar, newMVar, readMVar, threadDelay)
 
 import qualified Data.Aeson as J
 import qualified Data.ByteString as B
@@ -46,13 +47,32 @@ withHealthyWorkstations arrVCommSRV process = do
     workstationIDs <- currentHealthyWorkstationsWithNetwork arrVCommSRV
     mapM (process . uncurry workstationIDToAddr) workstationIDs
 
-initTCPServer :: IO ()
--- TODO: Change this port
-initTCPServer = void $ forkIO $ bracket (openSockTCPServer "port") close $ \sock -> forever $ do
-    bytes <- B.readFile "data/AccountData"
-    bytes `seq` do
+-- This function takes a bytestring IORef and returns the same bytestring
+-- whenever it receives a request.
+-- The same IORef is updated when the user clicks on Apply Changes.
+initTCPServer :: IORef B.ByteString -> IO ()
+initTCPServer accountBytesRef = void $ forkIO $ do
+    -- TODO: Change this port
+    bracket (openSockTCPServer "port") close $ \sock -> forever $ do
         (conn, peer) <- accept sock
-        forkIO $ void $ send conn bytes
+        forkIO $ sendAccountData conn
+    where
+        sendAccountData conn = void $ do
+            accountBytes <- readIORef accountBytesRef
+            send conn accountBytes
+
+initHeartbeatServer :: IO ()
+initHeartbeatServer = void $ forkIO $ do
+    bracket (openSockUDPServer heartbeatServerPort) close $ \sock -> forever $ do
+        -- Broadcast Heartbeat for Network 1
+        -- TODO: Change the address
+        sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,1,1)
+        -- Broadcast Heartbeat for Network 2
+        -- TODO: Change the address
+        sendTo sock (B.pack heartbeatData) $ SockAddrInet heartbeatClientPort $ tupleToHostAddress (127,0,2,1)
+
+        -- Wait 500ms before sending next heartbeat
+        threadDelay 500000
 
 sendUpdateCommands :: IO ()
 sendUpdateCommands = void $ forkIO $ do

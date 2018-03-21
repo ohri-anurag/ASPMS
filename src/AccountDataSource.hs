@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module AccountDataSource (
+    getDataBytes,
     getData,
     putData,
     updateAccount,
@@ -30,14 +31,17 @@ import qualified Data.Serialize as S
 import Data.Aeson
 
 
+getDataBytes :: IO B.ByteString
+getDataBytes = B.readFile accountFilePath
+
 -- TODO: Convert the exception being thrown here into default data.
 getData :: IO AccountAndSystemParameterConfig
 getData = either (const $ error "Could not read account data.") id
     <$> S.decode
-    <$> B.readFile "data/AccountData"
+    <$> getDataBytes
 
 putData :: AccountAndSystemParameterConfig -> IO ()
-putData accountData = B.writeFile "data/AccountData" (S.encode accountData)
+putData accountData = B.writeFile accountFilePath (S.encode accountData)
 
 -- Assumption that JSON data is being sent to the server.
 createAccount :: [(T.Text, T.Text)] -> Maybe (UserID2, Account)

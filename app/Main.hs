@@ -9,6 +9,7 @@ import Control.Monad.Trans
 import Control.Exception.Base(catch, SomeException(..))
 import Data.IORef
 import qualified Data.Text as T
+import qualified Data.ByteString as B
 
 -- Provides HTML templates
 import qualified Html as H
@@ -17,6 +18,7 @@ import qualified Html as H
 import AccountDataSource
 import Credentials
 import Network
+import Types
 import Text.Read(readMaybe)
 
 data MyAppState = MyAppState
@@ -33,18 +35,23 @@ data UserSession = UserLoggedIn | UserLoggedOut
 -- TODO: Change the port
 main :: IO ()
 main = do
+    -- Initialize a TCP server for receiving requests for AccountConfig data
+    accountBytes <- getDataBytes
+    accountBytesRef <- newIORef accountBytes
+    initTCPServer accountBytesRef
+
+    -- Initialize a UDP server for sending heartbeat requests
+    initHeartbeatServer
+
     -- Initialize a spock instance
     ref <- newIORef Free
     acData <- getData
     dataRef <- newIORef acData
     spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref dataRef)
-    runSpock 8080 (spock spockCfg app)
+    runSpock 8080 (spock spockCfg (app accountBytesRef))
 
-    -- Initialize a TCP server for receiving requests for AccountConfig
-    initTCPServer
-
-app :: SpockM () UserSession MyAppState ()
-app = do
+app :: IORef B.ByteString -> SpockM () UserSession MyAppState ()
+app accountBytesRef = do
     get root $
         redirect "/login"
 
@@ -113,11 +120,20 @@ app = do
     post "applyChanges" $
         userAuthenticated (do
             val <- runQuery $ const $ catch (do
+                -- Read latest account data
+                accountBytes <- getDataBytes
+
+                -- Update the accountDataRef
+                atomicModifyIORef' accountBytesRef $ const (accountBytes, ())
+
+                -- Send update commands to all workstations and servers
                 sendUpdateCommands
+
+                -- Send success code
                 pure "1"
-                ) (\(SomeException e) -> do
+                ) (\ (SomeException e) -> do
                     print e
-                    pure "0") -- :: SomeException -> IO T.Text)
+                    pure "0")
             text val
             ) (redirect "/login")
 
