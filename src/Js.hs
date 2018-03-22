@@ -15,6 +15,7 @@ import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
+-- TODO: Add a confirmation box for Apply Changes and Delete Account
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {
@@ -69,6 +70,18 @@ validation = [jmacro|
                 var regex = /^([1-9]\d*(\.\d*[1-9])?|0\.\d*[1-9])$/;
                 return regex.test(val)
             }) "Field must have a non-zero positive number."
+        }
+        fun alphaNumAndSpaces id {
+            return validate id (\ val {
+                var regex = /^[\dA-Za-z]+(\s[\dA-Za-z]+)*$/;
+                return regex.test(val)
+            }) "Field must consist of alphabets, numbers and space(only 1 allowed between words)."
+        }
+        fun noSpaces id {
+            return validate id (\ val {
+                var regex = /^\S+$/;
+                return regex.test(val)
+            }) "Field must not contain spaces."
         }
     |]
 
@@ -264,7 +277,14 @@ account mode = show $ renderJs $ sendXHRExp <>
                     aocLineOverviewList = document.getElementById('aocLineOverviewDiv').querySelectorAll('input'),
                     userID = `(userIDExp)`;
 
-                var check = `(userIDCheck)` && notEmpty('accountName') && noMoreThan10('accountName') && notEmpty('accountPassword') & noMoreThan10('accountPassword');
+                var check = 
+                    `(userIDCheck)` &&
+                    notEmpty('accountName') &&
+                    noMoreThan10('accountName') &&
+                    alphaNumAndSpaces('accountName') &&
+                    notEmpty('accountPassword') &&
+                    noMoreThan10('accountPassword') &&
+                    noSpaces('accountPassword');
                 if(!check)
                     return;
 
@@ -313,7 +333,7 @@ account mode = show $ renderJs $ sendXHRExp <>
             else [jmacroE|document.getElementById('userID').value|]
         userIDCheck = if mode == EDIT
             then [jmacroE|true|]
-            else [jmacroE|notEmpty('userID') && noMoreThan10('userID')|]
+            else [jmacroE|notEmpty('userID') && noMoreThan10('userID') && alphaNumAndSpaces('userID')|]
         redirect = if mode == EDIT
             then [jmacro|location.reload()|]
             else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"))|]

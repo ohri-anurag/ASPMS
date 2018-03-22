@@ -11,7 +11,7 @@ storePassword :: T.Text -> IO ()
 storePassword = B.writeFile "data/Credentials" . TE.encodeUtf8
 
 validatePassword :: T.Text -> IO Bool
-validatePassword text = ((==) text . TE.decodeUtf8) <$> catch (B.readFile "data/Credentials") handler
+validatePassword text = ((==) text . TE.decodeUtf8) <$> catch (B.readFile credentialsPath) handler
     where
         handler :: SomeException -> IO B.ByteString
         handler e = do

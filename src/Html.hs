@@ -11,6 +11,7 @@ import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html.Renderer.Text(renderHtml)
 
+import qualified Data.Array as AR
 -- CSS
 import qualified Css as CSS
 
@@ -219,6 +220,9 @@ labelledInput label' name' holder val = H.div ! class_ "row" $ do
     where
         addValue elem = maybe elem ((!) elem . value . toValue) val
 
+showStopPoint :: StopPointCode -> String
+showStopPoint spc = maybe (show spc) (\(sc,pn) -> show sc ++ " " ++ show pn) (arrSpCodeToStCode AR.! spc)
+
 -- Home page helpers
 accountAndSystemParameterView :: AccountAndSystemParameterConfig -> Html
 accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig systemParams) = do
@@ -259,9 +263,10 @@ accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
         acrList = maybe (zip [minBound..maxBound] $ repeat False) Prelude.id (assocs <$> accountACR <$> account)
 
 acrView :: (OC_ID, Bool) -> Html
-acrView (ocId, isAllowed) = checkbox (toHtml ocIdStr) (toValue ocIdStr) isAllowed False
+acrView (ocId, isAllowed) = checkbox (toHtml labelStr) (toValue idStr) isAllowed False
     where
-        ocIdStr = show ocId
+        idStr = show ocId
+        labelStr = show $ arrOCToStCode AR.! ocId
 
 areaOfControlView :: Maybe AreaOfControl -> Html
 areaOfControlView areaOfControl = do
@@ -330,12 +335,12 @@ runningTimeListView code rtl = do
 runningTimeView :: String -> ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
 runningTimeView code ((stc1, stc2), diffTime) = labelledInput label (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
     where
-        stc1Str = show stc1
-        stc2Str = show stc2
+        stc1Str = showStopPoint stc1
+        stc2Str = showStopPoint stc2
         label = do
             H.div ! class_ "from" $ (toHtml stc1Str)
             H.div ! class_ "to" $ (toHtml stc2Str)
-        name = code ++ stc1Str ++ "," ++ stc2Str
+        name = code ++ (show stc1) ++ "," ++ (show stc2)
 
 -- Dwell Time Sets Page Helpers
 dwellTimeSetsView :: DwellTimeSets -> Html
@@ -359,8 +364,10 @@ dwellTimeSetView code dts = do
     mapM_ (dwellTimeView code) $ M.toList dts
 
 dwellTimeView :: String -> (StopPointCode, NominalDiffTime) -> Html
-dwellTimeView code (spc, diffTime) = labelledInput (toHtml spcStr) (toValue $ code ++ spcStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
-    where spcStr = show spc
+dwellTimeView code (spc, diffTime) = labelledInput (toHtml labelStr) (toValue $ code ++ idStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
+    where
+        labelStr = showStopPoint spc
+        idStr = show spc
 
 -- Alarm Levels Page Helpers
 alarmLevelView :: (EventTag, AlarmLevel) -> Html

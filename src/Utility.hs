@@ -4,9 +4,11 @@ module Utility(
     currentHealthyWorkstationsWithNetwork,
     withHealthyWorkstations,
     accountFilePath,
+    accountFileCopy,
     debugHeartBeat,
     debugMain,
-    debugTCP
+    debugTCP,
+    credentialsPath
 ) where
 
 import Network.Socket
@@ -50,6 +52,12 @@ withHealthyWorkstations arrVCommWRK process = do
 -- Common variables
 accountFilePath :: FilePath
 accountFilePath = "data/AccountData"
+
+accountFileCopy :: FilePath
+accountFileCopy = "data/AccountDataCopy"
+
+credentialsPath :: FilePath
+credentialsPath = "data/Credentials"
 
 -- Debugging Functions
 debugTCP :: String -> IO ()

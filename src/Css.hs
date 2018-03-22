@@ -211,15 +211,19 @@ accountDetailsCss = render $ do
     ".form" ? do
         display flex
         flexDirection column
-    "#accountAOC" ** div ? textAlign (alignSide sideLeft)
+    ("#accountAOC" <> "#accountACR") ** div ? textAlign (alignSide sideLeft)
     "#accountAOC" |> div ? marginLeft (px 40)
     "#aocLineOverviewDiv .form" ? do
         marginLeft $ px 30
+    "#accountACR" ** div ? do
+        width $ pct 30
+        margin (px 0) auto (px 0) auto
     "#submit" ? do
         width $ px 150
         padding (px 5) (px 5) (px 5) (px 5)
         margin (px 10) auto (px 0) auto
         fontSize $ px 15
+    "input[type=checkbox]" ? margin (px 2) (px 2) (px 2) (px 2)
 
 runningTimeListsCss :: T.Text
 runningTimeListsCss = render $ do

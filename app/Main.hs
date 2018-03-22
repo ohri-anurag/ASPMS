@@ -17,7 +17,7 @@ import System.IO(stdout)
 -- import Network.Socket(withSocketsDo)
 
 import SP6.Data.ID
-import SP6.CommonIO
+import SP6.CommonIO hiding (accountFilePath)
 
 -- Provides HTML templates
 import qualified Html as H
@@ -44,8 +44,8 @@ data UserSession = UserLoggedIn | UserLoggedOut
 main :: IO ()
 main = withSocketsDo $ do
     -- Initialize a TCP server for receiving requests for AccountConfig data
-    debugMain "Reading account data from disk..."
-    accountBytes <- getDataBytes
+    debugMain "Reading applied account data from disk..."
+    accountBytes <- getDataBytes accountFileCopy
     accountBytesRef <- newIORef accountBytes
 
     debugMain "Initializing TCP Server..."
@@ -65,11 +65,12 @@ main = withSocketsDo $ do
     -- arrWorkstationStatus <- initMVarArray (minBound, maxBound) (-1, -1)
 
     -- Initialize a spock instance
-    debugMain "Initializing Spock Instance"
-    ref <- newIORef Free
+    stateRef <- newIORef Free
+    debugMain "Reading saved account data from disk..."
     acData <- getData
     dataRef <- newIORef acData
-    spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState ref dataRef)
+    spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState stateRef dataRef)
+    debugMain "Initializing Spock Instance"
     runSpock 8080 $ spock spockCfg $ app accountBytesRef arrServerStatus arrWorkstationStatus
 
 app
@@ -151,12 +152,16 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         userAuthenticated (do
             val <- runQuery $ const $ catch (do
                 -- Read latest account data
-                debugMain "Getting data from file..."
-                accountBytes <- getDataBytes
+                debugMain "Getting saved data from file..."
+                accountBytes <- getDataBytes accountFilePath
 
                 -- Update the accountDataRef
                 debugMain "Updating the cache..."
                 atomicModifyIORef' accountBytesRef $ const (accountBytes, ())
+
+                -- Update the copy
+                debugMain "Updating the applied data..."
+                B.writeFile accountFileCopy accountBytes
 
                 -- Send update commands to all workstations and servers
                 debugMain "Sending update command to all..."

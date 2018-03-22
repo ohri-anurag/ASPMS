@@ -36,8 +36,8 @@ import qualified Data.Serialize as S
 import Data.Aeson
 
 
-getDataBytes :: IO B.ByteString
-getDataBytes = catch (B.readFile accountFilePath) handler
+getDataBytes :: FilePath -> IO B.ByteString
+getDataBytes path = catch (B.readFile path) handler
     where
     handler :: SomeException -> IO B.ByteString
     handler e = do
@@ -47,7 +47,7 @@ getDataBytes = catch (B.readFile accountFilePath) handler
 getData :: IO AccountAndSystemParameterConfig
 getData = either (const def) id
     <$> S.decode
-    <$> getDataBytes
+    <$> getDataBytes accountFilePath
 
 putData :: AccountAndSystemParameterConfig -> IO ()
 putData accountData = B.writeFile accountFilePath (S.encode accountData)
