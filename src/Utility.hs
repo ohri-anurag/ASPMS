@@ -51,13 +51,13 @@ withHealthyWorkstations arrVCommWRK process = do
 
 -- Common variables
 accountFilePath :: FilePath
-accountFilePath = "data/AccountData"
+accountFilePath = "AccountData"
 
 accountFileCopy :: FilePath
-accountFileCopy = "data/AccountDataCopy"
+accountFileCopy = "AccountDataCopy"
 
 credentialsPath :: FilePath
-credentialsPath = "data/Credentials"
+credentialsPath = "Credentials"
 
 -- Debugging Functions
 debugTCP :: String -> IO ()

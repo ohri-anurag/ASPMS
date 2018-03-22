@@ -8,7 +8,7 @@ import qualified Data.ByteString as B
 import Control.Exception.Base(SomeException, catch)
 
 storePassword :: T.Text -> IO ()
-storePassword = B.writeFile "data/Credentials" . TE.encodeUtf8
+storePassword = B.writeFile credentialsPath . TE.encodeUtf8
 
 validatePassword :: T.Text -> IO Bool
 validatePassword text = ((==) text . TE.decodeUtf8) <$> catch (B.readFile credentialsPath) handler
