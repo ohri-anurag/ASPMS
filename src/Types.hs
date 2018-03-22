@@ -1,9 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Types(
-    AccountMode(ADD,EDIT),
-    accountFilePath,
-    printDebug
+    AccountMode(ADD,EDIT)
 ) where
 
 import SP6.Data.Account
@@ -61,15 +59,3 @@ instance FromJSON DwellTimeSets where
         dwellTimeSet2 <- o .: "dwellTimeSet2"
         dwellTimeSet3 <- o .: "dwellTimeSet3"
         pure $ DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3
-
--- Common variables
-accountFilePath = "data/AccountData"
-
--- Utility
-printDebug :: String -> IO ()
-printDebug = print
--- printDebug str = do
---     stRef <- newMVar stdout
---     withMVar stRef $ \ h -> do
---         hPutStrLn h str
---         hFlush h

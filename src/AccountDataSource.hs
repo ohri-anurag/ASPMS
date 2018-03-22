@@ -16,7 +16,9 @@ module AccountDataSource (
 import SP6.Data.Account
 import SP6.Data.ID
 import SP6.Data.Command
+
 import Types
+import Utility
 
 import Data.Derive.Class.Default
 
@@ -39,7 +41,7 @@ getDataBytes = catch (B.readFile accountFilePath) handler
     where
     handler :: SomeException -> IO B.ByteString
     handler e = do
-        putStrLn $ "Could not read data from file. Resorting to default values. Error : " ++ (show e)
+        debugMain $ "Could not read data from file. Resorting to default values. Error : " ++ (show e)
         pure $ S.encode (def :: AccountAndSystemParameterConfig)
 
 getData :: IO AccountAndSystemParameterConfig

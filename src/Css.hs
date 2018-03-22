@@ -192,7 +192,7 @@ homeCss = render $ do
     "#saveButton" ? do
         marginTop $ px 10
         fontSize $ px 15
-        padding (px 2) (px 2) (px 2) (px 2)
+    ".deleteButton" <> "#saveButton" ? padding (px 2) (px 2) (px 2) (px 2)
     "#runningTimeLists" ? visibility hidden
     "#dwellTimeSets" ? visibility hidden
     "#alarmLevels" ? visibility hidden

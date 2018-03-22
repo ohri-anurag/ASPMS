@@ -44,30 +44,28 @@ data UserSession = UserLoggedIn | UserLoggedOut
 main :: IO ()
 main = withSocketsDo $ do
     -- Initialize a TCP server for receiving requests for AccountConfig data
-    printDebug "Reading account data from disk..."
+    debugMain "Reading account data from disk..."
     accountBytes <- getDataBytes
     accountBytesRef <- newIORef accountBytes
 
-    printDebug "Initializing TCP Server..."
+    debugMain "Initializing TCP Server..."
     initTCPServer accountBytesRef
 
     -- Initialize a UDP server for sending heartbeat requests
-    printDebug "Initializing Heartbeat server..."
+    debugMain "Initializing Heartbeat server..."
     initHeartbeatServer
 
     -- Initialize Health receivers for both servers and workstations
-    printDebug "Receiving health info for servers and workstations..."
     handle <- newMVar stdout
-    print "Created handle..."
+    debugMain "Receiving server health..."
     (arrServerStatus, _) <- initReceiverServerStatus handle False []
-    print "Received server health..."
+    debugMain "Receiving workstation health..."
     (arrWorkstationStatus, _) <- initReceiverWorkstationStatus handle False []
-    print "Received workstation health..."
     -- arrServerStatus <- initMVarArray (minBound, maxBound) (-1, -1)
     -- arrWorkstationStatus <- initMVarArray (minBound, maxBound) (-1, -1)
 
     -- Initialize a spock instance
-    printDebug "Initializing Spock Instance"
+    debugMain "Initializing Spock Instance"
     ref <- newIORef Free
     acData <- getData
     dataRef <- newIORef acData
@@ -89,7 +87,9 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         userAuthenticated (redirect "/home") (do
             ps <- paramsPost
             maybe (redirect "/login") (\pwd -> do
-                b <- runQuery $ const $ validatePassword pwd
+                b <- runQuery $ const $ do
+                    debugMain "Validating password..."
+                    validatePassword pwd
                 if b
                     then login >> redirect "/home"
                     else redirect "/login"
@@ -108,7 +108,9 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         userAuthenticated (do
             ps <- paramsPost
             maybe (text "0") (\pwd -> do
-                runQuery $ const $ storePassword pwd
+                runQuery $ const $ do
+                    debugMain "Storing new password..."
+                    storePassword pwd
                 text "1"
                 ) (lookup "password" ps)
             ) (redirect "/login")
@@ -149,19 +151,19 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         userAuthenticated (do
             val <- runQuery $ const $ catch (do
                 -- Read latest account data
-                printDebug "Getting data from file..."
+                debugMain "Getting data from file..."
                 accountBytes <- getDataBytes
 
                 -- Update the accountDataRef
-                print "Updating the cache..."
+                debugMain "Updating the cache..."
                 atomicModifyIORef' accountBytesRef $ const (accountBytes, ())
 
                 -- Send update commands to all workstations and servers
-                print "Sending update command to all..."
+                debugMain "Sending update command to all..."
                 sendUpdateCommands arrServerStatus arrWorkstationStatus
 
                 -- Send success code
-                print "Sending success code..."
+                debugMain "Sending success code..."
                 pure "1"
                 ) errorHandler
             text val
@@ -192,6 +194,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                     -> SpockAction () UserSession MyAppState ()
                 updateCache cache newData = do
                     runQuery $ const $ do
+                        debugMain "Changes saved..."
                         putData newData
                         atomicModifyIORef' cache $ const (newData,())
                     text "1"

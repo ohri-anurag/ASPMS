@@ -39,11 +39,11 @@ svFork = withSocketsDo . void . forkIO
 -- The same IORef is updated when the user clicks on Apply Changes.
 initTCPServer :: IORef B.ByteString -> IO ()
 initTCPServer accountBytesRef = svFork $ do
-    printDebug "Creating socket and binding..."
+    debugTCP "Creating socket and binding..."
     bracket (openSockTCPServer portNumberAccountServer) close $ \sock -> forever $ do
-        printDebug $ "Opened socket, waiting for connections..."
+        debugTCP "Opened socket, waiting for connections..."
         (conn, peer) <- accept sock
-        printDebug $ "Accepted connection from " ++ (show peer)
+        debugTCP $ "Accepted connection from " ++ (show peer)
         forkIO $ sendAccountData conn
     where
         sendAccountData conn = void $ do
@@ -70,16 +70,15 @@ initHeartbeatServer = svFork $ bracket open close $ \sock -> do
 
 sendUpdateCommands :: Array ServerID (MVar (Int, Int)) -> Array WorkstationID (MVar (Int, Int)) -> IO ()
 sendUpdateCommands arrServerStatus arrWorkstationStatus = svFork $ do
-    health <- readMVar $ arrWorkstationStatus <! WS801
-    print health
+    debugMain "Sending update command to servers..."
     withHealthyServers arrServerStatus sendUpdateCommandToHost
+    debugMain "Sending update command to workstations..."
     withHealthyWorkstations arrWorkstationStatus sendUpdateCommandToHost
-    -- sendUpdateCommandToHost "172.21.102.1"
     pure ()
 
 sendUpdateCommandToHost :: HostName -> IO ()
 sendUpdateCommandToHost host = svFork $ do
-    putStrLn $ "Sending update command to " ++ host
+    debugMain $ "Sending update command to " ++ host
     bracket (openSockTCPClient host updateRequestCommandPortNumber) close $ \sock -> void $ do
         send sock $ LB.toStrict $ J.encode UpdateRequestCommand
         close sock
