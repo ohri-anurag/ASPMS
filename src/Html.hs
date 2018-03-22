@@ -62,6 +62,10 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
         script ! type_ "text/javascript" $ toHtml $ JS.home
     H.body $ do
         dialog
+        H.div ! A.id "confirm" $ do
+            H.span ! A.id "confirmText" $ "Test"
+            button ! A.id "yes" $ "Yes"
+            button ! A.id "no" $ "No"
         H.div ! A.id "container" $ do
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "tabContainer" $ do

@@ -51,7 +51,6 @@ dialogCss = do
     "#dialogButton" ? do
         position absolute
         padding (px 2) (px 2) (px 2) (px 2)
-        margin (px 0) auto (px 0) auto
         bottom $ px 10
         left $ pct 45
         width $ pct 10
@@ -196,6 +195,30 @@ homeCss = render $ do
     "#runningTimeLists" ? visibility hidden
     "#dwellTimeSets" ? visibility hidden
     "#alarmLevels" ? visibility hidden
+    "#confirm" ? do
+        position fixed
+        width $ pct 20
+        height $ pct 12
+        top $ pct 44
+        left $ pct 40
+        zIndex (-1)
+        opacity 0
+        backgroundColor gray
+    "#confirmText" ? do
+        fontSize $ px 18
+        position absolute
+        padding (px 10) (px 10) (px 10) (px 10)
+        margin (px 0) auto (px 0) auto
+        top $ px 0
+        left $ px 0
+        width $ pct 100
+    "#yes" <> "#no" ? do
+        position absolute
+        padding (px 2) (px 2) (px 2) (px 2)
+        bottom $ px 10
+        width $ pct 10
+    "#yes" ? left (pct 25)
+    "#no" ? left (pct 65)
 
 accountDetailsCss :: T.Text
 accountDetailsCss = render $ do

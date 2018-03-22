@@ -15,7 +15,6 @@ import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
--- TODO: Add a confirmation box for Apply Changes and Delete Account
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {
@@ -180,6 +179,26 @@ home = show $ renderJs $ sendXHRExp <>
                 toShow.style.visibility = 'visible';
             }
         };
+        fun showConfirmationDialog text {
+            var screen = document.getElementById('screen'),
+                confirm = document.getElementById('confirm'),
+                confirmText = document.getElementById('confirmText');
+            
+            confirmText.innerHTML = text;
+            screen.style.opacity = 0.7;
+            screen.style.zIndex = 1;
+            confirm.style.opacity = 1;
+            confirm.style.zIndex = 2;
+        }
+        fun hideConfirmationDialog {
+            var screen = document.getElementById('screen'),
+                confirm = document.getElementById('confirm');
+
+            screen.style.opacity = 0;
+            screen.style.zIndex = -1;
+            confirm.style.opacity = 0;
+            confirm.style.zIndex = -1;
+        }
         window.onload = \ {
             var accountsViewButton = document.getElementById('accountsViewButton'),
                 systemParamsViewButton = document.getElementById('systemParamsViewButton');
@@ -190,31 +209,43 @@ home = show $ renderJs $ sendXHRExp <>
                 toggleTabView(VIEW.SYSTEM_PARAMS);
             };
 
-            var apply = document.getElementById('apply');
-            apply.onclick = \ {
-                sendXHR("/applyChanges", "",{
-                    success: \ {
-                        console.log("Success!");
-                    },
-                    failure: \ {
-                        console.log("Encountered an error");
-                    }
-                });
-            };
-
-            var i, deleteButtons = document.querySelectorAll('.deleteButton');
-            for(i=0; i<deleteButtons.length; ++i) {
-                deleteButtons[i].onclick = \ {
-                    var id = this.getAttribute('id');
-                    sendXHR("/deleteAccount", "userID=" + id,{
+            var apply = document.getElementById('apply'),
+                yes = document.getElementById('yes'),
+                no = document.getElementById('no');
+            no.onclick = hideConfirmationDialog;
+            apply.onclick = \{
+                yes.onclick = \{
+                    sendXHR("/applyChanges", "",{
                         success: \ {
-                            location.reload();
+                            console.log("Success!");
                         },
                         failure: \ {
                             console.log("Encountered an error");
                         }
                     });
-                }
+                    hideConfirmationDialog();
+                };
+                showConfirmationDialog("This will send the latest information to all servers and workstations. Proceed?");
+            };
+
+            var i, deleteButtons = document.querySelectorAll('.deleteButton');
+            for(i=0; i<deleteButtons.length; ++i) {
+                deleteButtons[i].onclick = \ {
+                    var self = this;
+                    yes.onclick = \{
+                        var id = self.getAttribute('id');
+                        sendXHR("/deleteAccount", "userID=" + id,{
+                            success: \ {
+                                location.reload();
+                            },
+                            failure: \ {
+                                console.log("Encountered an error");
+                            }
+                        });
+                        hideConfirmationDialog();
+                    };
+                    showConfirmationDialog("Delete Account?");
+                };
             }
 
             var saveButton = document.getElementById('saveButton'),
