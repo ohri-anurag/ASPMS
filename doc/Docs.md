@@ -182,6 +182,7 @@ This link can be clicked to open the Alarm Levels page.
 This page allows the user to add a new account to ASPMS.
 
 The following table explains each part of the page:
+
 | Label            | Value                                                             |
 | ---------------- | ----------------------------------------------------------------- |
 | User Id          | Enter the user ID for the new account.                            |
@@ -193,6 +194,7 @@ The following table explains each part of the page:
 *Accepted Values*
 
 The following table lists the accepted values for the text boxes on the Add Account page
+
 | Field Name       | Accepted Value                                                                                                                                           |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | User Id          | Alphabets(A-Z,a-z), Numbers(0-9) and spaces are allowed. Only one space allowed between words. Should **NOT** be empty. Maximum length is 25 characters. |
