@@ -160,10 +160,10 @@ The values acceptable for each of the above parameters are documented in the tab
 | Tunnel Limit                     | Value must be a number **greater than 0** and **lesser than or equal to 5**, decimals are **NOT** allowed. |
 
 
-When viewing the System Parameters view, there are 3 more links available in the Sidebar.
-
 >**NOTE :** New Account cannot be added if invalid information is provided. Appropriate error message will be displayed.
 ![Error](img/ValidationSystemParameter.png)
+
+When viewing the System Parameters view, there are 3 more links available in the Sidebar.
 
 *Running Time Lists*
 
@@ -225,6 +225,7 @@ Clicking on this link takes the user back to the home page.
 This page allows the user to edit an account in ASPMS.
 
 The following table explains each part of the page:
+
 | Label            | Value                                                             |
 | ---------------- | ----------------------------------------------------------------- |
 | Account Name     | Enter the new account name for the account.                       |
@@ -235,6 +236,7 @@ The following table explains each part of the page:
 *Accepted Values*
 
 The following table lists the accepted values for the text boxes on the Add Account page
+
 | Field Name       | Accepted Value                                                                                                                                           |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Account Name     | Alphabets(A-Z,a-z), Numbers(0-9) and spaces are allowed. Only one space allowed between words. Should **NOT** be empty. Maximum length is 25 characters. |
@@ -406,9 +408,9 @@ Click on **Save Changes** and then click **OK** in the success dialog.
 ### Accepted Values
 Spaces are not acceptable, all other characters are accepted. Password must **NOT** be left blank. Maximum length is 25 characters.
 
+>**NOTE :** Password cannot be changed if invalid information is provided. Appropriate error message will be displayed.
+![Error](img/ValidationCP.png)
+
 *Home*
 
 Click on **Home** to go back to the Home Page.
-
->**NOTE :** Password cannot be changed if invalid information is provided. Appropriate error message will be displayed.
-![Error](img/ValidationCP.png)
