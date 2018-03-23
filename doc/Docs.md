@@ -152,11 +152,11 @@ The values acceptable for each of the above parameters are documented in the tab
 
 | System Parameter                 | Accepted Value                                                           |
 | -------------------------------- | ------------------------------------------------------------------------ |
-| Departure Offset                 | Value must be a number **greater than 0** and **lesser than or equal to 600**, decimals are **NOT** allowed. |
-| Route Trigger Offset             | Value must be a number **greater than 0** and **lesser than or equal to 600**, decimals are **NOT** allowed. |
-| Minimum Dwell Time               | Value must be a number **greater than 0** and **lesser than or equal to 600**, decimals are **NOT** allowed. |
-| Delay Detection Threshold        | Value must be a number **greater than 0** and **lesser than or equal to 600**, decimals are **NOT** allowed. |
-| Interstation Stop Detection Time | Value must be a number **greater than 0** and **lesser than or equal to 600**, decimals are **NOT** allowed. |
+| Departure Offset                 | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
+| Route Trigger Offset             | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
+| Minimum Dwell Time               | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
+| Delay Detection Threshold        | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
+| Interstation Stop Detection Time | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
 | Tunnel Limit                     | Value must be a number **greater than 0** and **lesser than or equal to 5**, decimals are **NOT** allowed. |
 
 
@@ -322,7 +322,7 @@ In each of the above 5 views, follow these steps to edit:
 2. Replace the existing value with the new value.
 
 ### Accepted Values
-All running times must be positive numbers. Maximum value is 600. Fields can **NOT** be left blank.
+All running times must be positive numbers. Maximum value is 999. Fields can **NOT** be left blank.
 
 
 >**NOTE :** Running Time Lists cannot be changed if invalid information is provided. Appropriate error message will be displayed.
@@ -373,7 +373,7 @@ In each of the above 3 views, follow these steps to edit:
 2. Replace the existing value with the new value.
 
 ### Accepted Values
-All dwell times must be positive numbers. Maximum value is 600. Decimal values are **NOT** accepted. Fields can **NOT** be left blank.
+All dwell times must be positive numbers. Maximum value is 999. Decimal values are **NOT** accepted. Fields can **NOT** be left blank.
 
 
 >**NOTE :** Dwell Time Sets cannot be changed if invalid information is provided. Appropriate error message will be displayed.

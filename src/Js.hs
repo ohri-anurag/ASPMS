@@ -15,6 +15,7 @@ import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
+-- TODO: Change the maximum for Running times and Dwell times to 999
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {
@@ -61,8 +62,8 @@ validation = [jmacro|
         fun noMoreThan5 id {
             return validate id (\ val -> parseFloat(val) <= 5) "Field cannot have number greater than 5."
         }
-        fun noMoreThan600 id {
-            return validate id (\ val -> parseFloat(val) <= 600) "Field cannot have number greater than 600."
+        fun noMoreThan999 id {
+            return validate id (\ val -> parseFloat(val) <= 999) "Field cannot have number greater than 999."
         }
         fun positiveInt id {
             return validate id (\ val {
@@ -271,7 +272,7 @@ home = show $ renderJs $ sendXHRExp <>
                     if (id === "tunnelLimit") {
                         flag = validator id [notEmpty, noMoreThan5, positiveInt];
                     } else {
-                        flag = validator id [notEmpty, noMoreThan600, positiveInt];
+                        flag = validator id [notEmpty, noMoreThan999, positiveInt];
                     }
                     check = check && flag;
                     str.push(id + "=" + inputs[i].value);
@@ -426,7 +427,7 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
                         var id = inputs[j].getAttribute('id');
-                        flag = validator id [notEmpty, noMoreThan600, positiveFloat];
+                        flag = validator id [notEmpty, noMoreThan999, positiveFloat];
                         check = check && flag;
                         arr.push([id.substr(3).split(','), parseFloat(inputs[j].value)]);
                     }
@@ -484,7 +485,7 @@ dwellTimeSets = show $ renderJs $ sendXHRExp <>
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
                         var id = inputs[j].getAttribute('id');
-                        flag = validator id [notEmpty, noMoreThan600, positiveInt];
+                        flag = validator id [notEmpty, noMoreThan999, positiveInt];
                         check = check && flag;
                         arr.push([id.substr(2), parseFloat(inputs[j].value)]);
                     }
