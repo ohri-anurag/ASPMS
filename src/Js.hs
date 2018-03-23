@@ -15,7 +15,6 @@ import Language.Javascript.JMacro
 
 import qualified Data.Text.Lazy as T
 
--- TODO: Change the maximum for Running times and Dwell times to 999
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {
