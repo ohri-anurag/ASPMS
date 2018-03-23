@@ -178,6 +178,7 @@ dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTy
                     H.div ! A.id "dwellTimeSet2Button" ! class_ "button" $ "Dwell Time Set 2"
                     H.div ! A.id "dwellTimeSet3Button" ! class_ "button" $ "Dwell Time Set 3"
                 H.div ! A.id "saveAndError" $ do
+                    H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
                     button ! A.id "saveButton" $ "Save Changes"
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do

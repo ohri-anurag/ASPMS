@@ -55,14 +55,20 @@ validation = [jmacro|
         fun notEmpty id {
             return validate id (\ val -> val !== "") "Field cannot be left empty."
         }
+        fun noLongerThan25 id {
+            return validate id (\ val -> val.length <= 25) "Field cannot have more than 25 characters."
+        }
+        fun noMoreThan5 id {
+            return validate id (\ val -> parseFloat(val) <= 5) "Field cannot have number greater than 5."
+        }
+        fun noMoreThan600 id {
+            return validate id (\ val -> parseFloat(val) <= 600) "Field cannot have number greater than 600."
+        }
         fun positiveInt id {
             return validate id (\ val {
                 var regex = /^[1-9]\d*$/;
                 return regex.test(val)
             }) "Field must have a non-zero positive integer."
-        }
-        fun noMoreThan10 id {
-            return validate id (\ val -> val.length <= 10) "Field cannot have more than 10 characters."
         }
         fun positiveFloat id {
             return validate id (\ val {
@@ -81,6 +87,13 @@ validation = [jmacro|
                 var regex = /^\S+$/;
                 return regex.test(val)
             }) "Field must not contain spaces."
+        }
+        fun validator id checkList {
+            var i, check = true;
+            for(i=0; i<checkList.length; ++i) {
+                 check = check && checkList[i] id;
+            }
+            return check;
         }
     |]
 
@@ -251,11 +264,17 @@ home = show $ renderJs $ sendXHRExp <>
             var saveButton = document.getElementById('saveButton'),
                 formDiv =  document.getElementById('form');
             saveButton.onclick = \ {
-                var i, str = [], check = true,
+                var i, str = [], flag, check = true,
                     inputs = formDiv.querySelectorAll('input');
                 for(i=0; i<inputs.length; ++i) {
-                    check = check && notEmpty(inputs[i].getAttribute('id')) && positiveInt(inputs[i].getAttribute('id'));
-                    str.push(inputs[i].getAttribute('id') + "=" + inputs[i].value);
+                    var id = inputs[i].getAttribute('id');
+                    if (id === "tunnelLimit") {
+                        flag = validator id [notEmpty, noMoreThan5, positiveInt];
+                    } else {
+                        flag = validator id [notEmpty, noMoreThan600, positiveInt];
+                    }
+                    check = check && flag;
+                    str.push(id + "=" + inputs[i].value);
                 }
 
                 if (!check)
@@ -308,14 +327,13 @@ account mode = show $ renderJs $ sendXHRExp <>
                     aocLineOverviewList = document.getElementById('aocLineOverviewDiv').querySelectorAll('input'),
                     userID = `(userIDExp)`;
 
-                var check = 
-                    `(userIDCheck)` &&
-                    notEmpty('accountName') &&
-                    noMoreThan10('accountName') &&
-                    alphaNumAndSpaces('accountName') &&
-                    notEmpty('accountPassword') &&
-                    noMoreThan10('accountPassword') &&
-                    noSpaces('accountPassword');
+                var flag, check = true; 
+                flag = `(userIDCheck)`;
+                check = check && flag;
+                flag = validator 'accountName' [notEmpty, noLongerThan25, alphaNumAndSpaces];
+                check = check && flag;
+                flag = validator 'accountPassword' [notEmpty, noLongerThan25, noSpaces];
+                check = check && flag;
                 if(!check)
                     return;
 
@@ -364,7 +382,7 @@ account mode = show $ renderJs $ sendXHRExp <>
             else [jmacroE|document.getElementById('userID').value|]
         userIDCheck = if mode == EDIT
             then [jmacroE|true|]
-            else [jmacroE|notEmpty('userID') && noMoreThan10('userID') && alphaNumAndSpaces('userID')|]
+            else [jmacroE|validator 'userID' [notEmpty, noLongerThan25, alphaNumAndSpaces]|]
         redirect = if mode == EDIT
             then [jmacro|location.reload()|]
             else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"))|]
@@ -401,14 +419,16 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
             };
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
-                var i, j, inputs, obj = {}, arr, check = true,
+                var i, j, inputs, obj = {}, arr, flag, check = true,
                     lists = document.querySelectorAll('.runningTimeList');
                 for (i=0; i<lists.length; ++i) {
                     inputs = lists[i].querySelectorAll('input');
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
-                        check = check && notEmpty(inputs[j].getAttribute('id')) && positiveFloat(inputs[j].getAttribute('id'));
-                        arr.push([inputs[j].getAttribute('id').substr(3).split(','), parseFloat(inputs[j].value)]);
+                        var id = inputs[j].getAttribute('id');
+                        flag = validator id [notEmpty, noMoreThan600, positiveFloat];
+                        check = check && flag;
+                        arr.push([id.substr(3).split(','), parseFloat(inputs[j].value)]);
                     }
                     obj[lists[i].getAttribute('id')] = arr;
                 }
@@ -457,14 +477,16 @@ dwellTimeSets = show $ renderJs $ sendXHRExp <>
             };
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
-                var i, j, inputs, obj = {}, arr, check = true,
+                var i, j, inputs, obj = {}, arr, flag, check = true,
                     lists = document.querySelectorAll('.dwellTimeSet');
                 for (i=0; i<lists.length; ++i) {
                     inputs = lists[i].querySelectorAll('input');
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
-                        check = check && notEmpty(inputs[j].getAttribute('id')) && positiveInt(inputs[j].getAttribute('id'));
-                        arr.push([inputs[j].getAttribute('id').substr(2), parseFloat(inputs[j].value)]);
+                        var id = inputs[j].getAttribute('id');
+                        flag = validator id [notEmpty, noMoreThan600, positiveInt];
+                        check = check && flag;
+                        arr.push([id.substr(2), parseFloat(inputs[j].value)]);
                     }
                     obj[lists[i].getAttribute('id')] = arr;
                 }
@@ -518,7 +540,7 @@ changePassword = show $ renderJs $ sendXHRExp <>
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
                 var input = document.getElementById('password').value, check = true;
-                check = notEmpty('password') && noMoreThan10('password');
+                check = validator 'password' [notEmpty, noLongerThan25, noSpaces];
 
                 if (!check)
                     return;
