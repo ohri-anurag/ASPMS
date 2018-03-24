@@ -134,12 +134,12 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         userAuthenticated (updateCacheWith updateSystemParams) (redirect "/login")
 
     get "runningTimeLists" $
-        userAuthenticated (withData H.runningTimeLists) (redirect "/login")
+        userAuthenticated (withData H.runningTimeListsPage) (redirect "/login")
     post "runningTimeLists" $
         userAuthenticated (updateCacheWith updateRunningTimeLists) (redirect "/login")
 
     get "dwellTimeSets" $
-        userAuthenticated (withData H.dwellTimeSets) (redirect "/login")
+        userAuthenticated (withData H.dwellTimeSetsPage) (redirect "/login")
     post "dwellTimeSets" $
         userAuthenticated (updateCacheWith updateDwellTimeSets) (redirect "/login")
 

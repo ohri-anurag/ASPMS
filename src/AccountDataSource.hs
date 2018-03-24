@@ -92,7 +92,7 @@ updateSystemParams ps accConfSysParam = do
     minimumDwellTime <- get "minimumDwellTime"
     delayDetectionThreshHold <- get "delayDetectionThreshHold"
     intestationStopDetectionTime <- get "interstationStopDetectionTime"
-    tunnelLimit <- get "tunnelLimit"
+    tunnelLimit <- lookup "tunnelLimit" ps >>= readMaybe . T.unpack
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
             departureOffset = departureOffset,
@@ -104,7 +104,9 @@ updateSystemParams ps accConfSysParam = do
         }
     }
     where
-        get key = lookup key ps >>= readMaybe . T.unpack
+        get key = do
+            json <- lookup key ps
+            decodeStrict' $ TE.encodeUtf8 json
 
 updateRunningTimeLists :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateRunningTimeLists ps accConfSysParam = do
@@ -112,7 +114,7 @@ updateRunningTimeLists ps accConfSysParam = do
     runningTimeList <- decodeStrict' $ TE.encodeUtf8 json
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
-            runningTimeList = runningTimeList
+            runningTimeLists = runningTimeList
         }
     }
 
@@ -122,7 +124,7 @@ updateDwellTimeSets ps accConfSysParam = do
     dwellTimeSet <- decodeStrict' $ TE.encodeUtf8 json
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
-            dwellTimeSet = dwellTimeSet
+            dwellTimeSets = dwellTimeSet
         }
     }
 

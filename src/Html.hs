@@ -138,8 +138,8 @@ account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
 
 
 -- Running Time List HTML
-runningTimeLists :: AccountAndSystemParameterConfig -> T.Text
-runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+runningTimeListsPage :: AccountAndSystemParameterConfig -> T.Text
+runningTimeListsPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Running Time Lists"
         H.style $ toHtml CSS.runningTimeListsCss
@@ -160,11 +160,11 @@ runningTimeLists accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
             H.div ! A.id "main" $ do
                 h1 "Running Time Lists"
-                runningTimeListsView $ runningTimeList $ systemParameter accountAndSystemParameterConfig
+                runningTimeListsView $ runningTimeLists $ systemParameter accountAndSystemParameterConfig
 
 -- Dwell Time Set HTML
-dwellTimeSets :: AccountAndSystemParameterConfig -> T.Text
-dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+dwellTimeSetsPage :: AccountAndSystemParameterConfig -> T.Text
+dwellTimeSetsPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Dwell Time Sets"
         H.style $ toHtml CSS.dwellTimeSetsCss
@@ -183,7 +183,7 @@ dwellTimeSets accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTy
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
             h1 "Dwell Time Sets"
-            dwellTimeSetsView $ dwellTimeSet $ systemParameter accountAndSystemParameterConfig
+            dwellTimeSetsView $ dwellTimeSets $ systemParameter accountAndSystemParameterConfig
 
 -- Alarm Levels HTML
 alarmLevels :: AccountAndSystemParameterConfig -> T.Text
@@ -278,6 +278,9 @@ areaOfControlView areaOfControl = do
     lineOverviewConfigView $ aocLineOverview <$> areaOfControl
     checkbox "AOC Maintenance Monitor" "aocMaintenanceMonitor" (toBool aocMaintenanceMonitor) False
     checkbox "AOC Timetable Management" "aocTimetableManagement" (toBool aocTimetableManagement) False
+    checkbox "AOC Event Monitor" "aocEventMonitor" (toBool aocEventMonitor) False
+    checkbox "AOC Line Overview Playback" "aocLineOverviewPlayback" (toBool aocLineOverviewPlayback) False
+    checkbox "AOC Maintenance Monitor Playback" "aocMaintenanceMonitorPlayback" (toBool aocMaintenanceMonitorPlayback) False
     checkbox "AOC Rolling Stock Controller" "aocRollingStockController" (toBool aocRollingStockController) False
     checkbox "AOC Crew Controller" "aocCrewController" (toBool aocCrewController) False
     checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" (toBool aocRollingStockManagement) False
@@ -300,11 +303,11 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
     h1 "System Parameters"
 
     H.div ! A.id "form" $ do
-        labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just departureOffset
-        labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just routeTriggerOffset
-        labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just minimumDwellTime
-        labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just delayDetectionThreshHold
-        labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just intestationStopDetectionTime
+        labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just $ init $ show $ departureOffset
+        labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just $ init $ show $ routeTriggerOffset
+        labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just $ init $ show $ minimumDwellTime
+        labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just $ init $ show $ delayDetectionThreshHold
+        labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show $ intestationStopDetectionTime
         labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
         button ! A.id "saveButton" $ "Save Changes"
 

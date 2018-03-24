@@ -235,7 +235,7 @@ accountDetailsCss = render $ do
         display flex
         flexDirection column
     ("#accountAOC" <> "#accountACR") ** div ? textAlign (alignSide sideLeft)
-    "#accountAOC" |> div ? marginLeft (px 40)
+    "#accountAOC" |> div ? marginLeft (px 20)
     "#aocLineOverviewDiv .form" ? do
         marginLeft $ px 30
     "#accountACR" ** div ? do
