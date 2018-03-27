@@ -40,9 +40,9 @@ allWorkstations = map parse $ mapMaybe (\wrkID -> find (isUser wrkID) asocUserID
 
 
 currentHealthyWorkstationsWithNetwork :: Array WorkstationID (MVar (Int, Int)) -> IO [(WorkstationID, NetworkID)]
-currentHealthyWorkstationsWithNetwork arrVCommWRK = liftM catMaybes $ forM allWorkstations $ \ (wrkID,_) -> do
+currentHealthyWorkstationsWithNetwork arrVCommWRK = fmap catMaybes $ forM allWorkstations $ \ (wrkID,_) -> do
     comm <- readMVar $ arrVCommWRK <! wrkID
-    return $ liftM (wrkID,) $ commToNetwork comm
+    return $ (wrkID,) <$> commToNetwork comm
 
 withHealthyWorkstations :: Array WorkstationID (MVar (Int, Int)) -> (HostName -> IO a) -> IO [a]
 withHealthyWorkstations arrVCommWRK process = do
@@ -68,8 +68,3 @@ debugMain = putStrLn . (++) "[Main] "
 
 debugHeartBeat :: String -> IO ()
 debugHeartBeat = putStrLn . (++) "[HeartBeat] "
--- debug str = do
---     stRef <- newMVar stdout
---     withMVar stRef $ \ h -> do
---         hPutStrLn h str
---         hFlush h

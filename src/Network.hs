@@ -43,7 +43,7 @@ initTCPServer accountBytesRef = svFork $ do
     bracket (openSockTCPServer portNumberAccountServer) close $ \sock -> forever $ do
         debugTCP "Opened socket, waiting for connections..."
         (conn, peer) <- accept sock
-        debugTCP $ "Accepted connection from " ++ (show peer)
+        debugTCP $ "Accepted connection from " ++ show peer
         forkIO $ sendAccountData conn
     where
         sendAccountData conn = void $ do

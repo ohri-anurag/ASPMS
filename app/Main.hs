@@ -123,7 +123,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
 
     get "addAccount" $
-        userAuthenticated (withData $ H.addAccount) (redirect "/login")
+        userAuthenticated (withData H.addAccount) (redirect "/login")
     post "addAccount" $
         userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
 
@@ -223,4 +223,4 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         writeAppState :: AppState -> SpockAction () UserSession MyAppState ()
         writeAppState state = do
             (MyAppState ref _) <- getState
-            liftIO $ atomicModifyIORef' ref (\_ -> (state, ()))
+            liftIO $ atomicModifyIORef' ref (const (state, ()))

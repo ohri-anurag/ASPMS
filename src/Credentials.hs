@@ -11,9 +11,9 @@ storePassword :: T.Text -> IO ()
 storePassword = B.writeFile credentialsPath . TE.encodeUtf8
 
 validatePassword :: T.Text -> IO Bool
-validatePassword text = ((==) text . TE.decodeUtf8) <$> catch (B.readFile credentialsPath) handler
+validatePassword text = (==) text . TE.decodeUtf8 <$> catch (B.readFile credentialsPath) handler
     where
         handler :: SomeException -> IO B.ByteString
         handler e = do
-            debugMain $ "Could not read password from file. Resorting to default password. Error : " ++ (show e)
+            debugMain $ "Could not read password from file. Resorting to default password. Error : " ++ show e
             pure $ TE.encodeUtf8 $ T.pack "password"

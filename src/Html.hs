@@ -59,7 +59,7 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
     H.head $ do
         H.title "Home"
         H.style $ toHtml CSS.homeCss
-        script ! type_ "text/javascript" $ toHtml $ JS.home
+        script ! type_ "text/javascript" $ toHtml JS.home
     H.body $ do
         dialog
         H.div ! A.id "confirm" $ do
@@ -87,11 +87,11 @@ changePassword = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Change Password"
         H.style $ toHtml CSS.changePasswordCss
-        script ! type_ "text/javascript" $ toHtml $ JS.changePassword
+        script ! type_ "text/javascript" $ toHtml JS.changePassword
     H.body $ do
         dialog
-        H.div ! A.id "container" $ do
-            H.div ! A.id "sidebar" $ do
+        H.div ! A.id "container" $
+            H.div ! A.id "sidebar" $
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
             H.div ! A.id "passwordDiv" $ do
@@ -115,7 +115,7 @@ account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
     H.body $ do
         dialog
         H.div ! A.id "container" $ do
-            H.div ! A.id "sidebar" $ do
+            H.div ! A.id "sidebar" $
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
             H.div ! A.id "main" $ do
                 h1 accountTitle
@@ -143,7 +143,7 @@ runningTimeListsPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml 
     H.head $ do
         H.title "Running Time Lists"
         H.style $ toHtml CSS.runningTimeListsCss
-        script ! type_ "text/javascript" $ toHtml $ JS.runningTimeLists
+        script ! type_ "text/javascript" $ toHtml JS.runningTimeLists
     H.body $ do
         dialog
         H.div ! A.id "container" $ do
@@ -168,10 +168,10 @@ dwellTimeSetsPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ d
     H.head $ do
         H.title "Dwell Time Sets"
         H.style $ toHtml CSS.dwellTimeSetsCss
-        script ! type_ "text/javascript" $ toHtml $ JS.dwellTimeSets
+        script ! type_ "text/javascript" $ toHtml JS.dwellTimeSets
     H.body $ do
         dialog
-        H.div ! A.id "container" $ do
+        H.div ! A.id "container" $
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "tabContainer" $ do
                     H.div ! A.id "dwellTimeSet1Button" ! class_ "button" $ "Dwell Time Set 1"
@@ -191,12 +191,12 @@ alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docType
     H.head $ do
         H.title "Alarm Levels"
         H.style $ toHtml CSS.alarmLevelsCss
-        script ! type_ "text/javascript" $ toHtml $ JS.alarmLevels
+        script ! type_ "text/javascript" $ toHtml JS.alarmLevels
     H.body $ do
         dialog
-        H.div ! A.id "container" $ do
+        H.div ! A.id "container" $
             H.div ! A.id "sidebar" $ do
-                H.div ! A.id "saveAndError" $ do
+                H.div ! A.id "saveAndError" $
                     button ! A.id "saveButton" $ "Save Changes"
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
@@ -257,7 +257,7 @@ accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
 
     H.div ! class_ "row" $ do
         H.label ! for "accountACR" ! class_ "rowElem" $ "Account ACR"
-        H.div ! A.id "accountACR" ! class_ "rowElem" $ mapM_ acrView $ acrList
+        H.div ! A.id "accountACR" ! class_ "rowElem" $ mapM_ acrView acrList
 
     H.div ! class_ "row" $ do
         H.label ! for "accountAOC" ! class_ "rowElem" $ "Account AOC"
@@ -265,7 +265,7 @@ accountDetailedView account = H.form ! A.id "accountForm" ! class_ "form" $ do
 
     button ! class_ "submit" ! A.id "submit" $ maybe "Add Account" (const "Save Changes") account
     where
-        acrList = maybe (zip [minBound..maxBound] $ repeat False) Prelude.id (assocs <$> accountACR <$> account)
+        acrList = maybe (zip [minBound..maxBound] $ repeat False) (assocs . accountACR) account
 
 acrView :: (OC_ID, Bool) -> Html
 acrView (ocId, isAllowed) = checkbox (toHtml labelStr) (toValue idStr) isAllowed False
@@ -285,7 +285,7 @@ areaOfControlView areaOfControl = do
     checkbox "AOC Crew Controller" "aocCrewController" (toBool aocCrewController) False
     checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" (toBool aocRollingStockManagement) False
     where
-        toBool f = maybe False Prelude.id (f <$> areaOfControl)
+        toBool f = maybe False f areaOfControl
 
 lineOverviewConfigView :: Maybe (Maybe LineOverviewConfig) -> Html
 lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ do
@@ -294,7 +294,7 @@ lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ 
         checkbox "Enable Global Command" "enableGlobalCommand" (toBool enableGlobalCommand $ join lineOverviewConfig) (not isChecked)
         checkbox "Enable Regulation" "enableRegulation" (toBool enableRegulation $ join lineOverviewConfig) (not isChecked)
     where
-        toBool f v = maybe False Prelude.id (f <$> v)
+        toBool = maybe False
         isChecked = toBool isJust lineOverviewConfig
 
 -- System Parameter Page Helpers
@@ -303,11 +303,11 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
     h1 "System Parameters"
 
     H.div ! A.id "form" $ do
-        labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just $ init $ show $ departureOffset
-        labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just $ init $ show $ routeTriggerOffset
-        labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just $ init $ show $ minimumDwellTime
-        labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just $ init $ show $ delayDetectionThreshHold
-        labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show $ intestationStopDetectionTime
+        labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just $ init $ show departureOffset
+        labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just $ init $ show routeTriggerOffset
+        labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just $ init $ show minimumDwellTime
+        labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just $ init $ show delayDetectionThreshHold
+        labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show intestationStopDetectionTime
         labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
         button ! A.id "saveButton" $ "Save Changes"
 
@@ -346,9 +346,9 @@ runningTimeView code ((stc1, stc2), diffTime) = labelledInput label (toValue nam
         stc1Str = showStopPoint stc1
         stc2Str = showStopPoint stc2
         label = do
-            H.div ! class_ "from" $ (toHtml stc1Str)
-            H.div ! class_ "to" $ (toHtml stc2Str)
-        name = code ++ (show stc1) ++ "," ++ (show stc2)
+            H.div ! class_ "from" $ toHtml stc1Str
+            H.div ! class_ "to" $ toHtml stc2Str
+        name = code ++ show stc1 ++ "," ++ show stc2
 
 -- Dwell Time Sets Page Helpers
 dwellTimeSetsView :: DwellTimeSets -> Html
@@ -385,7 +385,7 @@ alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
     where
         eTag' = show eTag
         selectList = select ! class_ "rowElem" ! A.id (toValue eTag') $ mapM_ optionify [minBound..maxBound]
-        optionify level = markSelected level $ option ! A.value (toValue lstr) $ (toHtml lstr)
+        optionify level = markSelected level $ option ! A.value (toValue lstr) $ toHtml lstr
             where lstr = show level
         markSelected level elem = if aLevel == level
             then elem ! selected "selected"

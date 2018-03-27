@@ -11,7 +11,7 @@ module Css(
 ) where
 
 import Clay as C
-import Prelude hiding ((**),div,span)
+import Prelude hiding ((**),div)
 import Data.Monoid((<>))
 import qualified Data.Text.Lazy as T
 
@@ -122,8 +122,7 @@ saveAndError = do
         width $ pct 15
         top $ pct 40
     "#saveButton" ? padding (px 5) (px 5) (px 5) (px 5)
-    "#cumulativeError" ? do
-        visibility hidden
+    "#cumulativeError" ? visibility hidden
 
 -- PAGE CSS --
 loginCss :: T.Text
@@ -178,12 +177,9 @@ homeCss = render $ do
     ".rowElem" ? do
         background $ grayish 220
         padding (px 10) (px 10) (px 10) (px 10)
-    ".uid" <> ".accountName" <> ".delete" ? do
-        width (pct 33)
-    ".uid" ? do
-        margin (px 3) (px 3) (px 3) (px 0)
-    ".accountName" ? do
-        margin (px 3) (px 0) (px 3) (px 3)
+    ".uid" <> ".accountName" <> ".delete" ? width (pct 33)
+    ".uid" ? margin (px 3) (px 3) (px 3) (px 0)
+    ".accountName" ? margin (px 3) (px 0) (px 3) (px 3)
     ".delete" ? background grey
     "#form label" <> "#form input" ? do
         width (pct 50)
