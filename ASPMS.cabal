@@ -53,4 +53,5 @@ executable ASPMS
                      , array
                      , ASPMS
                      , VDU
+                     , derive
   default-language:    Haskell2010

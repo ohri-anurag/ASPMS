@@ -15,9 +15,11 @@ import qualified Data.ByteString as B
 import Text.Read(readMaybe)
 import System.IO(stdout)
 -- import Network.Socket(withSocketsDo)
+import Data.Derive.Class.Default
 
 import SP6.Data.ID
 import SP6.CommonIO hiding (accountFilePath)
+import SP6.Data.Render
 
 -- Provides HTML templates
 import qualified Html as H
@@ -57,10 +59,11 @@ main = withSocketsDo $ do
 
     -- Initialize Health receivers for both servers and workstations
     handle <- newMVar stdout
+    loginStatus <- newMVar $ Logout def
     debugMain "Receiving server health..."
-    (arrServerStatus, _) <- initReceiverServerStatus handle False []
+    (arrServerStatus, _) <- initReceiverServerStatus handle loginStatus []
     debugMain "Receiving workstation health..."
-    (arrWorkstationStatus, _) <- initReceiverWorkstationStatus handle False []
+    (arrWorkstationStatus, _) <- initReceiverWorkstationStatus handle loginStatus []
     -- arrServerStatus <- initMVarArray (minBound, maxBound) (-1, -1)
     -- arrWorkstationStatus <- initMVarArray (minBound, maxBound) (-1, -1)
 

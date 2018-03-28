@@ -341,7 +341,7 @@ runningTimeListView code rtl = do
     mapM_ (runningTimeView code) $ M.toList rtl
 
 runningTimeView :: String -> ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
-runningTimeView code ((stc1, stc2), diffTime) = labelledInput label (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
+runningTimeView code ((stc1, stc2), diffTime) = hide $ labelledInput label (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
     where
         stc1Str = showStopPoint stc1
         stc2Str = showStopPoint stc2
@@ -349,6 +349,10 @@ runningTimeView code ((stc1, stc2), diffTime) = labelledInput label (toValue nam
             H.div ! class_ "from" $ toHtml stc1Str
             H.div ! class_ "to" $ toHtml stc2Str
         name = code ++ show stc1 ++ "," ++ show stc2
+        hide elem
+            -- Corner case, do not show or modify this field, but include it in the data
+            | diffTime > 9990   = elem ! A.style "display:none;"
+            | otherwise         = elem
 
 -- Dwell Time Sets Page Helpers
 dwellTimeSetsView :: DwellTimeSets -> Html

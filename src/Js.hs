@@ -426,8 +426,11 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
                         var id = inputs[j].getAttribute('id');
-                        flag = validator id [notEmpty, noMoreThan999, positiveFloat];
-                        check = check && flag;
+                        // Check if the value is greater than 9990, if so, skip validation
+                        if (parseFloat(inputs[j].value) <= 9990) {
+                            flag = validator id [notEmpty, noMoreThan999, positiveFloat];
+                            check = check && flag;
+                        }
                         arr.push([id.substr(3).split(','), parseFloat(inputs[j].value)]);
                     }
                     obj[lists[i].getAttribute('id')] = arr;
