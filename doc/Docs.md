@@ -46,11 +46,16 @@ This document tries to capture all the use cases of ASPMS.
 ## How to Install
 ### Build from source
 1. Install [stack](https://docs.haskellstack.org/en/stable/install_and_upgrade/)
-2. Clone code from github:
+2. Create a SSH key pair and add the key to your github account by following the instructions at:
+    - [Generate SSH Key](https://help.github.com/enterprise/2.12/user/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/)
+    - [Add SSH key to Github Account](https://help.github.com/enterprise/2.12/user/articles/adding-a-new-ssh-key-to-your-github-account/)
+3. Clone code from github:
     > git clone https://github.com/ohri-anurag/ASPMS.git
-3. Run following command to compile:
+4. Change the current directory:
+    > cd ASPMS
+5. Run following command to compile:
     > stack build
-4. Run following command to execute:
+6. Run following command to execute:
     > stack exec ASPMS
 ### Run Precompiled binary (ASPMS)
 1. Run following command to create a directory:
