@@ -1,4 +1,7 @@
 - [ASPMS](#aspms)
+    - [How to Install](#how-to-install)
+        - [Build from source](#build-from-source)
+        - [Run Precompiled binary (ASPMS)](#run-precompiled-binary-aspms)
     - [How it works](#how-it-works)
         - [Saving Data](#saving-data)
         - [Updating Data](#updating-data)
@@ -40,6 +43,22 @@
 # ASPMS
 Welcome to Accounts and System Parameters Management System.
 This document tries to capture all the use cases of ASPMS.
+## How to Install
+### Build from source
+1. Install [stack](https://docs.haskellstack.org/en/stable/install_and_upgrade/)
+2. Clone code from github:
+    > git clone https://github.com/ohri-anurag/ASPMS.git
+3. Run following command to compile:
+    > stack build
+4. Run following command to execute:
+    > stack exec ASPMS
+### Run Precompiled binary (ASPMS)
+1. Run following command to create a directory:
+    > mkdir ASPMS
+2. Run following directory to change the current working directory:
+    > cd ASPMS
+4. Run following command to execute:
+    > ./ASPMS
 
 ## How it works
 ASPMS can be used to:
