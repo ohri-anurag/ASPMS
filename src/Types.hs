@@ -5,22 +5,13 @@ module Types(
 
 import SP6.Data.Account
 import SP6.Data.ID
-import SP6.Data.Command
+-- import SP6.Data.Command
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Array.Unboxed as A
 
 import Data.Aeson
 import Data.Hashable
-
-import Data.Serialize as S
-import GHC.Generics
-
-import Network.Socket(PortNumber)
-import Data.Word(Word8)
-
-import System.IO
-import Control.Concurrent
 
 -- Account Mode
 data AccountMode = ADD | EDIT

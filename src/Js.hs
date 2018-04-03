@@ -8,11 +8,11 @@ module Js(
     alarmLevels,
     changePassword
 ) where
-
+import Prelude(String, show, ($), (==))
 import Types
 import Data.Monoid((<>))
 import Language.Javascript.JMacro
-
+-- TODO: Change maximum length for user name to something larger than 25
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {
@@ -262,7 +262,7 @@ home = show $ renderJs $ sendXHRExp <>
             var saveButton = document.getElementById('saveButton'),
                 formDiv =  document.getElementById('form');
             saveButton.onclick = \ {
-                var i, str = [], flag, check = true,
+                var str = [], flag, check = true,
                     inputs = formDiv.querySelectorAll('input');
                 for(i=0; i<inputs.length; ++i) {
                     var id = inputs[i].getAttribute('id');

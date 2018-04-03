@@ -14,12 +14,12 @@ module Utility(
 import Network.Socket
 import Control.Concurrent
 import Data.Array
-import Control.Monad(unless, forever, void, liftM, forM)
+import Control.Monad(forM)
 import Data.Maybe(catMaybes, mapMaybe, fromJust)
 import Data.List(find)
 
 import SP6.Data.ID
-import SP6.Data.TimetableRegulation(withHealthyServers, commToNetwork)
+import SP6.Data.TimetableRegulation(commToNetwork)
 import SP6.Data.Common((<!), allElems)
 
 -- VDU Helper Functions
@@ -35,8 +35,8 @@ workstationIDToAddr wrkID nwID = case nwID of
 allWorkstations :: [(WorkstationID, (String, String))]
 allWorkstations = map parse $ mapMaybe (\wrkID -> find (isUser wrkID) asocUserIDToProfile) (allElems :: [WorkstationID])
     where
-        isUser wrkID (_,id,_,_,_,_) = id == wrkID
-        parse (_,id,_,ip1,ip2,_) = (id,(ip1,ip2))
+        isUser wrkID (_,wid,_,_,_,_) = wid == wrkID
+        parse (_,wid,_,ip1,ip2,_) = (wid,(ip1,ip2))
 
 
 currentHealthyWorkstationsWithNetwork :: Array WorkstationID (MVar (Int, Int)) -> IO [(WorkstationID, NetworkID)]

@@ -5,31 +5,27 @@ module Network(
     withSocketsDo
 ) where
 
-import Types
 import Utility
 
 import SP6.Data.Account
 import SP6.Data.ID
 import SP6.CommonIO
 import SP6.Data.IOConfig
-import SP6.Data.TimetableRegulation(withHealthyServers, commToNetwork)
-import SP6.Data.Common((<!), allElems)
+import SP6.Data.TimetableRegulation(withHealthyServers)
 
-import System.IO(stdout)
 import Data.IORef
 import Control.Exception
 import Network.Socket hiding (send, sendTo)
 import Network.Socket.ByteString (send, sendTo)
 
-import Control.Monad(unless, forever, void, liftM, forM)
-import Control.Concurrent(forkIO, MVar, newMVar, readMVar, threadDelay)
+import Control.Monad(void, forever)
+import Control.Concurrent(MVar, forkIO)
 
 import Data.Serialize
 import qualified Data.Aeson as J
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as LB
 import Data.Array
-import Data.Maybe(catMaybes)
 
 svFork :: IO () -> IO ()
 svFork = withSocketsDo . void . forkIO
@@ -48,7 +44,7 @@ initTCPServer accountBytesRef = svFork $ do
     where
         sendAccountData conn = void $ do
             accountBytes <- readIORef accountBytesRef
-            send conn accountBytes
+            _ <- send conn accountBytes
             close conn
 
 initHeartbeatServer :: IO ()
@@ -58,7 +54,7 @@ initHeartbeatServer = svFork $ bracket open close $ \sock -> do
     addr2:_ <- getAddrInfo (Just hints) (Just (networkToAddr ATSNetwork2)) (Just portNumberASPMHeartBeat)
     addTimer 500000 $ void $ do
         -- Broadcast Heartbeat for Network 1
-        sendTo sock (encode APSMHeartBeat) $ addrAddress addr1
+        _ <- sendTo sock (encode APSMHeartBeat) $ addrAddress addr1
         -- Broadcast Heartbeat for Network 2
         sendTo sock (encode APSMHeartBeat) $ addrAddress addr2
     where
@@ -72,14 +68,14 @@ initHeartbeatServer = svFork $ bracket open close $ \sock -> do
 sendUpdateCommands :: Array ServerID (MVar (Int, Int)) -> Array WorkstationID (MVar (Int, Int)) -> IO ()
 sendUpdateCommands arrServerStatus arrWorkstationStatus = svFork $ do
     debugMain "Sending update command to servers..."
-    withHealthyServers arrServerStatus sendUpdateCommandToHost
+    _ <- withHealthyServers arrServerStatus sendUpdateCommandToHost
     debugMain "Sending update command to workstations..."
-    withHealthyWorkstations arrWorkstationStatus sendUpdateCommandToHost
+    _ <- withHealthyWorkstations arrWorkstationStatus sendUpdateCommandToHost
     pure ()
 
 sendUpdateCommandToHost :: HostName -> IO ()
 sendUpdateCommandToHost host = svFork $ do
     debugMain $ "Sending update command to " ++ host
     bracket (openSockTCPClient host updateRequestCommandPortNumber) close $ \sock -> void $ do
-        send sock $ LB.toStrict $ J.encode UpdateRequestCommand
+        _ <- send sock $ LB.toStrict $ J.encode UpdateRequestCommand
         close sock
