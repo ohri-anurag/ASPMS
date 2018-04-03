@@ -42,7 +42,7 @@ packages:
 extra-deps:
 # VDU
 - git: git@github.com:wkoiking/VDU.git
-  commit: f6a750f0f99789f2fc0a83a3d3e499797920824c
+  commit: 862f3d15cf21e7f1083b674fba83af6d63ae87ce
 # VDU Dependencies
 - parsec-numbers-0.1.0
 - ftp-client-0.5.0.0

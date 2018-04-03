@@ -1,4 +1,5 @@
 - [ASPMS](#aspms)
+    - [Pre Installation Instructions](#pre-installation-instructions)
     - [How to Install](#how-to-install)
         - [Build from source](#build-from-source)
         - [Run Precompiled binary (ASPMS)](#run-precompiled-binary-aspms)
@@ -43,6 +44,9 @@
 # ASPMS
 Welcome to Accounts and System Parameters Management System.
 This document tries to capture all the use cases of ASPMS.
+## Pre Installation Instructions
+ATS assumes that logger server runs on 172.21.107.1(Network 1) and 172.22.107.1(Network 2).
+So, the machine on which ASPMS is to be tested must be configured to have IP as 172.21.107.1 or 172.22.107.1.
 ## How to Install
 ### Build from source
 1. Install [stack](https://docs.haskellstack.org/en/stable/install_and_upgrade/)
