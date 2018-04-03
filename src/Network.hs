@@ -67,7 +67,8 @@ initHeartbeatServer = svFork $ bracket open close $ \sock -> do
             setSocketOption sock Broadcast 1
             pure sock
 
-
+-- TODO: Every 500 ms decrement the server and workstation health.
+-- Confirm the time interval(500 ms).
 sendUpdateCommands :: Array ServerID (MVar (Int, Int)) -> Array WorkstationID (MVar (Int, Int)) -> IO ()
 sendUpdateCommands arrServerStatus arrWorkstationStatus = svFork $ do
     debugMain "Sending update command to servers..."
