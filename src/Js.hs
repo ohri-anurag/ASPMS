@@ -13,8 +13,6 @@ import Types
 import Data.Monoid((<>))
 import Language.Javascript.JMacro
 
-import qualified Data.Text.Lazy as T
-
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {

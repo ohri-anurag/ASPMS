@@ -5,20 +5,17 @@ import Web.Spock
 import Web.Spock.Config
 
 import Data.Array
-import Data.Monoid((<>))
 import Control.Monad.Trans
 import Control.Concurrent
 import Control.Exception.Base(catch, SomeException(..))
 import Data.IORef
 import qualified Data.Text as T
 import qualified Data.ByteString as B
-import Text.Read(readMaybe)
 import System.IO(stdout)
--- import Network.Socket(withSocketsDo)
 import Data.Derive.Class.Default
 
 import SP6.Data.ID
-import SP6.CommonIO hiding (accountFilePath)
+import SP6.CommonIO
 import SP6.Data.Render
 
 -- Provides HTML templates
@@ -28,7 +25,7 @@ import qualified Html as H
 import AccountDataSource
 import Credentials
 import Network
-import Types
+-- import Types
 import Utility
 
 data MyAppState = MyAppState
@@ -186,25 +183,25 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         -- Read account data from the cache, and run the action with that data
         withData :: (AccountAndSystemParameterConfig -> T.Text) -> SpockAction () UserSession MyAppState ()
         withData action = do
-            (MyAppState _ cache) <- getState
-            acData <- liftIO (readIORef cache)
+            (MyAppState _ accountCache) <- getState
+            acData <- liftIO (readIORef accountCache)
             html $ action acData
 
         updateCacheWith :: ([(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig)
             -> SpockAction () UserSession MyAppState ()
         updateCacheWith update = do
             ps <- paramsPost
-            (MyAppState _ cache) <- getState
-            acData <- liftIO (readIORef cache)
-            maybe (text "0") (updateCache cache) $ update ps acData
+            (MyAppState _ accountCache) <- getState
+            acData <- liftIO (readIORef accountCache)
+            maybe (text "0") (updateCache accountCache) $ update ps acData
             where
                 updateCache :: IORef AccountAndSystemParameterConfig -> AccountAndSystemParameterConfig
                     -> SpockAction () UserSession MyAppState ()
-                updateCache cache newData = do
+                updateCache accountCache newData = do
                     runQuery $ const $ do
                         debugMain "Changes saved..."
                         putData newData
-                        atomicModifyIORef' cache $ const (newData,())
+                        atomicModifyIORef' accountCache $ const (newData,())
                     text "1"
 
         -- Check if this user is logged in. If yes, perform the given action, otherwise redirect to the login page.
@@ -215,8 +212,8 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                 UserLoggedOut -> do
                   -- Check if some other user is already using the app. If yes, don't show the login page.
                     (MyAppState ref _) <- getState
-                    state <- liftIO (readIORef ref)
-                    case state of
+                    appState <- liftIO (readIORef ref)
+                    case appState of
                         InUse -> text "The account management system is in use by another user. Kindly login at a later time."
                         Free -> actionFalse
 
@@ -224,6 +221,6 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         logout = writeAppState Free >> writeSession UserLoggedOut
 
         writeAppState :: AppState -> SpockAction () UserSession MyAppState ()
-        writeAppState state = do
+        writeAppState appState = do
             (MyAppState ref _) <- getState
-            liftIO $ atomicModifyIORef' ref (const (state, ()))
+            liftIO $ atomicModifyIORef' ref (const (appState, ()))

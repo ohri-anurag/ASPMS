@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Html where
 
@@ -30,7 +31,6 @@ import SP6.Data.ID
 import SP6.Data.Command
 import Data.Time.Clock(NominalDiffTime)
 
-import Text.Read(readMaybe)
 import Data.Array.Unboxed(assocs)
 
 --- Web Pages ---
@@ -101,13 +101,13 @@ changePassword = LT.toStrict $ renderHtml $ docTypeHtml $ do
 
 -- Account Page HTML
 editAccount :: T.Text -> AccountAndSystemParameterConfig -> T.Text
-editAccount uid = account EDIT (Just $ UserID2 $ T.unpack uid)
+editAccount uid = accountHtml EDIT (Just $ UserID2 $ T.unpack uid)
 
 addAccount :: AccountAndSystemParameterConfig -> T.Text
-addAccount = account ADD Nothing
+addAccount = accountHtml ADD Nothing
 
-account :: AccountMode -> Maybe UserID2 -> AccountAndSystemParameterConfig -> T.Text
-account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+accountHtml :: AccountMode -> Maybe UserID2 -> AccountAndSystemParameterConfig -> T.Text
+accountHtml mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title accountTitle
         H.style $ toHtml CSS.accountDetailsCss
@@ -127,7 +127,7 @@ account mode uid accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ do
         accountTitle = if mode == EDIT then "Account Details" else "Add Account"
         userIdDisplay = if mode == EDIT
             then b $ do
-                "Individual Account Details for "
+                _ <- "Individual Account Details for "
                 H.span ! A.id "userID" $ toHtml uid'
             else labelledInput "User Id" "userID" "Enter User ID here" (Nothing :: Maybe String)
         accountDetails = if mode == EDIT
@@ -206,16 +206,16 @@ alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docType
 --- Helpers ---
 -- General Helpers
 checkbox :: Html -> AttributeValue -> Bool -> Bool -> Html
-checkbox label name' isChecked isDisabled = H.div $ do
+checkbox checkBoxLabel name' isChecked isDisabled = H.div $ do
     markDisabled $ markChecked $ input ! type_ "checkbox" ! name name' ! A.id name'
-    H.label ! for name' $ label
+    H.label ! for name' $ checkBoxLabel
     where
-        markChecked elem = if isChecked
-            then elem ! checked "checked"
-            else elem
-        markDisabled elem = if isDisabled
-            then elem ! disabled "disabled"
-            else elem
+        markChecked tag = if isChecked
+            then tag ! checked "checked"
+            else tag
+        markDisabled tag = if isDisabled
+            then tag ! disabled "disabled"
+            else tag
 
 -- Creates a label input pair, and fills the input with the given value
 labelledInput :: (ToValue a) => Html -> AttributeValue -> String -> Maybe a -> Html
@@ -223,7 +223,7 @@ labelledInput label' name' holder val = H.div ! class_ "row" $ do
     H.label ! class_ "rowElem" ! for name' $ label'
     addValue $ input ! class_ "rowElem" ! type_ "text" ! A.id name' ! name name' ! placeholder (toValue holder)
     where
-        addValue elem = maybe elem ((!) elem . value . toValue) val
+        addValue tag = maybe tag ((!) tag . value . toValue) val
 
 showStopPoint :: StopPointCode -> String
 showStopPoint spc = maybe (show spc) (\(sc,pn) -> show sc ++ " " ++ show pn) (arrSpCodeToStCode AR.! spc)
@@ -299,7 +299,7 @@ lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ 
 
 -- System Parameter Page Helpers
 systemParamsView :: SystemParameter -> Html
-systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwellTime delayDetectionThreshHold intestationStopDetectionTime tunnelLimit runningTimeList dwellTimeSet alarmLevel) = H.div $ do
+systemParamsView SystemParameter{..} = H.div $ do
     h1 "System Parameters"
 
     H.div ! A.id "form" $ do
@@ -313,7 +313,7 @@ systemParamsView (SystemParameter departureOffset routeTriggerOffset minimumDwel
 
 -- Running Time Lists Page Helpers
 runningTimeListsView :: RunningTimeLists -> Html
-runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting eightPercentCoasting energySaving fullCoasting) = do
+runningTimeListsView RunningTimeLists{..} = do
     H.div ! A.id "maximumPerformance" ! class_ "runningTimeList" $ do
         h2 "Maximum Performance"
         runningTimeListView "mpf" maximumPerformance
@@ -332,31 +332,31 @@ runningTimeListsView (RunningTimeLists maximumPerformance fivePercentCoasting ei
 
 -- ASSUMPTION - Code must have only 3 letters
 runningTimeListView :: String -> M.Map (StopPointCode, StopPointCode) NominalDiffTime -> Html
-runningTimeListView code rtl = do
+runningTimeListView rtlCode rtl = do
     H.div ! class_ "header row" $ do
         H.div ! A.id "fromTo" ! class_ "rowElem" $ do
             H.div ! class_ "from" $ "From"
             H.div ! class_ "to" $ "To"
         H.div ! class_ "rowElem" $ "Running Time"
-    mapM_ (runningTimeView code) $ M.toList rtl
+    mapM_ (runningTimeView rtlCode) $ M.toList rtl
 
 runningTimeView :: String -> ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
-runningTimeView code ((stc1, stc2), diffTime) = hide $ labelledInput label (toValue name) "Enter Running Time here" (Just $ init $ show diffTime)
+runningTimeView rtlCode ((stc1, stc2), diffTime) = hide $ labelledInput rtLabel (toValue rtName) "Enter Running Time here" (Just $ init $ show diffTime)
     where
         stc1Str = showStopPoint stc1
         stc2Str = showStopPoint stc2
-        label = do
+        rtLabel = do
             H.div ! class_ "from" $ toHtml stc1Str
             H.div ! class_ "to" $ toHtml stc2Str
-        name = code ++ show stc1 ++ "," ++ show stc2
-        hide elem
+        rtName = rtlCode ++ show stc1 ++ "," ++ show stc2
+        hide tag
             -- Corner case, do not show or modify this field, but include it in the data
-            | diffTime > 9990   = elem ! A.style "display:none;"
-            | otherwise         = elem
+            | diffTime > 9990   = tag ! A.style "display:none;"
+            | otherwise         = tag
 
 -- Dwell Time Sets Page Helpers
 dwellTimeSetsView :: DwellTimeSets -> Html
-dwellTimeSetsView (DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3) = do
+dwellTimeSetsView DwellTimeSets{..} = do
     H.div ! A.id "dwellTimeSet1" ! class_ "dwellTimeSet" $ do
         h2 "Dwell Time Set 1"
         dwellTimeSetView "d1" dwellTimeSet1
@@ -369,14 +369,14 @@ dwellTimeSetsView (DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3) = do
 
 -- ASSUMPTION - Code must have only 2 letters
 dwellTimeSetView :: String -> M.Map StopPointCode NominalDiffTime -> Html
-dwellTimeSetView code dts = do
+dwellTimeSetView dtsCode dts = do
     H.div ! class_ "header row" $ do
         H.div ! class_ "rowElem" $ "Stop Point"
         H.div ! class_ "rowElem" $ "Dwell Time"
-    mapM_ (dwellTimeView code) $ M.toList dts
+    mapM_ (dwellTimeView dtsCode) $ M.toList dts
 
 dwellTimeView :: String -> (StopPointCode, NominalDiffTime) -> Html
-dwellTimeView code (spc, diffTime) = labelledInput (toHtml labelStr) (toValue $ code ++ idStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
+dwellTimeView dtsCode (spc, diffTime) = labelledInput (toHtml labelStr) (toValue $ dtsCode ++ idStr) "Enter Dwell Time here" (Just $ init $ show diffTime)
     where
         labelStr = showStopPoint spc
         idStr = show spc
@@ -391,6 +391,6 @@ alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
         selectList = select ! class_ "rowElem" ! A.id (toValue eTag') $ mapM_ optionify [minBound..maxBound]
         optionify level = markSelected level $ option ! A.value (toValue lstr) $ toHtml lstr
             where lstr = show level
-        markSelected level elem = if aLevel == level
-            then elem ! selected "selected"
-            else elem
+        markSelected level tag = if aLevel == level
+            then tag ! selected "selected"
+            else tag

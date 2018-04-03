@@ -15,9 +15,8 @@ module AccountDataSource (
 -- Data Type Definitions
 import SP6.Data.Account
 import SP6.Data.ID
-import SP6.Data.Command
 
-import Types
+import Types()
 import Utility
 
 import Data.Derive.Class.Default
@@ -55,8 +54,8 @@ putData accountData = B.writeFile accountFilePath (S.encode accountData)
 createAccount :: [(T.Text, T.Text)] -> Maybe (UserID2, Account)
 createAccount paramList = do
     text <- lookup "userID" paramList
-    json <- lookup "data" paramList
-    acc <- decodeStrict' $ TE.encodeUtf8 json
+    accountJson <- lookup "data" paramList
+    acc <- decodeStrict' $ TE.encodeUtf8 accountJson
     Just (UserID2 $ T.unpack text, acc)
 
     -- FOR DEBUGGING
@@ -85,31 +84,31 @@ deleteAccount ps (AccountAndSystemParameterConfig accConf sysParam) =
 
 updateSystemParams :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateSystemParams ps accConfSysParam = do
-    departureOffset <- get "departureOffset"
-    routeTriggerOffset <- get "routeTriggerOffset"
-    minimumDwellTime <- get "minimumDwellTime"
-    delayDetectionThreshHold <- get "delayDetectionThreshHold"
-    intestationStopDetectionTime <- get "interstationStopDetectionTime"
-    tunnelLimit <- lookup "tunnelLimit" ps >>= readMaybe . T.unpack
+    departureOffsetVal <- get "departureOffset"
+    routeTriggerOffsetVal <- get "routeTriggerOffset"
+    minimumDwellTimeVal <- get "minimumDwellTime"
+    delayDetectionThreshHoldVal <- get "delayDetectionThreshHold"
+    intestationStopDetectionTimeVal <- get "interstationStopDetectionTime"
+    tunnelLimitVal <- lookup "tunnelLimit" ps >>= readMaybe . T.unpack
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
-            departureOffset = departureOffset,
-            routeTriggerOffset = routeTriggerOffset,
-            minimumDwellTime = minimumDwellTime,
-            delayDetectionThreshHold = delayDetectionThreshHold,
-            intestationStopDetectionTime = intestationStopDetectionTime,
-            tunnelLimit = tunnelLimit
+            departureOffset = departureOffsetVal,
+            routeTriggerOffset = routeTriggerOffsetVal,
+            minimumDwellTime = minimumDwellTimeVal,
+            delayDetectionThreshHold = delayDetectionThreshHoldVal,
+            intestationStopDetectionTime = intestationStopDetectionTimeVal,
+            tunnelLimit = tunnelLimitVal
         }
     }
     where
         get key = do
-            json <- lookup key ps
-            decodeStrict' $ TE.encodeUtf8 json
+            keyJson <- lookup key ps
+            decodeStrict' $ TE.encodeUtf8 keyJson
 
 updateRunningTimeLists :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateRunningTimeLists ps accConfSysParam = do
-    json <- lookup "data" ps
-    runningTimeList <- decodeStrict' $ TE.encodeUtf8 json
+    rtlJson <- lookup "data" ps
+    runningTimeList <- decodeStrict' $ TE.encodeUtf8 rtlJson
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
             runningTimeLists = runningTimeList
@@ -118,8 +117,8 @@ updateRunningTimeLists ps accConfSysParam = do
 
 updateDwellTimeSets :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateDwellTimeSets ps accConfSysParam = do
-    json <- lookup "data" ps
-    dwellTimeSet <- decodeStrict' $ TE.encodeUtf8 json
+    dtsJson <- lookup "data" ps
+    dwellTimeSet <- decodeStrict' $ TE.encodeUtf8 dtsJson
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
             dwellTimeSets = dwellTimeSet
@@ -128,11 +127,11 @@ updateDwellTimeSets ps accConfSysParam = do
 
 updateAlarmLevels :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateAlarmLevels ps accConfSysParam = do
-    json <- lookup "data" ps
-    alarmLevel <- decodeStrict' $ TE.encodeUtf8 json
+    alJson <- lookup "data" ps
+    alarmLevelVal <- decodeStrict' $ TE.encodeUtf8 alJson
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
-            alarmLevel = alarmLevel
+            alarmLevel = alarmLevelVal
         }
     }
 

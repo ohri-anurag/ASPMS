@@ -76,4 +76,4 @@ extra-deps:
 # compiler-check: newer-minor
 ghc-options:
     # All packages
-    "*": -threaded -Wincomplete-patterns -msse4.2 -fwarn-missing-signatures # -W -Wall -fwarn-incomplete-patterns
+    "ASPMS": -threaded -Wall # -Wincomplete-patterns -msse4.2 -fwarn-missing-signatures -W  -fwarn-incomplete-patterns
