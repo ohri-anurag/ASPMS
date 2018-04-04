@@ -14,9 +14,9 @@ import Data.Monoid((<>))
 import Language.Javascript.JMacro
 
 -- TODO:
--- 1. Add (In seconds to rtl, dts, sys params)
--- 2. Change the position of rtl, dts links
--- 3. AOC Line Overview Config
+-- 1. Add (In seconds to rtl, dts, sys params) - Done
+-- 2. Change the position of rtl, dts links - Done
+-- 3. AOC Line Overview Config - Done
 -- 4. Add Versioning
 -- 5. Sort the rtl in the following manner: a) PL1 -> PL1, b) PL2 -> PL2 c) PL1->PL2 | PL2 -> PL1
 validation :: JStat
@@ -168,9 +168,7 @@ home = show $ renderJs $ sendXHRExp <>
         fun toggleTabView view {
             var accountsView = document.getElementById('accountsView'),
                 systemParamsView = document.getElementById('systemParamsView'),
-                runningTimeListsLink = document.getElementById('runningTimeLists'),
-                dwellTimeSetsLink = document.getElementById('dwellTimeSets'),
-                alarmLevelsLink = document.getElementById('alarmLevels'),
+                systemParamsRemaining = document.getElementById('systemParamsRemaining'),
                 addAccountLink = document.getElementById('addAccount'),
                 toHide, toShow;
             if (currentView !== view) {
@@ -178,18 +176,14 @@ home = show $ renderJs $ sendXHRExp <>
                     toHide = accountsView;
                     toShow = systemParamsView;
                     currentView = VIEW.SYSTEM_PARAMS;
-                    runningTimeListsLink.style.visibility = 'visible';
-                    dwellTimeSetsLink.style.visibility = 'visible';
-                    alarmLevelsLink.style.visibility = 'visible';
+                    systemParamsRemaining.style.visibility = 'visible';
                     addAccountLink.style.visibility = 'hidden';
                 }
                 else {
                     toHide = systemParamsView;
                     toShow = accountsView;
                     currentView = VIEW.ACCOUNTS;
-                    runningTimeListsLink.style.visibility = 'hidden';
-                    dwellTimeSetsLink.style.visibility = 'hidden';
-                    alarmLevelsLink.style.visibility = 'hidden';
+                    systemParamsRemaining.style.visibility = 'hidden';
                     addAccountLink.style.visibility = 'visible';
                 }
                 toHide.style.visibility = 'hidden';

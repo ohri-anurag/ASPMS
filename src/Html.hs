@@ -71,11 +71,12 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                 H.div ! A.id "tabContainer" $ do
                     H.div ! A.id "accountsViewButton" ! class_ "button" $ "Accounts"
                     H.div ! A.id "systemParamsViewButton" ! class_ "button" $ "System Parameters"
-                H.div ! A.id "applyDiv" $ button ! A.id "apply" $ "Apply Changes"
-                H.div ! A.id "linkContainer" $ do
+                H.div ! A.id "systemParamsRemaining" $ do
                     a ! href "/runningTimeLists" $ H.div ! A.id "runningTimeLists" $ "Running Time Lists"
                     a ! href "/dwellTimeSets" $ H.div ! A.id "dwellTimeSets" $ "Dwell Time Sets"
                     a ! href "/alarmLevels" $ H.div ! A.id "alarmLevels" $ "Alarm Levels"
+                H.div ! A.id "applyDiv" $ button ! A.id "apply" $ "Apply Changes"
+                H.div ! A.id "linkContainer" $ do
                     a ! href "/addAccount" $ H.div ! A.id "addAccount" $ "Add Account"
                     a ! href "/changePassword" $ H.div ! A.id "changePassword" $ "Change Password"
                     a ! href "/logout" $ H.div ! A.id "logout" $ "Logout"
@@ -289,7 +290,7 @@ areaOfControlView areaOfControl = do
 
 lineOverviewConfigView :: Maybe (Maybe LineOverviewConfig) -> Html
 lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ do
-    checkbox "Line Overview Config" "aocLineOverview" isChecked False
+    checkbox "AOC Line Overview Config" "aocLineOverview" isChecked False
     H.div ! class_ "form" $ do
         checkbox "Enable Global Command" "enableGlobalCommand" (toBool enableGlobalCommand $ join lineOverviewConfig) (not isChecked)
         checkbox "Enable Regulation" "enableRegulation" (toBool enableRegulation $ join lineOverviewConfig) (not isChecked)
@@ -303,12 +304,12 @@ systemParamsView SystemParameter{..} = H.div $ do
     h1 "System Parameters"
 
     H.div ! A.id "form" $ do
-        labelledInput "Departure Offset" "departureOffset" "Enter Departure Offset here" $ Just $ init $ show departureOffset
-        labelledInput "Route Trigger Offset" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just $ init $ show routeTriggerOffset
-        labelledInput "Minimum Dwell Time" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just $ init $ show minimumDwellTime
-        labelledInput "Delay Detection Threshold" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just $ init $ show delayDetectionThreshHold
-        labelledInput "Interstation Stop Detection Time" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show intestationStopDetectionTime
-        labelledInput "Tunnel Limit" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
+        labelledInput "Departure Offset(In seconds)" "departureOffset" "Enter Departure Offset here" $ Just $ init $ show departureOffset
+        labelledInput "Route Trigger Offset(In seconds)" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just $ init $ show routeTriggerOffset
+        labelledInput "Minimum Dwell Time(In seconds)" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just $ init $ show minimumDwellTime
+        labelledInput "Delay Detection Threshold(In seconds)" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just $ init $ show delayDetectionThreshHold
+        labelledInput "Interstation Stop Detection Time(In seconds)" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show intestationStopDetectionTime
+        labelledInput "Tunnel Limit(Number of Trains)" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
         button ! A.id "saveButton" $ "Save Changes"
 
 -- Running Time Lists Page Helpers
@@ -337,7 +338,7 @@ runningTimeListView rtlCode rtl = do
         H.div ! A.id "fromTo" ! class_ "rowElem" $ do
             H.div ! class_ "from" $ "From"
             H.div ! class_ "to" $ "To"
-        H.div ! class_ "rowElem" $ "Running Time"
+        H.div ! class_ "rowElem" $ "Running Time(In seconds)"
     mapM_ (runningTimeView rtlCode) $ M.toList rtl
 
 runningTimeView :: String -> ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
@@ -372,7 +373,7 @@ dwellTimeSetView :: String -> M.Map StopPointCode NominalDiffTime -> Html
 dwellTimeSetView dtsCode dts = do
     H.div ! class_ "header row" $ do
         H.div ! class_ "rowElem" $ "Stop Point"
-        H.div ! class_ "rowElem" $ "Dwell Time"
+        H.div ! class_ "rowElem" $ "Dwell Time(In seconds)"
     mapM_ (dwellTimeView dtsCode) $ M.toList dts
 
 dwellTimeView :: String -> (StopPointCode, NominalDiffTime) -> Html
