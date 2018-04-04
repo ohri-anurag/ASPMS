@@ -12,7 +12,13 @@ import Prelude(String, show, ($), (==))
 import Types
 import Data.Monoid((<>))
 import Language.Javascript.JMacro
--- TODO: Change maximum length for user name to something larger than 25
+
+-- TODO:
+-- 1. Add (In seconds to rtl, dts, sys params)
+-- 2. Change the position of rtl, dts links
+-- 3. AOC Line Overview Config
+-- 4. Add Versioning
+-- 5. Sort the rtl in the following manner: a) PL1 -> PL1, b) PL2 -> PL2 c) PL1->PL2 | PL2 -> PL1
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {
@@ -53,8 +59,8 @@ validation = [jmacro|
         fun notEmpty id {
             return validate id (\ val -> val !== "") "Field cannot be left empty."
         }
-        fun noLongerThan25 id {
-            return validate id (\ val -> val.length <= 25) "Field cannot have more than 25 characters."
+        fun noLongerThan num {
+            return \ id -> validate id (\ val -> val.length <= num) ("Field cannot have more than " + num + " characters.")
         }
         fun noMoreThan5 id {
             return validate id (\ val -> parseFloat(val) <= 5) "Field cannot have number greater than 5."
@@ -328,9 +334,9 @@ account mode = show $ renderJs $ sendXHRExp <>
                 var flag, check = true; 
                 flag = `(userIDCheck)`;
                 check = check && flag;
-                flag = validator 'accountName' [notEmpty, noLongerThan25, alphaNumAndSpaces];
+                flag = validator 'accountName' [notEmpty, noLongerThan 35, alphaNumAndSpaces];
                 check = check && flag;
-                flag = validator 'accountPassword' [notEmpty, noLongerThan25, noSpaces];
+                flag = validator 'accountPassword' [notEmpty, noLongerThan 25, noSpaces];
                 check = check && flag;
                 if(!check)
                     return;
@@ -380,7 +386,7 @@ account mode = show $ renderJs $ sendXHRExp <>
             else [jmacroE|document.getElementById('userID').value|]
         userIDCheck = if mode == EDIT
             then [jmacroE|true|]
-            else [jmacroE|validator 'userID' [notEmpty, noLongerThan25, alphaNumAndSpaces]|]
+            else [jmacroE|validator 'userID' [notEmpty, noLongerThan 25, alphaNumAndSpaces]|]
         redirect = if mode == EDIT
             then [jmacro|location.reload()|]
             else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"))|]
@@ -541,7 +547,7 @@ changePassword = show $ renderJs $ sendXHRExp <>
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
                 var input = document.getElementById('password').value, check = true;
-                check = validator 'password' [notEmpty, noLongerThan25, noSpaces];
+                check = validator 'password' [notEmpty, noLongerThan 25, noSpaces];
 
                 if (!check)
                     return;

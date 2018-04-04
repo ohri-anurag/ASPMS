@@ -54,4 +54,5 @@ executable ASPMS
                      , ASPMS
                      , VDU
                      , derive
+                     , deepseq
   default-language:    Haskell2010

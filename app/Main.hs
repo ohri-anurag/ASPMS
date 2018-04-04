@@ -5,7 +5,9 @@ import Web.Spock
 import Web.Spock.Config
 
 import Data.Array
+import Control.Monad(void, forM_)
 import Control.Monad.Trans
+import Control.DeepSeq
 import Control.Concurrent
 import Control.Exception.Base(catch, SomeException(..))
 import Data.IORef
@@ -17,6 +19,8 @@ import Data.Derive.Class.Default
 import SP6.Data.ID
 import SP6.CommonIO
 import SP6.Data.Render
+import SP6.Data.Utility
+import SP6.Data.Common
 
 -- Provides HTML templates
 import qualified Html as H
@@ -61,8 +65,16 @@ main = withSocketsDo $ do
     (arrServerStatus, _) <- initReceiverServerStatus handle loginStatus []
     debugMain "Receiving workstation health..."
     (arrWorkstationStatus, _) <- initReceiverWorkstationStatus handle loginStatus []
-    -- arrServerStatus <- initMVarArray (minBound, maxBound) (-1, -1)
-    -- arrWorkstationStatus <- initMVarArray (minBound, maxBound) (-1, -1)
+
+    -- Decrement health information every 500 ms
+    void $ forkIO $ addTimer 500000 $
+        let
+            modifyMVarArrayPure :: (NFData a, Enum i, Ix i, Bounded i) => Array i (MVar a) -> (a -> a) -> IO ()
+            modifyMVarArrayPure arr f = forM_ allElems $ \ x ->
+                modifyMVarPure_ (arr <! x) f
+        in do
+            modifyMVarArrayPure arrServerStatus $ mapPair pred
+            modifyMVarArrayPure arrWorkstationStatus $ mapPair pred
 
     -- Initialize a spock instance
     stateRef <- newIORef Free
