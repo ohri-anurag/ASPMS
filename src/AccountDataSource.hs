@@ -96,7 +96,7 @@ updateSystemParams ps accConfSysParam = do
             routeTriggerOffset = routeTriggerOffsetVal,
             minimumDwellTime = minimumDwellTimeVal,
             delayDetectionThreshHold = delayDetectionThreshHoldVal,
-            intestationStopDetectionTime = intestationStopDetectionTimeVal,
+            interstationStopDetectionTime = intestationStopDetectionTimeVal,
             tunnelLimit = tunnelLimitVal
         }
     }

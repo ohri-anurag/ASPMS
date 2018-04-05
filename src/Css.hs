@@ -157,6 +157,10 @@ homeCss = render $ do
         padding (px 10) (px 10) (px 10) (px 10)
         fontSize $ px 18
     "#apply" # hover ? cursor pointer
+    "#versionDiv" ? do
+        position fixed
+        width $ pct 15
+        top $ pct 70
     ".tab" ? do
         position absolute
         height $ pct 100
@@ -188,11 +192,11 @@ homeCss = render $ do
         marginTop $ px 10
         fontSize $ px 15
     ".deleteButton" <> "#saveButton" ? padding (px 2) (px 2) (px 2) (px 2)
-    "#systemParamsRemaining" ? do
-        visibility hidden
+    "#systemParamsRemaining" <> "#addAccountDiv" ? do
         position fixed
         top $ pct 10
         width $ pct 15
+    "#systemParamsRemaining" ? visibility hidden
     "#systemParamsRemaining" ** div ? padding (px 5) (px 5) (px 5) (px 5)
     "#confirm" ? do
         position fixed

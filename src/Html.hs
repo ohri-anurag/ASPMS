@@ -5,9 +5,9 @@ module Html where
 
 import Control.Monad(join)
 import Data.Maybe(isJust,maybe,fromJust)
+import Data.List(partition)
 
 -- HTML
--- import Text.Blaze
 import Text.Blaze.Html5 as H
 import Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html.Renderer.Text(renderHtml)
@@ -26,9 +26,11 @@ import qualified Data.Map.Strict as M
 
 -- Account Data Types
 import Types
+import Utility(version)
 import SP6.Data.Account
 import SP6.Data.ID
 import SP6.Data.Command
+import SP6.Data.Common((<!))
 import Data.Time.Clock(NominalDiffTime)
 
 import Data.Array.Unboxed(assocs)
@@ -75,9 +77,11 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                     a ! href "/runningTimeLists" $ H.div ! A.id "runningTimeLists" $ "Running Time Lists"
                     a ! href "/dwellTimeSets" $ H.div ! A.id "dwellTimeSets" $ "Dwell Time Sets"
                     a ! href "/alarmLevels" $ H.div ! A.id "alarmLevels" $ "Alarm Levels"
-                H.div ! A.id "applyDiv" $ button ! A.id "apply" $ "Apply Changes"
-                H.div ! A.id "linkContainer" $ do
+                H.div ! A.id "addAccountDiv" $
                     a ! href "/addAccount" $ H.div ! A.id "addAccount" $ "Add Account"
+                H.div ! A.id "applyDiv" $ button ! A.id "apply" $ "Apply Changes"
+                H.div ! A.id "versionDiv" $ toHtml $ "Version : " ++ version
+                H.div ! A.id "linkContainer" $ do
                     a ! href "/changePassword" $ H.div ! A.id "changePassword" $ "Change Password"
                     a ! href "/logout" $ H.div ! A.id "logout" $ "Logout"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
@@ -308,7 +312,7 @@ systemParamsView SystemParameter{..} = H.div $ do
         labelledInput "Route Trigger Offset(In seconds)" "routeTriggerOffset" "Enter Route Trigger Offset here" $ Just $ init $ show routeTriggerOffset
         labelledInput "Minimum Dwell Time(In seconds)" "minimumDwellTime" "Enter Minimum Dwell Time here" $ Just $ init $ show minimumDwellTime
         labelledInput "Delay Detection Threshold(In seconds)" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just $ init $ show delayDetectionThreshHold
-        labelledInput "Interstation Stop Detection Time(In seconds)" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show intestationStopDetectionTime
+        labelledInput "Interstation Stop Detection Time(In seconds)" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show interstationStopDetectionTime
         labelledInput "Tunnel Limit(Number of Trains)" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
         button ! A.id "saveButton" $ "Save Changes"
 
@@ -339,7 +343,18 @@ runningTimeListView rtlCode rtl = do
             H.div ! class_ "from" $ "From"
             H.div ! class_ "to" $ "To"
         H.div ! class_ "rowElem" $ "Running Time(In seconds)"
-    mapM_ (runningTimeView rtlCode) $ M.toList rtl
+    mapM_ (runningTimeView rtlCode) $ sortPlatform $ M.toList rtl
+    where
+        sortPlatform xss = pl1 ++ reverse pl2 ++ cross
+            where
+                (same, cross) = partition (samePlatform . fst) xss
+                (pl1, pl2) = partition ((==) PL1 . platform . fst . fst) same
+
+        samePlatform (sp1, sp2) = platform sp1 == platform sp2
+
+        platform spc = pl
+            where
+                (Just (_,pl)) = arrSpCodeToStCode <! spc
 
 runningTimeView :: String -> ((StopPointCode, StopPointCode), NominalDiffTime) -> Html
 runningTimeView rtlCode ((stc1, stc2), diffTime) = hide $ labelledInput rtLabel (toValue rtName) "Enter Running Time here" (Just $ init $ show diffTime)

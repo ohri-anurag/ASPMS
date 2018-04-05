@@ -8,7 +8,8 @@ module Utility(
     debugHeartBeat,
     debugMain,
     debugTCP,
-    credentialsPath
+    credentialsPath,
+    version
 ) where
 
 import Network.Socket
@@ -58,6 +59,9 @@ accountFileCopy = "AccountDataCopy"
 
 credentialsPath :: FilePath
 credentialsPath = "Credentials"
+
+version :: String
+version = "0.0.1"
 
 -- Debugging Functions
 debugTCP :: String -> IO ()

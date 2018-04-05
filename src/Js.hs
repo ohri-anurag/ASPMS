@@ -13,12 +13,6 @@ import Types
 import Data.Monoid((<>))
 import Language.Javascript.JMacro
 
--- TODO:
--- 1. Add (In seconds to rtl, dts, sys params) - Done
--- 2. Change the position of rtl, dts links - Done
--- 3. AOC Line Overview Config - Done
--- 4. Add Versioning
--- 5. Sort the rtl in the following manner: a) PL1 -> PL1, b) PL2 -> PL2 c) PL1->PL2 | PL2 -> PL1
 validation :: JStat
 validation = [jmacro|
         fun displayError parent errorMsg {
@@ -169,7 +163,7 @@ home = show $ renderJs $ sendXHRExp <>
             var accountsView = document.getElementById('accountsView'),
                 systemParamsView = document.getElementById('systemParamsView'),
                 systemParamsRemaining = document.getElementById('systemParamsRemaining'),
-                addAccountLink = document.getElementById('addAccount'),
+                addAccountDiv = document.getElementById('addAccountDiv'),
                 toHide, toShow;
             if (currentView !== view) {
                 if (view === VIEW.SYSTEM_PARAMS) {
@@ -177,14 +171,14 @@ home = show $ renderJs $ sendXHRExp <>
                     toShow = systemParamsView;
                     currentView = VIEW.SYSTEM_PARAMS;
                     systemParamsRemaining.style.visibility = 'visible';
-                    addAccountLink.style.visibility = 'hidden';
+                    addAccountDiv.style.visibility = 'hidden';
                 }
                 else {
                     toHide = systemParamsView;
                     toShow = accountsView;
                     currentView = VIEW.ACCOUNTS;
                     systemParamsRemaining.style.visibility = 'hidden';
-                    addAccountLink.style.visibility = 'visible';
+                    addAccountDiv.style.visibility = 'visible';
                 }
                 toHide.style.visibility = 'hidden';
                 toShow.style.visibility = 'visible';
