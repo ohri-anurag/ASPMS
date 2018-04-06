@@ -129,6 +129,8 @@ This link can be clicked to change the existing password via the Change Password
 
 *Logout*
 
+Click the logout button to log out of ASPMS.
+
 ### Views
 
 The home page has 2 views
