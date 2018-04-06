@@ -150,9 +150,17 @@ sendXHRExp = [jmacro|
         };
     |]
 
+heartBeatExp :: JStat
+heartBeatExp = [jmacro|
+        setInterval(\ {
+            (new Image()).src = "/heartbeat";
+        }, 1000);
+    |]
+
 home :: String
 home = show $ renderJs $ sendXHRExp <>
     validation <>
+    heartBeatExp <>
     [jmacro|
         var VIEW = {
                 ACCOUNTS: 1,
@@ -287,6 +295,7 @@ home = show $ renderJs $ sendXHRExp <>
 account :: AccountMode -> String
 account mode = show $ renderJs $ sendXHRExp <>
     validation <>
+    heartBeatExp <>
     [jmacro|
         window.onload = \ {
             var checkbox = document.getElementById('aocLineOverview'),
@@ -382,6 +391,7 @@ account mode = show $ renderJs $ sendXHRExp <>
 runningTimeLists :: String
 runningTimeLists = show $ renderJs $ sendXHRExp <>
     validation <>
+    heartBeatExp <>
     [jmacro|
         var currentView;
         fun display id {
@@ -449,6 +459,7 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
 dwellTimeSets :: String
 dwellTimeSets = show $ renderJs $ sendXHRExp <>
     validation <>
+    heartBeatExp <>
     [jmacro|
         var currentView;
         fun display id {
@@ -505,7 +516,9 @@ dwellTimeSets = show $ renderJs $ sendXHRExp <>
     |]
 
 alarmLevels :: String
-alarmLevels = show $ renderJs $ sendXHRExp <> [jmacro|
+alarmLevels = show $ renderJs $ sendXHRExp <>
+    heartBeatExp <>
+    [jmacro|
         window.onload = \ {
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
@@ -530,6 +543,7 @@ alarmLevels = show $ renderJs $ sendXHRExp <> [jmacro|
 changePassword :: String
 changePassword = show $ renderJs $ sendXHRExp <> 
     validation <>
+    heartBeatExp <>
     [jmacro|
         window.onload = \ {
             var saveButton = document.getElementById('saveButton');

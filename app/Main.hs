@@ -5,7 +5,7 @@ import Web.Spock
 import Web.Spock.Config
 
 import Data.Array
-import Control.Monad(void, forM_)
+import Control.Monad(void, forM_, when)
 import Control.Monad.Trans
 import Control.DeepSeq
 import Control.Concurrent
@@ -35,10 +35,11 @@ import Utility
 data MyAppState = MyAppState
     { state :: IORef AppState
     , cache :: IORef AccountAndSystemParameterConfig
+    , health :: IORef Int
     }
 
 data AppState = InUse | Free
-    deriving Show
+    deriving (Eq, Show)
 
 data UserSession = UserLoggedIn | UserLoggedOut
     deriving Show
@@ -76,17 +77,25 @@ main = withSocketsDo $ do
             modifyMVarArrayPure arrServerStatus $ mapPair pred
             modifyMVarArrayPure arrWorkstationStatus $ mapPair pred
 
-    -- Initialize a spock instance
     stateRef <- newIORef Free
+
+    -- Start decrementing heartbeat every second
+    healthRef <- newIORef 5
+    void $ forkIO $ addTimer 1000000 $ do
+        stateVal <- readIORef stateRef
+        -- Do not decrement less than 0
+        when (stateVal == InUse) $ atomicModifyIORef' healthRef $ \ h ->
+            (if h == 0 then 0 else h - 1, ())
+
+    -- Initialize a spock instance
     debugMain "Reading saved account data from disk..."
     acData <- getData
     dataRef <- newIORef acData
-    spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState stateRef dataRef)
+    spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState stateRef dataRef healthRef)
     debugMain "Initializing Spock Instance"
     runSpock 8080 $ spock spockCfg $ app accountBytesRef arrServerStatus arrWorkstationStatus
 
-app
-    :: IORef B.ByteString
+app :: IORef B.ByteString
     -> Array ServerID (MVar (Int, Int))
     -> Array WorkstationID (MVar (Int, Int))
     -> SpockM () UserSession MyAppState ()
@@ -104,13 +113,18 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                     debugMain "Validating password..."
                     validatePassword pwd
                 if b
-                    then login >> redirect "/home"
+                    then do
+                        login
+                        updateHealth
+                        redirect "/home"
                     else redirect "/login"
                 ) (lookup "password" ps)
             )
 
     get "logout" $
         logout >> redirect "/login"
+
+    get "heartbeat" updateHealth
 
     get "home" $
         userAuthenticated (withData H.home) (redirect "/login")
@@ -195,7 +209,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         -- Read account data from the cache, and run the action with that data
         withData :: (AccountAndSystemParameterConfig -> T.Text) -> SpockAction () UserSession MyAppState ()
         withData action = do
-            (MyAppState _ accountCache) <- getState
+            (MyAppState _ accountCache _) <- getState
             acData <- liftIO (readIORef accountCache)
             html $ action acData
 
@@ -203,7 +217,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
             -> SpockAction () UserSession MyAppState ()
         updateCacheWith update = do
             ps <- paramsPost
-            (MyAppState _ accountCache) <- getState
+            (MyAppState _ accountCache _) <- getState
             acData <- liftIO (readIORef accountCache)
             maybe (text "0") (updateCache accountCache) $ update ps acData
             where
@@ -218,12 +232,14 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
 
         -- Check if this user is logged in. If yes, perform the given action, otherwise redirect to the login page.
         userAuthenticated actionTrue actionFalse = do
+            (MyAppState ref _ healthRef) <- getState
+            healthVal <- liftIO $ readIORef healthRef
+            when (healthVal == 0) logout
             session <- readSession
             case session of
                 UserLoggedIn -> actionTrue
                 UserLoggedOut -> do
                   -- Check if some other user is already using the app. If yes, don't show the login page.
-                    (MyAppState ref _) <- getState
                     appState <- liftIO (readIORef ref)
                     case appState of
                         InUse -> text "The account management system is in use by another user. Kindly login at a later time."
@@ -232,7 +248,12 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         login = writeAppState InUse >> writeSession UserLoggedIn
         logout = writeAppState Free >> writeSession UserLoggedOut
 
+        updateHealth :: SpockAction () UserSession MyAppState ()
+        updateHealth = do
+            (MyAppState _ _ healthRef) <- getState
+            liftIO $ atomicModifyIORef' healthRef $ const (5, ())
+
         writeAppState :: AppState -> SpockAction () UserSession MyAppState ()
         writeAppState appState = do
-            (MyAppState ref _) <- getState
+            (MyAppState ref _ _) <- getState
             liftIO $ atomicModifyIORef' ref (const (appState, ()))
