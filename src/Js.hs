@@ -153,7 +153,9 @@ sendXHRExp = [jmacro|
 heartBeatExp :: JStat
 heartBeatExp = [jmacro|
         setInterval(\ {
-            (new Image()).src = "/heartbeat";
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "/heartbeat", true);
+            xhttp.send();
         }, 1000);
     |]
 
