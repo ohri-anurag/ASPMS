@@ -56,11 +56,13 @@ validation = [jmacro|
         fun noLongerThan num {
             return \ id -> validate id (\ val -> val.length <= num) ("Field cannot have more than " + num + " characters.")
         }
-        fun noMoreThan5 id {
-            return validate id (\ val -> parseFloat(val) <= 5) "Field cannot have number greater than 5."
-        }
-        fun noMoreThan999 id {
-            return validate id (\ val -> parseFloat(val) <= 999) "Field cannot have number greater than 999."
+        fun noMoreThan num {
+            return \ id {
+                return validate id (\ val {
+                    var n = parseFloat(val);
+                    return n !== NaN && n !== Infinity && n <= num;
+                }) ("Field cannot have number greater than " + num + ".");
+            };
         }
         fun positiveInt id {
             return validate id (\ val {
@@ -178,18 +180,18 @@ home = show $ renderJs $ sendXHRExp <>
                     toHide = accountsView;
                     toShow = systemParamsView;
                     currentView = VIEW.SYSTEM_PARAMS;
-                    systemParamsRemaining.style.visibility = 'visible';
-                    addAccountDiv.style.visibility = 'hidden';
+                    systemParamsRemaining.style.display = 'block';
+                    addAccountDiv.style.display = 'none';
                 }
                 else {
                     toHide = systemParamsView;
                     toShow = accountsView;
                     currentView = VIEW.ACCOUNTS;
-                    systemParamsRemaining.style.visibility = 'hidden';
-                    addAccountDiv.style.visibility = 'visible';
+                    systemParamsRemaining.style.display = 'none';
+                    addAccountDiv.style.display = 'block';
                 }
-                toHide.style.visibility = 'hidden';
-                toShow.style.visibility = 'visible';
+                toHide.style.display = 'none';
+                toShow.style.display = 'block';
             }
         };
         fun showConfirmationDialog text {
@@ -269,9 +271,9 @@ home = show $ renderJs $ sendXHRExp <>
                 for(i=0; i<inputs.length; ++i) {
                     var id = inputs[i].getAttribute('id');
                     if (id === "tunnelLimit") {
-                        flag = validator id [notEmpty, noMoreThan5, positiveInt];
+                        flag = validator id [notEmpty, positiveInt, noMoreThan 5];
                     } else {
-                        flag = validator id [notEmpty, noMoreThan999, positiveInt];
+                        flag = validator id [notEmpty, positiveInt, noMoreThan 999];
                     }
                     check = check && flag;
                     str.push(id + "=" + inputs[i].value);
@@ -428,9 +430,9 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
                         var id = inputs[j].getAttribute('id');
-                        // Check if the value is greater than 9990, if so, skip validation
-                        if (parseFloat(inputs[j].value) <= 9990) {
-                            flag = validator id [notEmpty, noMoreThan999, positiveFloat];
+                        // If the input is hidden, do not validate it
+                        if (inputs[j].parentElement.getAttribute("style") !== "display:none;") {
+                            flag = validator id [notEmpty, positiveFloat, noMoreThan 999];
                             check = check && flag;
                         }
                         arr.push([id.substr(3).split(','), parseFloat(inputs[j].value)]);
@@ -490,7 +492,7 @@ dwellTimeSets = show $ renderJs $ sendXHRExp <>
                     arr = [];
                     for (j=0; j<inputs.length; ++j) {
                         var id = inputs[j].getAttribute('id');
-                        flag = validator id [notEmpty, noMoreThan999, positiveInt];
+                        flag = validator id [notEmpty, positiveInt, noMoreThan 999];
                         check = check && flag;
                         arr.push([id.substr(2), parseFloat(inputs[j].value)]);
                     }

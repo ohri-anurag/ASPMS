@@ -165,8 +165,7 @@ homeCss = render $ do
         position absolute
         height $ pct 100
         width $ pct 100
-    "#accountsView" ? visibility visible
-    "#systemParamsView" ? visibility hidden
+    "#systemParamsView" <> "#systemParamsRemaining" ? display none
     "#accountsView .row" ? do
         marginLeft $ pct 30
         width $ pct 60
@@ -196,7 +195,6 @@ homeCss = render $ do
         position fixed
         top $ pct 10
         width $ pct 15
-    "#systemParamsRemaining" ? visibility hidden
     "#systemParamsRemaining" ** div ? padding (px 5) (px 5) (px 5) (px 5)
     "#confirm" ? do
         position fixed
