@@ -367,7 +367,7 @@ runningTimeView rtlCode ((stc1, stc2), diffTime) = hide $ labelledInput rtLabel 
         rtName = rtlCode ++ show stc1 ++ "," ++ show stc2
         hide tag
             -- Corner case, do not show or modify this field, but include it in the data
-            | diffTime > 9990   = tag ! A.style "display:none;"
+            | diffTime > 9990   = tag ! dataAttribute "noshow" "true"
             | otherwise         = tag
 
 -- Dwell Time Sets Page Helpers

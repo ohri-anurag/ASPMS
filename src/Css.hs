@@ -278,6 +278,7 @@ runningTimeListsCss = render $ do
     "#eightPercentCoasting" ? visibility hidden
     "#energySaving" ? visibility hidden
     "#fullCoasting" ? visibility hidden
+    "div" # ("data-noshow" *= "true") ? display none
 
 dwellTimeSetsCss :: T.Text
 dwellTimeSetsCss = render $ do

@@ -431,7 +431,7 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
                     for (j=0; j<inputs.length; ++j) {
                         var id = inputs[j].getAttribute('id');
                         // If the input is hidden, do not validate it
-                        if (inputs[j].parentElement.getAttribute("style") !== "display:none;") {
+                        if (inputs[j].parentElement.getAttribute("data-noshow") !== "true") {
                             flag = validator id [notEmpty, positiveFloat, noMoreThan 999];
                             check = check && flag;
                         }
