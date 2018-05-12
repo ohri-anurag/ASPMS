@@ -5,7 +5,7 @@ module Types(
 
 import SP6.Data.Account
 import SP6.Data.ID
--- import SP6.Data.Command
+import SP6.Data.Command(EventTag)
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Array.Unboxed as A
@@ -23,7 +23,6 @@ instance FromJSON LineOverviewConfig
 instance Hashable OC_ID
 instance FromJSONKey OC_ID
 instance FromJSONKey StopPointCode
-instance FromJSON EventTag
 instance FromJSONKey EventTag
 
 instance FromJSON Account where

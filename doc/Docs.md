@@ -227,7 +227,7 @@ The following table lists the accepted values for the text boxes on the Add Acco
 
 | Field Name       | Accepted Value                                                                                                                                           |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| User Id          | Alphabets(A-Z,a-z), Numbers(0-9) and spaces are allowed. Only one space allowed between words. Should **NOT** be empty. Maximum length is 25 characters. |
+| User Id          | Alphabets(A-Z,a-z), Numbers(0-9), spaces and underscores are allowed. Only one space/underscore allowed between words. Should **NOT** be empty. Maximum length is 25 characters. |
 | Account Name     | Alphabets(A-Z,a-z), Numbers(0-9) and spaces are allowed. Only one space allowed between words. Should **NOT** be empty. Maximum length is 25 characters. |
 | Account Password | Should **NOT** contain spaces, all other characters are acceptable . Should **NOT** be empty. Maximum length is 25 characters.                           |
 

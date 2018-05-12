@@ -235,7 +235,7 @@ showStopPoint spc = maybe (show spc) (\(sc,pn) -> show sc ++ " " ++ show pn) (ar
 
 -- Home page helpers
 accountAndSystemParameterView :: AccountAndSystemParameterConfig -> Html
-accountAndSystemParameterView (AccountAndSystemParameterConfig accountsConfig systemParams) = do
+accountAndSystemParameterView (AccountAndSystemParameterConfig systemParams accountsConfig) = do
     H.div ! A.id "accountsView" ! class_ "tab" $ do
         h1 "Accounts"
         H.div ! class_ "row header" $ do

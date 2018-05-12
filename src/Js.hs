@@ -82,6 +82,12 @@ validation = [jmacro|
                 return regex.test(val)
             }) "Field must consist of alphabets, numbers and space(only 1 allowed between words)."
         }
+        fun alphaNumSpacesUnderscore id {
+            return validate id (\ val {
+                var regex = /^[\dA-Za-z]+([\s_][\dA-Za-z]+)*$/;
+                return regex.test(val)
+            }) "Field must consist of alphabets, numbers, space(only 1 allowed between words) and underscore(only 1 allowed between words)."
+        }
         fun noSpaces id {
             return validate id (\ val {
                 var regex = /^\S+$/;
@@ -385,7 +391,7 @@ account mode = show $ renderJs $ sendXHRExp <>
             else [jmacroE|document.getElementById('userID').value|]
         userIDCheck = if mode == EDIT
             then [jmacroE|true|]
-            else [jmacroE|validator 'userID' [notEmpty, noLongerThan 25, alphaNumAndSpaces]|]
+            else [jmacroE|validator 'userID' [notEmpty, noLongerThan 25, alphaNumSpacesUnderscore]|]
         redirect = if mode == EDIT
             then [jmacro|location.reload()|]
             else [jmacro|window.location.replace(window.location.href.replace("addAccount", "home"))|]

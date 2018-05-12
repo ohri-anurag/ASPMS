@@ -70,14 +70,14 @@ createAccount paramList = do
     --                 Just acc -> Just (uid, acc)
 
 modifyAccount :: (UserID2, Account) -> AccountAndSystemParameterConfig -> AccountAndSystemParameterConfig
-modifyAccount (uid, acc) (AccountAndSystemParameterConfig accConf sysParam) = AccountAndSystemParameterConfig (M.insert uid acc accConf) sysParam
+modifyAccount (uid, acc) (AccountAndSystemParameterConfig sysParam accConf) = AccountAndSystemParameterConfig sysParam (M.insert uid acc accConf)
 
 updateAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateAccount ps accConfSysParam = flip modifyAccount accConfSysParam <$> createAccount ps
 
 deleteAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
-deleteAccount ps (AccountAndSystemParameterConfig accConf sysParam) =
-    flip AccountAndSystemParameterConfig sysParam . delete
+deleteAccount ps (AccountAndSystemParameterConfig sysParam accConf) =
+    AccountAndSystemParameterConfig sysParam . delete
     <$> lookup "userID" ps
     where
         delete uid = M.delete (UserID2 $ T.unpack uid) accConf

@@ -7,25 +7,29 @@ Available Data
 2. Passenger Load
 3. Intertation Stops record(when, where, how many etc.)
 
+Scheduled vs Completed missions
+Average Delay
+Average Waiting Time per station
+
 The following points are associated with online function of Reports and Graphs
 
 S. No.|Requirement|Comment
 ------|------|--------
-1.|Support for Excel and other formats|Achieved easily, because our output is a Diagram
+1.|Support for Excel and other formats|[Not in my scope]
 2.|Statistical reports|Easily derivable from corresponding graphs, just the same data displayed in a different format
 3.|Punctuality reports|Different kinds of delay records:<ul><li>Arrival Delay (per train/averaged on trains) for the required time period</li><li> Departure Delay (per train/averaged on trains) for the required time period [NOT NEEDED - One station's departure delay is next station's arrival delay]</li><li> Interstation Stops Graph (per train, averaged on trains)</li></ul>
-4.|Unusual Occurences|DATA NOT AVAILABLE
+4.|Unusual Occurences|Available via Event Monitor
 5.|Crew Link and Rake Utilisation|DATA NOT AVAILABLE
 6.|Blocks overview(Blocks granted/refused)|DATA NOT AVAILABLE
-7.|Sectional Running Times|(Per train/Averaged on trains) Per train might not be significant, averaged makes more sense
+7.|Sectional Running Times|(Median on trains) Per train might not be significant, averaged makes more sense
 8.|Daily report of trains|ALREADY COVERED in Point 3
 9.|Department wise booking of trains delays|What is department? Might be covered in Point 3
 10.|Difference between actual and scheduled running times|Actual covered in Point 7, just need to display scheduled together with scheduled for comparison
 11.|Adding remarks|May be difficult to implement, will require some feature mirroring comments
 12.|Performance Analysis, Incident Evaluation|Performance Analysis already covered in Points 3 & 7, Incident Evaluation Data Not Available
 13.|Train performance graph, actual performance vs timetabled performance|Already covered in Points 7 and 10
-14.|Comparison of actual departure vs timetable|might be covered by Point 3, sub-point 2
-15.|Headway Interval Graph – headway interval in seconds versus time in minutes|Doesn't seem possible, headway interval cannot be plotted against time, since it requires two departure times to calculate one headway interval<br/>Alternate - Plot average headway interval for the entire day for each station.<br/>Also since headway interval basically corresponds to waiting time, this might be already covered in Point 3
+14.|Comparison of actual departure vs timetable|Available via TimeTable
+15.|Headway Interval Graph – headway interval in seconds versus time in minutes|Doesn't seem possible, headway interval cannot be plotted against time, since it requires two departure times to calculate one headway interval<br/>Alternate - Plot average headway interval for the entire day for each station.<br/>Also since headway interval basically corresponds to waiting time, this might be already covered in Point 3[Variance of Headway per station makes more sense]
 16.|Inter-station stopping chart|Already Covered in Point 3
 17.|The capability to produce online and offline graphical analysis|Automatically provided, since offline and online timetable formats are the same
 18.|The capability to produce the train graph for a particular train along with the ATP commands/signals it has encountered|What is Train Graph? Might already be covered above. Also, ATP commands are available
