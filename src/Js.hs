@@ -420,9 +420,55 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
             var reader = new FileReader();
 
             reader.onload = \ event {
-                var i, 
-                    runningTimes = JSON.parse(event.target.result),
+                var i, runningTimes = [],
                     encoding = viewToEncoding[currentView.getAttribute('id')];
+
+                try {
+                    runningTimes = JSON.parse(event.target.result);
+                } catch (e) {
+                    toggleDialog(true, "Invalid File.", \ {
+                        console.log("Invalid File. Exception : " + e);
+                    });
+                    return;
+                }
+
+                var validity = true;
+                // Validate the data
+                if (runningTimes.length !== undefined && runningTimes.length !== null) {
+                    // Validate each entry
+                    for (i=0; i<runningTimes.length; ++i) {
+                        var entry = runningTimes[i];
+                        if (entry.length !== undefined && entry.length !== null && entry.length === 2) {
+                            // First element should be another pair
+                            var pair = entry[0];
+                            if (pair.length !== undefined && pair.length !== null && pair.length === 2) {
+                                if (typeof pair[0] !== "string" || typeof pair[1] !== "string") {
+                                    validity = false;
+                                }
+                            }
+                            else {
+                                validity = false;
+                            }
+                            // Second element should be a float
+                            if (parseFloat(entry[1]) === NaN) {
+                                validity = false;
+                            }
+                        }
+                        else {
+                            validity = false;
+                        }
+                    }
+                }
+                else {
+                    validity = false;
+                }
+
+                if (validity === false) {
+                    toggleDialog(true, "Invalid Data.", \ {
+                        console.log("Invalid Data.");
+                    });
+                    return;
+                }
 
                 for (i=0; i<runningTimes.length; ++i) {
                     var from  = runningTimes[i][0][0],
