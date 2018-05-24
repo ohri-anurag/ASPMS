@@ -163,6 +163,9 @@ runningTimeListsPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml 
                     H.div ! A.id "cumulativeError" ! class_ "error" $ "Changes could not be saved because form contains errors."
                     button ! A.id "saveButton" $ "Save Changes"
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+                H.div ! A.id "import" $ do
+                    H.label ! for "importButton" $ "Import Running Times"
+                    input ! A.id "importButton" ! type_ "file"
             H.div ! A.id "main" $ do
                 h1 "Running Time Lists"
                 runningTimeListsView $ runningTimeLists $ systemParameter accountAndSystemParameterConfig

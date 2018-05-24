@@ -61,7 +61,7 @@ credentialsPath :: FilePath
 credentialsPath = "Credentials"
 
 version :: String
-version = "0.0.2"
+version = "0.0.3"
 
 -- Debugging Functions
 debugTCP :: String -> IO ()

@@ -321,6 +321,13 @@ This button opens the Full Coasting view in the view region.
 
 Click on **Save Changes** and then click **OK** in the success dialog.
 
+*Import Running Times*
+
+Click on **Choose File** to select a file that was exported from VDU, to import all of the running time data into ASPMS.
+>**NOTE :** There are 5 profiles for running times. Data will be imported for the profile that is currently open.
+
+![Import Running Times](img/import.png)
+
 *Home*
 
 Click on **Home** to go back to the home page.

@@ -258,6 +258,16 @@ runningTimeListsCss = render $ do
     sidebar
     labelledInputCss
     saveAndError
+    "#import" ? do
+        position fixed
+        width $ pct 15
+        top $ pct 60
+    "#import" # label ? fontWeight bold
+    "#importButton" ? do
+        marginTop (px 10)
+        padding (px 10) (px 0) (px 10) (px 0)
+        borderTop solid (px 2) black
+        borderBottom solid (px 2) black
     label # ".rowElem" <> "#fromTo" ? do
         backgroundColor grey
         display flex

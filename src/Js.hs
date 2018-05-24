@@ -401,7 +401,13 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
     validation <>
     heartBeatExp <>
     [jmacro|
-        var currentView;
+        var currentView, viewToEncoding = {
+            maximumPerformance : 'mpf',
+            fivePercentCoasting : 'fpc',
+            eightPercentCoasting : 'epc',
+            energySaving : 'esg',
+            fullCoasting : 'fcg'
+        };
         fun display id {
             var elem = document.getElementById(id);
             if (currentView === elem)
@@ -409,6 +415,33 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
             currentView.style.visibility = 'hidden';
             elem.style.visibility = 'visible';
             currentView = elem;
+        };
+        fun importRunningTimes file {
+            var reader = new FileReader();
+
+            reader.onload = \ event {
+                var i, 
+                    runningTimes = JSON.parse(event.target.result),
+                    encoding = viewToEncoding[currentView.getAttribute('id')];
+
+                for (i=0; i<runningTimes.length; ++i) {
+                    var from  = runningTimes[i][0][0],
+                        to    = runningTimes[i][0][1],
+                        time  = runningTimes[i][1],
+                        id    = encoding + from + ',' + to,
+                        input = document.getElementById(id);
+                    // Check to see if such a tag really exists, if yes, update the value
+                    if (input) {
+                        input.value = time;
+                    }
+                }
+
+                toggleDialog(true, "Running Times imported successfully.", \ {
+                    console.log("Running Times imported successfully.");
+                });
+            };
+      
+            reader.readAsText(file);
         };
         window.onload = \ {
             currentView = document.getElementById('maximumPerformance');
@@ -461,6 +494,10 @@ runningTimeLists = show $ renderJs $ sendXHRExp <>
                     }
                 });
             };
+            var importButton = document.getElementById('importButton');
+            importButton.addEventListener('change', \ {
+                importRunningTimes(importButton.files[0]);
+            });
         };
     |]
 
