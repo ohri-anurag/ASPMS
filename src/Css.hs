@@ -262,7 +262,6 @@ runningTimeListsCss = render $ do
         position fixed
         width $ pct 15
         top $ pct 60
-        display none
     "#import" ** label ? fontWeight bold
     "#importButton" ? do
         marginTop (px 10)
