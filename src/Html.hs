@@ -79,6 +79,10 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                     a ! href "/alarmLevels" $ H.div ! A.id "alarmLevels" $ "Alarm Levels"
                 H.div ! A.id "addAccountDiv" $
                     a ! href "/addAccount" $ H.div ! A.id "addAccount" $ "Add Account"
+                H.div ! A.id "saveLoadDataDiv" $ do
+                    H.label ! for "loadDataButton" $ "Load Data"
+                    input ! A.id "loadDataButton" ! type_ "file"
+                    button ! A.id "saveDataButton" $ "Save Data"
                 H.div ! A.id "applyDiv" $ button ! A.id "apply" $ "Apply Changes"
                 H.div ! A.id "versionDiv" $ toHtml $ "Version : " ++ version
                 H.div ! A.id "linkContainer" $ do

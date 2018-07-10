@@ -220,6 +220,34 @@ home = show $ renderJs $ sendXHRExp <>
             confirm.style.opacity = 0;
             confirm.style.zIndex = -1;
         }
+        fun loadDataFromFile file {
+            var reader = new FileReader();
+
+            reader.onload = \ event {
+                var fileData = event.target.result;
+
+                var xhttp = new XMLHttpRequest();
+                xhttp.onload = function() {
+                    if (this.status == 200) {
+                        if (this.responseText === "1") {
+                            toggleDialog(true, "Data loaded successfully.", \ {
+                                location.reload();
+                            });
+                        }
+                        else {
+                            // Error Handling
+                            toggleDialog(true, "Could not load data.", \ {
+                                console.log("Encountered an error");
+                            });
+                        }
+                    }
+                };
+                xhttp.open("POST", "/loadData", true);
+                xhttp.send(fileData);
+            };
+      
+            reader.readAsArrayBuffer(file);
+        };
         window.onload = \ {
             var accountsViewButton = document.getElementById('accountsViewButton'),
                 systemParamsViewButton = document.getElementById('systemParamsViewButton');
@@ -297,6 +325,35 @@ home = show $ renderJs $ sendXHRExp <>
                     }
                 });
             };
+
+            var saveDataButton = document.getElementById('saveDataButton');
+            saveDataButton.onclick = \ {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onload = function() {
+                    if (this.status == 200) {
+                        var msg = "",
+                            logFunc = \ {
+                                console.log(msg);
+                            };
+                        if (this.responseText === "0") {
+                            // Error Handling
+                            msg = "Could not save data.";
+                            toggleDialog(true, msg, logFunc);
+                        }
+                        else {
+                            msg = "Data saved in file - " + this.responseText;
+                            toggleDialog(true, msg, logFunc);
+                        }
+                    }
+                };
+                xhttp.open("GET", "/saveData", true);
+                xhttp.send();
+            };
+
+            var loadDataButton = document.getElementById('loadDataButton');
+            loadDataButton.addEventListener('change', \ {
+                loadDataFromFile(loadDataButton.files[0]);
+            });
         };
     |]
 

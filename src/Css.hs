@@ -191,10 +191,22 @@ homeCss = render $ do
         marginTop $ px 10
         fontSize $ px 15
     ".deleteButton" <> "#saveButton" ? padding (px 2) (px 2) (px 2) (px 2)
-    "#systemParamsRemaining" <> "#addAccountDiv" ? do
+    "#systemParamsRemaining" <> "#addAccountDiv" <> "#saveLoadDataDiv" ? do
         position fixed
-        top $ pct 10
         width $ pct 15
+    "#systemParamsRemaining" <> "#addAccountDiv" ? top (pct 10)
+    "#saveLoadDataDiv" ? do
+        top $ pct 75
+        borderTop solid (px 2) black
+        borderBottom solid (px 2) black
+        paddingTop $ px 10
+    "#saveDataButton" ? do
+        width $ pct 75
+        fontSize $ px 18
+        margin (px 10) (px 0) (px 10) (px 0)
+    "#loadDataButton" ? do
+        padding (px 10) (px 0) (px 10) (px 0)
+        borderBottom solid (px 2) black
     "#systemParamsRemaining" ** div ? padding (px 5) (px 5) (px 5) (px 5)
     "#confirm" ? do
         position fixed

@@ -15,6 +15,7 @@ import qualified Data.Text as T
 import qualified Data.ByteString as B
 import System.IO(stdout)
 import Data.Derive.Class.Default
+import Data.Time.Clock.POSIX(getPOSIXTime)
 
 import SP6.Data.ID
 import SP6.CommonIO
@@ -155,6 +156,32 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
 
     post "deleteAccount" $
         userAuthenticated (updateCacheWith deleteAccount) (redirect "/login")
+
+    get "saveData" $
+        userAuthenticated (do
+            val <- runQuery $ const $ catch (do
+                -- Read latest account data
+                debugMain "Getting current data from file..."
+                accountBytes <- getDataBytes accountFilePath
+
+                -- Get the current time
+                debugMain "Get the current time..."
+                time <- getPOSIXTime
+
+                let roundTime = round (realToFrac time :: Double) :: Integer
+                let fileName = "SavedData_" ++ show roundTime
+
+                -- Save the current account and system data onto disk
+                debugMain $ "Save current account data to file" ++ fileName
+                B.writeFile fileName accountBytes
+
+                pure $ T.pack fileName
+                ) errorHandler
+            text val
+            ) (redirect "/login")
+
+    post "loadData" $
+        userAuthenticated (body >>= \fileData -> updateCacheWith (updateData fileData)) (redirect "/login")
 
     post "systemParams" $
         userAuthenticated (updateCacheWith updateSystemParams) (redirect "/login")

@@ -9,6 +9,7 @@ module AccountDataSource (
     updateRunningTimeLists,
     updateDwellTimeSets,
     updateAlarmLevels,
+    updateData,
     AccountAndSystemParameterConfig
 ) where
 
@@ -134,6 +135,9 @@ updateAlarmLevels ps accConfSysParam = do
             alarmLevel = alarmLevelVal
         }
     }
+
+updateData :: B.ByteString -> [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
+updateData accountData _ _ = either (const Nothing) Just $ S.decode accountData
 
     -- FOR DEBUGGING
     -- case createAccount ps of
