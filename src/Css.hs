@@ -7,6 +7,8 @@ module Css(
     runningTimeListsCss,
     dwellTimeSetsCss,
     alarmLevelsCss,
+    rollingStockRosterCss,
+    crewRosterCss,
     changePasswordCss
 ) where
 
@@ -331,6 +333,24 @@ alarmLevelsCss = render $ do
         width $ pct 30
         margin (px 3) (px 3) (px 3) (px 3)
     label # ".rowElem" ? width (pct 70)
+
+rollingStockRosterCss :: T.Text
+rollingStockRosterCss = render $ do
+    dialogCss
+    zeroPM
+    common
+    sidebar
+    labelledInputCss
+    saveAndError
+
+crewRosterCss :: T.Text
+crewRosterCss = render $ do
+    dialogCss
+    zeroPM
+    common
+    sidebar
+    labelledInputCss
+    saveAndError
 
 changePasswordCss :: T.Text
 changePasswordCss = render $ do

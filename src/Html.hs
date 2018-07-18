@@ -77,6 +77,8 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                     a ! href "/runningTimeLists" $ H.div ! A.id "runningTimeLists" $ "Running Time Lists"
                     a ! href "/dwellTimeSets" $ H.div ! A.id "dwellTimeSets" $ "Dwell Time Sets"
                     a ! href "/alarmLevels" $ H.div ! A.id "alarmLevels" $ "Alarm Levels"
+                    a ! href "/rollingStockRoster" $ H.div ! A.id "rollingStockRoster" $ "Rolling Stock Roster"
+                    a ! href "/crewRoster" $ H.div ! A.id "crewRoster" $ "Crew Roster"
                 H.div ! A.id "addAccountDiv" $
                     a ! href "/addAccount" $ H.div ! A.id "addAccount" $ "Add Account"
                 H.div ! A.id "saveLoadDataDiv" $ do
@@ -214,6 +216,40 @@ alarmLevels accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docType
         H.div ! A.id "main" $ do
             h1 "Alarm Levels"
             mapM_ alarmLevelView $ M.toList $ alarmLevel $ systemParameter accountAndSystemParameterConfig
+
+rollingStockRosterPage :: AccountAndSystemParameterConfig -> T.Text
+rollingStockRosterPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+    H.head $ do
+        H.title "Rolling Stock Roster"
+        H.style $ toHtml CSS.rollingStockRosterCss
+        script ! type_ "text/javascript" $ toHtml JS.rollingStockRoster
+    H.body $ do
+        dialog
+        H.div ! A.id "container" $
+            H.div ! A.id "sidebar" $ do
+                H.div ! A.id "saveAndError" $
+                    button ! A.id "saveButton" $ "Save Changes"
+                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+        H.div ! A.id "main" $ do
+            h1 "Rolling Stock Roster"
+            mapM_ rollingStockView $ M.toList $ rollingStockRoster $ systemParameter accountAndSystemParameterConfig
+
+crewRosterPage :: AccountAndSystemParameterConfig -> T.Text
+crewRosterPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
+    H.head $ do
+        H.title "Crew Roster"
+        H.style $ toHtml CSS.crewRosterCss
+        script ! type_ "text/javascript" $ toHtml JS.crewRoster
+    H.body $ do
+        dialog
+        H.div ! A.id "container" $
+            H.div ! A.id "sidebar" $ do
+                H.div ! A.id "saveAndError" $
+                    button ! A.id "saveButton" $ "Save Changes"
+                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+        H.div ! A.id "main" $ do
+            h1 "Crew Roster"
+            mapM_ crewView $ M.toList $ crewRoster $ systemParameter accountAndSystemParameterConfig
 
 --- Helpers ---
 -- General Helpers
@@ -417,3 +453,13 @@ alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
         markSelected level tag = if aLevel == level
             then tag ! selected "selected"
             else tag
+
+-- Rolling Stock Roster Page Helpers
+rollingStockView :: (RakeID, T.Text) -> Html
+rollingStockView (rakeID, desc) = 
+    labelledInput (toHtml $ show rakeID) (toValue $ show rakeID) "Enter Rake Description Here" (Just desc)
+
+-- Crew Roster Page Helpers
+crewView :: (CrewID, T.Text) -> Html
+crewView (crewID, desc) = 
+    labelledInput (toHtml $ unCrewID crewID) (toValue $ unCrewID crewID) "Enter Crew Description Here" (Just desc)

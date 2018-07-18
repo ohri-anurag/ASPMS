@@ -10,6 +10,8 @@ module AccountDataSource (
     updateDwellTimeSets,
     updateAlarmLevels,
     updateData,
+    updateRollingStockRoster,
+    updateCrewRoster,
     AccountAndSystemParameterConfig
 ) where
 
@@ -75,6 +77,10 @@ modifyAccount (uid, acc) (AccountAndSystemParameterConfig sysParam accConf) = Ac
 
 updateAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateAccount ps accConfSysParam = flip modifyAccount accConfSysParam <$> createAccount ps
+    -- FOR DEBUGGING
+    -- case createAccount ps of
+    --     Nothing -> error "Could not create account"
+    --     Just x -> Just (modifyAccount x accConf)
 
 deleteAccount :: [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 deleteAccount ps (AccountAndSystemParameterConfig sysParam accConf) =
@@ -139,7 +145,28 @@ updateAlarmLevels ps accConfSysParam = do
 updateData :: B.ByteString -> [(T.Text, T.Text)] -> AccountAndSystemParameterConfig -> Maybe AccountAndSystemParameterConfig
 updateData accountData _ _ = either (const Nothing) Just $ S.decode accountData
 
-    -- FOR DEBUGGING
-    -- case createAccount ps of
-    --     Nothing -> error "Could not create account"
-    --     Just x -> Just (modifyAccount x accConf)
+updateRollingStockRoster
+    :: [(T.Text, T.Text)]
+    -> AccountAndSystemParameterConfig
+    -> Maybe AccountAndSystemParameterConfig
+updateRollingStockRoster ps accConfSysParam = do
+    rsJson <- lookup "data" ps
+    rollingStock <- decodeStrict' $ TE.encodeUtf8 rsJson
+    Just $ accConfSysParam {
+        systemParameter = (systemParameter accConfSysParam) {
+            rollingStockRoster = rollingStock
+        }
+    }
+
+updateCrewRoster
+    :: [(T.Text, T.Text)]
+    -> AccountAndSystemParameterConfig
+    -> Maybe AccountAndSystemParameterConfig
+updateCrewRoster ps accConfSysParam = do
+    crJson <- lookup "data" ps
+    crew <- decodeStrict' $ TE.encodeUtf8 crJson
+    Just $ accConfSysParam {
+        systemParameter = (systemParameter accConfSysParam) {
+            crewRoster = crew
+        }
+    }

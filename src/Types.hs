@@ -24,6 +24,8 @@ instance Hashable OC_ID
 instance FromJSONKey OC_ID
 instance FromJSONKey StopPointCode
 instance FromJSONKey EventTag
+instance FromJSONKey RakeID
+instance FromJSONKey CrewID
 
 instance FromJSON Account where
     parseJSON = withObject "Account" $ \o -> do

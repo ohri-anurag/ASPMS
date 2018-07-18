@@ -6,6 +6,8 @@ module Js(
     runningTimeLists,
     dwellTimeSets,
     alarmLevels,
+    rollingStockRoster,
+    crewRoster,
     changePassword
 ) where
 import Prelude(String, show, ($), (==))
@@ -665,6 +667,56 @@ dwellTimeSets = show $ renderJs $ sendXHRExp <>
 
 alarmLevels :: String
 alarmLevels = show $ renderJs $ sendXHRExp <>
+    heartBeatExp <>
+    [jmacro|
+        window.onload = \ {
+            var saveButton = document.getElementById('saveButton');
+            saveButton.onclick = \ {
+                var i, obj = [],
+                    selects = document.querySelectorAll('select');
+                for (i=0; i<selects.length; ++i) {
+                    obj.push([selects[i].getAttribute('id'), selects[i].value]);
+                }
+
+                sendXHR("/alarmLevels", "data=" + JSON.stringify(obj), {
+                    success: \ {
+                        location.reload();
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
+                    }
+                })
+            };
+        };
+    |]
+
+rollingStockRoster :: String
+rollingStockRoster = show $ renderJs $ sendXHRExp <>
+    heartBeatExp <>
+    [jmacro|
+        window.onload = \ {
+            var saveButton = document.getElementById('saveButton');
+            saveButton.onclick = \ {
+                var i, obj = [],
+                    selects = document.querySelectorAll('select');
+                for (i=0; i<selects.length; ++i) {
+                    obj.push([selects[i].getAttribute('id'), selects[i].value]);
+                }
+
+                sendXHR("/alarmLevels", "data=" + JSON.stringify(obj), {
+                    success: \ {
+                        location.reload();
+                    },
+                    failure: \ {
+                        console.log("Encountered an error");
+                    }
+                })
+            };
+        };
+    |]
+
+crewRoster :: String
+crewRoster = show $ renderJs $ sendXHRExp <>
     heartBeatExp <>
     [jmacro|
         window.onload = \ {

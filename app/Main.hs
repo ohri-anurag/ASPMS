@@ -201,6 +201,16 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
     post "alarmLevels" $
         userAuthenticated (updateCacheWith updateAlarmLevels) (redirect "/login")
 
+    get "rollingStockRoster" $
+        userAuthenticated (withData H.rollingStockRosterPage) (redirect "/login")
+    post "rollingStockRoster" $
+        userAuthenticated (updateCacheWith updateRollingStockRoster) (redirect "/login")
+
+    get "crewRoster" $
+        userAuthenticated (withData H.crewRosterPage) (redirect "/login")
+    post "crewRoster" $
+        userAuthenticated (updateCacheWith updateCrewRoster) (redirect "/login")
+
     post "applyChanges" $
         userAuthenticated (do
             val <- runQuery $ const $ catch (do
