@@ -334,23 +334,40 @@ alarmLevelsCss = render $ do
         margin (px 3) (px 3) (px 3) (px 3)
     label # ".rowElem" ? width (pct 70)
 
+
+rollingStockAndCrewCSS :: Css
+rollingStockAndCrewCSS = do
+    ".rowCover" ? display flex
+    ".check" ? do
+        marginTop (px 15)
+        width (pct 30)
+    ".check input" ? do
+        position absolute
+        left (pct 28)
+    ".row" ? marginLeft (pct 0)
+    "#headerCheck" ? marginTop (px 35)
+
 rollingStockRosterCss :: T.Text
 rollingStockRosterCss = render $ do
+    validation
     dialogCss
     zeroPM
     common
     sidebar
     labelledInputCss
     saveAndError
+    rollingStockAndCrewCSS
 
 crewRosterCss :: T.Text
 crewRosterCss = render $ do
+    validation
     dialogCss
     zeroPM
     common
     sidebar
     labelledInputCss
     saveAndError
+    rollingStockAndCrewCSS
 
 changePasswordCss :: T.Text
 changePasswordCss = render $ do

@@ -24,10 +24,10 @@ validation = [jmacro|
             errorDiv.appendChild(document.createTextNode(errorMsg));
             errorDiv.setAttribute('class', 'error');
             parent.appendChild(errorDiv);
-            var label = parent.querySelector('label'),
-                input = parent.querySelector('input');
-            label.style.width = '33.33%';
-            input.style.width = '33.33%';
+            var elem1 = parent.children[0],
+                elem2 = parent.children[1];
+            elem1.style.width = '33.33%';
+            elem2.style.width = '33.33%';
             errorDiv.style.width = '33.33%';
             parent.style.width = '60%';
         }
@@ -36,10 +36,10 @@ validation = [jmacro|
                 return;
             var errorDiv = parent.querySelector('.error');
             parent.removeChild(errorDiv);
-            var label = parent.querySelector('label'),
-                input = parent.querySelector('input');
-            label.style = {};
-            input.style = {};
+            var elem1 = parent.children[0],
+                elem2 = parent.children[1];
+            elem1.style = {};
+            elem2.style = {};
             errorDiv.style = {};
             parent.style = {};
         }
@@ -165,6 +165,28 @@ heartBeatExp = [jmacro|
         setInterval(\ {
             (new Image()).src = "/heartbeat?" + Date.now();
         }, 1000);
+    |]
+
+inputExp :: JStat
+inputExp = [jmacro|
+        fun createTextInput id placeholder {
+            var input = document.createElement('input');
+            input.setAttribute('class', 'rowElem');
+            input.setAttribute('type', "text");
+            input.setAttribute('id', id);
+            input.setAttribute('name', id);
+            input.setAttribute('placeholder', placeholder);
+            return input;
+        }
+        fun createCheckBox id checked {
+            var checkbox = document.createElement('input');
+            checkbox.setAttribute("type", "checkbox");
+            checkbox.setAttribute("id", id);
+            checkbox.setAttribute("name", id);
+            if (checked)
+                checkbox.setAttribute("checked", "checked");
+            return checkbox;
+        }
     |]
 
 home :: String
@@ -690,53 +712,144 @@ alarmLevels = show $ renderJs $ sendXHRExp <>
         };
     |]
 
-rollingStockRoster :: String
-rollingStockRoster = show $ renderJs $ sendXHRExp <>
-    heartBeatExp <>
-    [jmacro|
-        window.onload = \ {
+crewAndRollingStockExp :: JStat
+crewAndRollingStockExp = [jmacro|
+        fun crewAndRollingStock obj {
+            var addRow = document.getElementById('addRow'),
+                delRow = document.getElementById('delRow'),
+                headerCheck = document.getElementById('headerCheck');
+
+            headerCheck.onclick = \ {
+                var i,
+                    selected = document.querySelectorAll('input[type=checkbox]');
+
+                for (i = 1; i < selected.length; ++i) {
+                    selected[i].checked = selected[0].checked;
+                }
+            };
+
+            addRow.onclick = \ {
+                var parentDiv = addRow.parentElement.parentElement;
+
+                var num = parentDiv.querySelectorAll('.rowCover').length - 1,
+                    checkbox = createCheckBox ("check" + num) parentDiv.querySelector('input[type=checkbox]').checked,
+                    checkDiv = document.createElement('div'),
+                    input1 = createTextInput (obj.text.toLocaleLowerCase() + num) ("Enter " + obj.text + " ID Here"),
+                    input2 = createTextInput ("desc" + num) ("Enter " + obj.text + " Description Here"),
+                    newRow = document.createElement('div'),
+                    rowCover = document.createElement('div');
+
+                checkDiv.appendChild(checkbox);
+                checkDiv.setAttribute("class", "check");
+
+                newRow.appendChild(input1);
+                newRow.appendChild(input2);
+                newRow.setAttribute("class", "row");
+                
+                rowCover.appendChild(checkDiv);
+                rowCover.appendChild(newRow);
+                rowCover.setAttribute("class", "rowCover");
+
+                parentDiv.insertBefore(rowCover, addRow.parentElement);
+            };
+
+            delRow.onclick = \ {
+                var i,
+                    selected = document.querySelectorAll('input[type=checkbox]'),
+                    parent = delRow.parentElement.parentElement;
+
+                for (i = 1; i < selected.length; ++i) {
+                    if(selected[i].checked) {
+                        parent.removeChild(selected[i].parentElement.parentElement);
+                    }
+                }
+            };
+
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
-                var i, obj = [],
-                    selects = document.querySelectorAll('select');
-                for (i=0; i<selects.length; ++i) {
-                    obj.push([selects[i].getAttribute('id'), selects[i].value]);
+                var i,
+                    rows = document.querySelectorAll('.row'),
+                    check = true,
+                    flag;
+                // First row is the header
+                for (i = 1; i < rows.length; ++i) {
+                    rowFlag = true;
+                    var inputs = rows[i].querySelectorAll('input'),
+                        rakeID = inputs[0].value,
+                        desc   = inputs[1].value;
+
+                    flag = validator (obj.text.toLocaleLowerCase() + (i-1)) obj.verify;
+                    if (flag)
+                        flag = validator ("desc" + (i-1)) [notEmpty, noLongerThan 25];
+                    
+                    check = check && flag;
                 }
 
-                sendXHR("/alarmLevels", "data=" + JSON.stringify(obj), {
+                if (!check)
+                    return;
+
+                var postData = [];
+                for (i = 1; i < rows.length; ++i) {
+                    var inputs = rows[i].querySelectorAll('input');
+                    postData.push(obj.toPostElement(inputs));
+                }
+
+                sendXHR("/" + obj.url, "data=" + JSON.stringify(postData), {
                     success: \ {
                         location.reload();
                     },
                     failure: \ {
                         console.log("Encountered an error");
                     }
-                })
+                });
             };
+        }
+    |]
+
+rollingStockRoster :: String
+rollingStockRoster = show $ renderJs $ sendXHRExp <>
+    heartBeatExp <>
+    validation <>
+    inputExp <>
+    crewAndRollingStockExp <>
+    [jmacro|
+        fun rakeVerify id {
+            return validate id (\ val {
+                var rexp = /^8(0[1-9]|([1-9]|[A-Fa-f])[0-9])$/;
+                return rexp.test(val);
+            }) "Must be of the form 801, 802, 803 .. 899, 8A0 ... 8F9."
+        }
+        window.onload = \ {
+            crewAndRollingStock {
+                text: "Rake",
+                verify: [rakeVerify],
+                toPostElement: \ inputs {
+                    var rakeID = inputs[0].value,
+                        letter1 = rakeID[1],
+                        letter2 = rakeID[2],
+                        num = parseInt(rakeID[1], 16) * 10 + parseInt(rakeID[2]);
+
+                    return [num, inputs[1].value]
+                },
+                url: "rollingStockRoster"
+            }
         };
     |]
 
 crewRoster :: String
 crewRoster = show $ renderJs $ sendXHRExp <>
     heartBeatExp <>
+    validation <>
+    inputExp <>
+    crewAndRollingStockExp <>
     [jmacro|
         window.onload = \ {
-            var saveButton = document.getElementById('saveButton');
-            saveButton.onclick = \ {
-                var i, obj = [],
-                    selects = document.querySelectorAll('select');
-                for (i=0; i<selects.length; ++i) {
-                    obj.push([selects[i].getAttribute('id'), selects[i].value]);
-                }
-
-                sendXHR("/alarmLevels", "data=" + JSON.stringify(obj), {
-                    success: \ {
-                        location.reload();
-                    },
-                    failure: \ {
-                        console.log("Encountered an error");
-                    }
-                })
-            };
+            crewAndRollingStock {
+                text: "Crew",
+                verify: [notEmpty, noMoreThan 999999],
+                toPostElement: \ inputs -> [{unCrewID: parseInt(inputs[0].value)}, inputs[1].value],
+                url: "crewRoster"
+            }
         };
     |]
 

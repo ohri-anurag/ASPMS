@@ -232,7 +232,18 @@ rollingStockRosterPage accountAndSystemParameterConfig = LT.toStrict $ renderHtm
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
             h1 "Rolling Stock Roster"
-            mapM_ rollingStockView $ M.toList $ rollingStockRoster $ systemParameter accountAndSystemParameterConfig
+            H.div ! class_ "rowCover" $ do
+                H.div ! class_ "check" $
+                    input ! type_ "checkbox"
+                          ! A.id "headerCheck"
+                          ! name "headerCheck"
+                H.div ! class_ "row header" $ do
+                    H.div ! class_ "rowElem" $ "Rake ID"
+                    H.div ! class_ "rowElem" $ "Description"
+            mapM_ rollingStockView $ zip [0..] $ M.toList $ rollingStockRoster $ systemParameter accountAndSystemParameterConfig
+            H.div $ do
+                button ! A.id "addRow" $ "Add Rolling Stock"
+                button ! A.id "delRow" $ "Delete Rolling Stock"
 
 crewRosterPage :: AccountAndSystemParameterConfig -> T.Text
 crewRosterPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ do
@@ -249,7 +260,18 @@ crewRosterPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docT
                 H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
             h1 "Crew Roster"
-            mapM_ crewView $ M.toList $ crewRoster $ systemParameter accountAndSystemParameterConfig
+            H.div ! class_ "rowCover" $ do
+                H.div ! class_ "check" $
+                    input ! type_ "checkbox"
+                          ! A.id "headerCheck"
+                          ! name "headerCheck"
+                H.div ! class_ "row header" $ do
+                    H.div ! class_ "rowElem" $ "Crew ID"
+                    H.div ! class_ "rowElem" $ "Description"
+            mapM_ crewView $ zip [0..] $ M.toList $ crewRoster $ systemParameter accountAndSystemParameterConfig
+            H.div $ do
+                button ! A.id "addRow" $ "Add Crew"
+                button ! A.id "delRow" $ "Delete Crew"
 
 --- Helpers ---
 -- General Helpers
@@ -264,6 +286,15 @@ checkbox checkBoxLabel name' isChecked isDisabled = H.div $ do
         markDisabled tag = if isDisabled
             then tag ! disabled "disabled"
             else tag
+
+simpleInput :: (ToValue a) =>AttributeValue -> String -> a -> Html
+simpleInput name' holder val =
+    input ! class_ "rowElem"
+          ! type_ "text"
+          ! A.id name'
+          ! name name'
+          ! placeholder (toValue holder)
+          ! value (toValue val)
 
 -- Creates a label input pair, and fills the input with the given value
 labelledInput :: (ToValue a) => Html -> AttributeValue -> String -> Maybe a -> Html
@@ -455,11 +486,31 @@ alarmLevelView (eTag, aLevel) = H.div ! class_ "row" $ do
             else tag
 
 -- Rolling Stock Roster Page Helpers
-rollingStockView :: (RakeID, T.Text) -> Html
-rollingStockView (rakeID, desc) = 
-    labelledInput (toHtml $ show rakeID) (toValue $ show rakeID) "Enter Rake Description Here" (Just desc)
+rollingStockView :: (Int, (RakeID, T.Text)) -> Html
+rollingStockView (index, (rakeID, desc)) = H.div ! class_ "rowCover" $ do
+    H.div ! class_ "check" $
+        input ! type_ "checkbox"
+              ! A.id checkIDStr
+              ! name checkIDStr
+    H.div ! class_ "row" $ do
+        simpleInput rakeIDStr "Enter Rake ID Here" (show rakeID)
+        simpleInput descIDStr "Enter Rake Description Here" desc
+    where
+        rakeIDStr = toValue $ "rake" ++ show index
+        descIDStr = toValue $ "desc" ++ show index
+        checkIDStr = toValue $ "check" ++ show index
 
 -- Crew Roster Page Helpers
-crewView :: (CrewID, T.Text) -> Html
-crewView (crewID, desc) = 
-    labelledInput (toHtml $ unCrewID crewID) (toValue $ unCrewID crewID) "Enter Crew Description Here" (Just desc)
+crewView :: (Int, (CrewID, T.Text)) -> Html
+crewView (index, (crewID, desc)) = H.div ! class_ "rowCover" $ do
+    H.div ! class_ "check" $
+        input ! type_ "checkbox"
+              ! A.id checkIDStr
+              ! name checkIDStr
+    H.div ! class_ "row" $ do
+        simpleInput crewIDStr "Enter Crew ID Here" (show $ unCrewID crewID)
+        simpleInput descIDStr "Enter Crew Description Here" desc
+    where
+        crewIDStr = toValue $ "crew" ++ show index
+        descIDStr = toValue $ "desc" ++ show index
+        checkIDStr = toValue $ "check" ++ show index
