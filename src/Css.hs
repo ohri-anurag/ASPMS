@@ -346,6 +346,9 @@ rollingStockAndCrewCSS = do
         left (pct 28)
     ".row" ? marginLeft (pct 0)
     "#headerCheck" ? marginTop (px 35)
+    "#main button" ? do
+        padding (px 5) (px 5) (px 5) (px 5)
+        margin (px 5) (px 5) (px 5) (px 5)
 
 rollingStockRosterCss :: T.Text
 rollingStockRosterCss = render $ do
