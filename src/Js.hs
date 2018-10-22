@@ -846,7 +846,7 @@ crewRoster = show $ renderJs $ sendXHRExp <>
         window.onload = \ {
             crewAndRollingStock {
                 text: "Crew",
-                verify: [notEmpty, noMoreThan 999999],
+                verify: [notEmpty, noMoreThan 9999],
                 toPostElement: \ inputs -> [{unCrewID: parseInt(inputs[0].value)}, inputs[1].value],
                 url: "crewRoster"
             }
