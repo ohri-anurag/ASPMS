@@ -96,6 +96,7 @@ updateSystemParams ps accConfSysParam = do
     minimumDwellTimeVal <- get "minimumDwellTime"
     delayDetectionThreshHoldVal <- get "delayDetectionThreshHold"
     intestationStopDetectionTimeVal <- get "interstationStopDetectionTime"
+    wakeUpCommandOffsetVal <- get "wakeUpCommandOffset"
     tunnelLimitVal <- lookup "tunnelLimit" ps >>= readMaybe . T.unpack
     Just $ accConfSysParam {
         systemParameter = (systemParameter accConfSysParam) {
@@ -104,6 +105,7 @@ updateSystemParams ps accConfSysParam = do
             minimumDwellTime = minimumDwellTimeVal,
             delayDetectionThreshHold = delayDetectionThreshHoldVal,
             interstationStopDetectionTime = intestationStopDetectionTimeVal,
+            wakeUpCommandOffset = wakeUpCommandOffsetVal,
             tunnelLimit = tunnelLimitVal
         }
     }

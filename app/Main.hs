@@ -5,6 +5,7 @@ import Web.Spock
 import Web.Spock.Config
 
 import Data.Array
+import Data.Word(Word32)
 import Control.Monad(void, forM_, when)
 import Control.Monad.Trans
 import Control.DeepSeq
@@ -75,8 +76,8 @@ main = withSocketsDo $ do
             modifyMVarArrayPure arr f = forM_ allElems $ \ x ->
                 modifyMVarPure_ (arr <! x) f
         in do
-            modifyMVarArrayPure arrServerStatus $ mapPair pred
-            modifyMVarArrayPure arrWorkstationStatus $ mapPair pred
+            modifyMVarArrayPure arrServerStatus $ makePair (mapPair pred . fst) snd
+            modifyMVarArrayPure arrWorkstationStatus $ makePair (mapPair pred . fst) snd
 
     stateRef <- newIORef Free
 
@@ -97,8 +98,8 @@ main = withSocketsDo $ do
     runSpock 8080 $ spock spockCfg $ app accountBytesRef arrServerStatus arrWorkstationStatus
 
 app :: IORef B.ByteString
-    -> Array ServerID (MVar (Int, Int))
-    -> Array WorkstationID (MVar (Int, Int))
+    -> Array ServerID (MVar ((Int, Int), Word32))
+    -> Array WorkstationID (MVar ((Int, Int), Word32))
     -> SpockM () UserSession MyAppState ()
 app accountBytesRef arrServerStatus arrWorkstationStatus = do
     get root $

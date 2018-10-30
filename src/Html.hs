@@ -363,6 +363,7 @@ areaOfControlView areaOfControl = do
     checkbox "AOC Rolling Stock Controller" "aocRollingStockController" (toBool aocRollingStockController) False
     checkbox "AOC Crew Controller" "aocCrewController" (toBool aocCrewController) False
     checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" (toBool aocRollingStockManagement) False
+    checkbox "AOC Handle Fault Data" "aocHandleFaultData" (toBool aocHandleFaultData) False
     where
         toBool f = maybe False f areaOfControl
 
@@ -388,6 +389,7 @@ systemParamsView SystemParameter{..} = H.div $ do
         labelledInput "Delay Detection Threshold(In seconds)" "delayDetectionThreshHold" "Enter Delay Detection Threshold here" $ Just $ init $ show delayDetectionThreshHold
         labelledInput "Interstation Stop Detection Time(In seconds)" "interstationStopDetectionTime" "Enter Interstation Stop Detection Time here" $ Just $ init $ show interstationStopDetectionTime
         labelledInput "Tunnel Limit(Number of Trains)" "tunnelLimit" "Enter Tunnel Limit here" $ Just tunnelLimit
+        labelledInput "WakeUp Command Offset(In seconds)" "wakeUpCommandOffset" "Enter WakeUp Command Offset here" $ Just $ init $ show wakeUpCommandOffset
         button ! A.id "saveButton" $ "Save Changes"
 
 -- Running Time Lists Page Helpers

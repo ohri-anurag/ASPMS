@@ -18,6 +18,7 @@ import Data.Array
 import Control.Monad(forM)
 import Data.Maybe(catMaybes, mapMaybe, fromJust)
 import Data.List(find)
+import Data.Word(Word32)
 
 import SP6.Data.ID
 import SP6.Data.TimetableRegulation(commToNetwork)
@@ -40,12 +41,12 @@ allWorkstations = map parse $ mapMaybe (\wrkID -> find (isUser wrkID) asocUserID
         parse (_,wid,_,ip1,ip2,_) = (wid,(ip1,ip2))
 
 
-currentHealthyWorkstationsWithNetwork :: Array WorkstationID (MVar (Int, Int)) -> IO [(WorkstationID, NetworkID)]
+currentHealthyWorkstationsWithNetwork :: Array WorkstationID (MVar ((Int, Int), Word32)) -> IO [(WorkstationID, NetworkID)]
 currentHealthyWorkstationsWithNetwork arrVCommWRK = fmap catMaybes $ forM allWorkstations $ \ (wrkID,_) -> do
-    comm <- readMVar $ arrVCommWRK <! wrkID
+    (comm, _) <- readMVar $ arrVCommWRK <! wrkID
     return $ (wrkID,) <$> commToNetwork comm
 
-withHealthyWorkstations :: Array WorkstationID (MVar (Int, Int)) -> (HostName -> IO a) -> IO [a]
+withHealthyWorkstations :: Array WorkstationID (MVar ((Int, Int), Word32)) -> (HostName -> IO a) -> IO [a]
 withHealthyWorkstations arrVCommWRK process = do
     workstationIDs <- currentHealthyWorkstationsWithNetwork arrVCommWRK
     mapM (process . uncurry workstationIDToAddr) workstationIDs

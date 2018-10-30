@@ -14,6 +14,7 @@ import SP6.Data.IOConfig
 import SP6.Data.TimetableRegulation(withHealthyServers)
 
 import Data.IORef
+import Data.Word(Word32)
 import Control.Exception
 import Network.Socket hiding (send, sendTo)
 import Network.Socket.ByteString (send, sendTo)
@@ -64,7 +65,10 @@ initHeartbeatServer = svFork $ bracket open close $ \sock -> do
             pure sock
 
 -- Confirm the time interval(500 ms).
-sendUpdateCommands :: Array ServerID (MVar (Int, Int)) -> Array WorkstationID (MVar (Int, Int)) -> IO ()
+sendUpdateCommands
+    :: Array ServerID (MVar ((Int, Int), Word32))
+    -> Array WorkstationID (MVar ((Int, Int), Word32))
+    -> IO ()
 sendUpdateCommands arrServerStatus arrWorkstationStatus = svFork $ do
     debugMain "Sending update command to servers..."
     _ <- withHealthyServers arrServerStatus sendUpdateCommandToHost
