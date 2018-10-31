@@ -9,7 +9,7 @@ import SP6.Data.ID
 import SP6.Data.Command
 
 import Data.Array.Unboxed
-import Data.Text
+import qualified Data.Text as T
 import Data.Time.Clock
 import Data.Serialize (Serialize (..), encode, decode)
 import GHC.Generics (Generic)
