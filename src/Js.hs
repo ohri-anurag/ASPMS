@@ -66,6 +66,14 @@ validation = [jmacro|
                 }) ("Field cannot have number greater than " + num + ".");
             };
         }
+        fun noLessThan num {
+            return \ id {
+                return validate id (\ val {
+                    var n = parseFloat(val);
+                    return n !== NaN && n !== Infinity && n >= num;
+                }) ("Field cannot have number less than " + num + ".");
+            };
+        }
         fun positiveInt id {
             return validate id (\ val {
                 var regex = /^[1-9]\d*$/;
@@ -330,6 +338,9 @@ home = show $ renderJs $ sendXHRExp <>
                     var id = inputs[i].getAttribute('id');
                     if (id === "tunnelLimit") {
                         flag = validator id [notEmpty, positiveInt, noMoreThan 5];
+                    } 
+                    else if (id === "wakeUpCommandOffset") {
+                        flag = validator id [notEmpty, positiveInt, noLessThan 5,noMoreThan 18000];
                     } else {
                         flag = validator id [notEmpty, positiveInt, noMoreThan 999];
                     }

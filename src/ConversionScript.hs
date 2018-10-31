@@ -76,7 +76,10 @@ transform old = A.AccountAndSystemParameterConfig
             , A.runningTimeLists              = runningTimeLists old
             , A.dwellTimeSets                 = dwellTimeSets old
             , A.alarmLevel                    = alarmLevel old
-            , A.rollingStockRoster            = M.empty
+            , A.rollingStockRoster            = M.fromList
+                                              $ zip (map RakeID [801..])
+                                              $ replicate 29
+                                              $ T.pack ""
             , A.crewRoster                    = M.empty
             }
         transformAccount old = A.Account
