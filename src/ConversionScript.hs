@@ -79,7 +79,7 @@ transform old = A.AccountAndSystemParameterConfig
             , A.rollingStockRoster            = M.fromList
                                               $ zip (map RakeID [801..])
                                               $ replicate 29
-                                              $ T.pack ""
+                                              $ T.pack "6 car"
             , A.crewRoster                    = M.empty
             }
         transformAccount old = A.Account
