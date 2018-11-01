@@ -77,7 +77,7 @@ transform old = A.AccountAndSystemParameterConfig
             , A.dwellTimeSets                 = dwellTimeSets old
             , A.alarmLevel                    = alarmLevel old
             , A.rollingStockRoster            = M.fromList
-                                              $ zip (map RakeID [801..])
+                                              $ zip (map RakeID [1..])
                                               $ replicate 29
                                               $ T.pack "6 car"
             , A.crewRoster                    = M.empty
