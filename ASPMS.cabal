@@ -35,6 +35,7 @@ library
                       , bytestring
                       , cereal
                       , aeson
+                      , aeson-pretty
                       , unordered-containers
                       , hashable
                       , network
