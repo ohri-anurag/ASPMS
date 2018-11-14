@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Types(
     AccountMode(ADD,EDIT)
 ) where
@@ -9,9 +10,12 @@ import SP6.Data.Command(EventTag)
 
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Array.Unboxed as A
+import qualified Data.Text as T
 
 import Data.Aeson
 import Data.Hashable
+
+import GHC.Generics (Generic)
 
 -- Account Mode
 data AccountMode = ADD | EDIT
@@ -50,3 +54,19 @@ instance FromJSON DwellTimeSets where
         dwellTimeSet2 <- o .: "dwellTimeSet2"
         dwellTimeSet3 <- o .: "dwellTimeSet3"
         pure $ DwellTimeSets dwellTimeSet1 dwellTimeSet2 dwellTimeSet3
+
+instance ToJSON AccountAndSystemParameterConfig
+instance ToJSON SystemParameter
+instance ToJSON Account
+instance ToJSON RunningTimeLists
+instance ToJSON DwellTimeSets
+instance ToJSON AreaOfControl
+instance ToJSON LineOverviewConfig
+instance (Show a, ToJSON b, A.IArray A.UArray b, A.Ix a) => ToJSON (A.UArray a b) where
+    toJSON = object . map (\(a,b) -> (T.pack $ show a, toJSON b)) . A.assocs
+
+instance ToJSONKey UserID2
+instance ToJSONKey EventTag
+instance ToJSONKey StopPointCode
+instance ToJSONKey RakeID
+instance ToJSONKey CrewID

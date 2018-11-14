@@ -219,13 +219,16 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                 debugMain "Getting saved data from file..."
                 accountBytes <- getDataBytes accountFilePath
 
-                -- Update the accountDataRef
+                -- Get the old applied data, to create a timestamped copy
+                oldBytes <- readIORef accountBytesRef
+
+                -- Update the accountBytesRef
                 debugMain "Updating the cache..."
                 atomicModifyIORef' accountBytesRef $ const (accountBytes, ())
 
                 -- Update the copy
                 debugMain "Updating the applied data..."
-                B.writeFile accountFileCopy accountBytes
+                updateCopy oldBytes accountBytes
 
                 -- Send update commands to all workstations and servers
                 debugMain "Sending update command to all..."

@@ -3,6 +3,7 @@ module AccountDataSource (
     getDataBytes,
     getData,
     putData,
+    updateCopy,
     updateAccount,
     deleteAccount,
     updateSystemParams,
@@ -18,6 +19,7 @@ module AccountDataSource (
 -- Data Type Definitions
 import SP6.Data.Account
 import SP6.Data.ID
+import SP6.Data.Locale (indiaTimeZone)
 
 import Types()
 import Utility
@@ -26,17 +28,20 @@ import Data.Derive.Class.Default
 
 import qualified Data.Map.Strict as M
 
-import Control.Exception.Base(SomeException, catch)
+import Control.Exception.Base(SomeException, catch, handle)
 import Text.Read(readMaybe)
 import Data.Either(either)
+import Data.Time.Clock (getCurrentTime)
+import Data.Time.LocalTime (utcToLocalTime)
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as LB
 import qualified Data.Serialize as S
 import Data.Aeson
-
+import qualified Data.Aeson.Encode.Pretty as A
 
 getDataBytes :: FilePath -> IO B.ByteString
 getDataBytes path = catch (B.readFile path) handler
@@ -52,6 +57,35 @@ getData = either (const def) id . S.decode
 
 putData :: AccountAndSystemParameterConfig -> IO ()
 putData accountData = B.writeFile accountFilePath (S.encode accountData)
+
+updateCopy :: B.ByteString -> B.ByteString -> IO ()
+updateCopy oldBytes newBytes = do
+    -- Get the current timestamp, converted to local time
+    timestamp <- map rep . show . utcToLocalTime indiaTimeZone <$> getCurrentTime
+    let newFileName = accountFileCopy ++ "-" ++ timestamp ++ ".json"
+
+    -- Decode the contents of the Applied IORef ByteString
+    either
+        -- Upon failure, print message
+        (debugMain . (++) "Could not decode data.")
+        -- Upon success, dump the JSON data into new file with timestamp
+        (\acc ->
+            handle writeHandler $ do
+                debugMain $ "Logged the old parameters in the file : " ++ newFileName
+                LB.writeFile newFileName (A.encodePretty acc)
+            )
+        (S.decode oldBytes :: Either String AccountAndSystemParameterConfig)
+
+    -- Overwrite the copy file with new bytes
+    B.writeFile accountFileCopy newBytes
+    where
+        -- Need to do this on Windows
+        rep ':' = '.'
+        rep c   = c
+
+        writeHandler :: SomeException -> IO ()
+        writeHandler e = debugMain $ "Could not write JSON data to file. Error : " ++ show e
+
 
 -- Assumption that JSON data is being sent to the server.
 createAccount :: [(T.Text, T.Text)] -> Maybe (UserID2, Account)
