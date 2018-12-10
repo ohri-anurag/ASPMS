@@ -176,7 +176,10 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                 debugMain $ "Save current account data to file" ++ fileName
                 B.writeFile fileName accountBytes
 
-                pure $ T.pack fileName
+                -- Create a JSON string to be sent to the client side
+                let str = T.pack $
+                        "{\"fileName\":\"" ++ fileName ++ "\",\"data\":" ++ show (B.unpack accountBytes) ++ "}"
+                pure str
                 ) errorHandler
             text val
             ) (redirect "/login")
@@ -244,7 +247,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
     where
         errorHandler :: SomeException -> IO T.Text
         errorHandler e = do
-            putStrLn $ "Encountered error : " ++ show e
+            debugMain $ "Encountered error : " ++ show e
             pure "0"
 
         -- Read account data from the cache, and run the action with that data

@@ -162,7 +162,8 @@ sendXHRExp = [jmacro|
                    }
                 }
             };
-            xhttp.open("POST", url, true);
+            // Include a cachebuster in the URL for IE 11
+            xhttp.open("POST", url + "?t=" + Date.now(), true);
             xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
             xhttp.send(postData);
         };
@@ -274,7 +275,8 @@ home = show $ renderJs $ sendXHRExp <>
                         }
                     }
                 };
-                xhttp.open("POST", "/loadData", true);
+                // Include a cachebuster in the URL for IE 11
+                xhttp.open("POST", "/loadData?t=" + Date.now(), true);
                 xhttp.send(fileData);
             };
       
@@ -376,12 +378,21 @@ home = show $ renderJs $ sendXHRExp <>
                             toggleDialog(true, msg, logFunc);
                         }
                         else {
-                            msg = "Data saved in file - " + this.responseText;
+                            var obj = JSON.parse(this.responseText);
+                            msg = "Data saved in file - " + obj.fileName;
                             toggleDialog(true, msg, logFunc);
+                            // Also trigger the file download
+                            var fileData = new Blob(
+                                [new Uint8Array(obj.data).buffer], 
+                                {type: "application/octet-stream"}
+                                );
+                            // IE specific function to save a file locally
+                            window.navigator.msSaveBlob(fileData, obj.fileName);
                         }
                     }
                 };
-                xhttp.open("GET", "/saveData", true);
+                // Include a cachebuster in the URL for IE 11
+                xhttp.open("GET", "/saveData?t=" + Date.now(), true);
                 xhttp.send();
             };
 
