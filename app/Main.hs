@@ -46,6 +46,10 @@ data AppState = InUse | Free
 data UserSession = UserLoggedIn | UserLoggedOut
     deriving Show
 
+-- The interval(seconds) after which user is logged out
+healthInterval :: Int
+healthInterval = 60
+
 -- TODO: Change the port
 main :: IO ()
 main = withSocketsDo $ do
@@ -82,7 +86,7 @@ main = withSocketsDo $ do
     stateRef <- newIORef Free
 
     -- Start decrementing heartbeat every second
-    healthRef <- newIORef 5
+    healthRef <- newIORef healthInterval
     void $ forkIO $ addTimer 1000000 $ do
         stateVal <- readIORef stateRef
         -- Do not decrement less than 0
@@ -295,7 +299,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         updateHealth :: SpockAction () UserSession MyAppState ()
         updateHealth = do
             (MyAppState _ _ healthRef) <- getState
-            liftIO $ atomicModifyIORef' healthRef $ const (5, ())
+            liftIO $ atomicModifyIORef' healthRef $ const (healthInterval, ())
 
         writeAppState :: AppState -> SpockAction () UserSession MyAppState ()
         writeAppState appState = do
