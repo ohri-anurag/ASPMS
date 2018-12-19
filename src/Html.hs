@@ -28,7 +28,7 @@ import qualified Data.Map.Strict as M
 import Types
 import Utility(version)
 import SP6.Data.Account
-import SP6.Data.ID
+import SP6.Data.ID hiding (RollingStockController, CrewController)
 import SP6.Data.Command
 import SP6.Data.Common((<!))
 import Data.Time.Clock(NominalDiffTime)
@@ -78,8 +78,6 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                     a ! href "/runningTimeLists" $ H.div ! A.id "runningTimeLists" $ "Running Time Lists"
                     a ! href "/dwellTimeSets" $ H.div ! A.id "dwellTimeSets" $ "Dwell Time Sets"
                     a ! href "/alarmLevels" $ H.div ! A.id "alarmLevels" $ "Alarm Levels"
-                    a ! href "/rollingStockRoster" $ H.div ! A.id "rollingStockRoster" $ "Rolling Stock Roster"
-                    a ! href "/crewRoster" $ H.div ! A.id "crewRoster" $ "Crew Roster"
                 H.div ! A.id "addAccountDiv" $
                     a ! href "/addAccount" $ H.div ! A.id "addAccount" $ "Add Account"
                 H.div ! A.id "saveLoadDataDiv" $ do
@@ -89,13 +87,13 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                 H.div ! A.id "applyDiv" $ button ! A.id "apply" $ "Apply Changes"
                 H.div ! A.id "versionDiv" $ toHtml $ "Version : " ++ version
                 H.div ! A.id "linkContainer" $ do
-                    a ! href "/changePassword" $ H.div ! A.id "changePassword" $ "Change Password"
+                    a ! href "/changePassword/cc" $ H.div ! A.id "changePassword" $ "Change Password"
                     a ! href "/logout/cc" $ H.div ! A.id "logout" $ "Logout"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
 -- Change Password Page HTML
-changePassword :: T.Text
-changePassword = LT.toStrict $ renderHtml $ docTypeHtml $ do
+changePassword :: User -> T.Text
+changePassword user = LT.toStrict $ renderHtml $ docTypeHtml $ do
     H.head $ do
         H.title "Change Password"
         H.style $ toHtml CSS.changePasswordCss
@@ -104,12 +102,17 @@ changePassword = LT.toStrict $ renderHtml $ docTypeHtml $ do
         dialog
         H.div ! A.id "container" $
             H.div ! A.id "sidebar" $
-                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+                H.div ! A.id "linkContainer" $ a ! href homeUri $ H.div ! A.id "home" $ "Home"
         H.div ! A.id "main" $ do
             H.div ! A.id "passwordDiv" $ do
-                H.label ! for "password" ! class_ "rowElem" $ "Enter new Password"
+                H.label ! for "password" ! class_ "rowElem" $ toHtml $ "Enter new Password for " ++ show user
                 input ! type_ "password" ! class_ "rowElem" ! placeholder "Password" ! name "password" ! A.id "password"
             input ! type_ "submit" ! A.id "saveButton" ! value "Save Changes"
+    where
+        homeUri = case user of
+            CrewController          -> "/crew"
+            RollingStockController  -> "/rsc"
+            ChiefController         -> "/home"
 
 -- Account Page HTML
 editAccount :: T.Text -> AccountAndSystemParameterConfig -> T.Text
@@ -230,7 +233,9 @@ rollingStockRosterPage accountAndSystemParameterConfig = LT.toStrict $ renderHtm
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "saveAndError" $
                     button ! A.id "saveButton" $ "Save Changes"
-                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+                H.div ! A.id "linkContainer" $ do
+                    a ! href "/changePassword/rsc" $ H.div ! A.id "changePassword" $ "Change Password"
+                    a ! href "/logout/rsc" $ H.div ! A.id "logout" $ "Logout"
         H.div ! A.id "main" $ do
             h1 "Rolling Stock Roster"
             H.div ! class_ "rowCover" $ do
@@ -258,7 +263,10 @@ crewRosterPage accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docT
             H.div ! A.id "sidebar" $ do
                 H.div ! A.id "saveAndError" $
                     button ! A.id "saveButton" $ "Save Changes"
-                H.div ! A.id "linkContainer" $ a ! href "/home" $ H.div ! A.id "home" $ "Home"
+                
+                H.div ! A.id "linkContainer" $ do
+                    a ! href "/changePassword/crew" $ H.div ! A.id "changePassword" $ "Change Password"
+                    a ! href "/logout/crew" $ H.div ! A.id "logout" $ "Logout"
         H.div ! A.id "main" $ do
             h1 "Crew Roster"
             H.div ! class_ "rowCover" $ do

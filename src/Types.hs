@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Types(
-    AccountMode(ADD,EDIT)
+    AccountMode(ADD,EDIT),
+    User(ChiefController, RollingStockController, CrewController)
 ) where
 
 import SP6.Data.Account
-import SP6.Data.ID
+import SP6.Data.ID hiding (CrewController, RollingStockController)
 import SP6.Data.Command(EventTag)
 
 import qualified Data.HashMap.Strict as HM
@@ -70,3 +71,10 @@ instance ToJSONKey EventTag
 instance ToJSONKey StopPointCode
 instance ToJSONKey RakeID
 instance ToJSONKey CrewID
+
+data User = ChiefController | RollingStockController | CrewController
+
+instance Show User where
+    show ChiefController        = "Chief Controller"
+    show RollingStockController = "Rolling Stock Controller"
+    show CrewController         = "Crew Controller"

@@ -19,7 +19,7 @@ import Data.Derive.Class.Default
 import Data.Time.Clock.POSIX(getPOSIXTime)
 import Data.Monoid ((<>))
 
-import SP6.Data.ID
+import SP6.Data.ID hiding (CrewController, RollingStockController)
 import SP6.CommonIO
 import SP6.Data.Render
 import SP6.Data.Utility
@@ -29,6 +29,7 @@ import SP6.Data.Common
 import qualified Html as H
 
 -- Data Source
+import Types
 import AccountDataSource
 import Credentials
 import Network
@@ -36,16 +37,9 @@ import Network
 import Utility
 
 data MyAppState = MyAppState
-    { state :: IORef AppState
-    , cache :: IORef AccountAndSystemParameterConfig
+    { cache :: IORef AccountAndSystemParameterConfig
     , health :: IORef Int
     }
-
-data AppState = InUse | Free
-    deriving (Eq, Show)
-
-data User = ChiefController | RollingStockController | CrewController
-    deriving Show
 
 data UserSession = UserLoggedIn User | UserLoggedOut
     deriving Show
@@ -87,21 +81,18 @@ main = withSocketsDo $ do
             modifyMVarArrayPure arrServerStatus $ makePair (mapPair pred . fst) snd
             modifyMVarArrayPure arrWorkstationStatus $ makePair (mapPair pred . fst) snd
 
-    stateRef <- newIORef Free
-
     -- Start decrementing heartbeat every second
     healthRef <- newIORef healthInterval
-    void $ forkIO $ addTimer 1000000 $ do
-        stateVal <- readIORef stateRef
+    void $ forkIO $ addTimer 1000000 $
         -- Do not decrement less than 0
-        when (stateVal == InUse) $ atomicModifyIORef' healthRef $ \ h ->
+        atomicModifyIORef' healthRef $ \ h ->
             (if h == 0 then 0 else h - 1, ())
 
     -- Initialize a spock instance
     debugMain "Reading saved account data from disk..."
     acData <- getData
     dataRef <- newIORef acData
-    spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState stateRef dataRef healthRef)
+    spockCfg <- defaultSpockCfg UserLoggedOut PCNoDatabase (MyAppState dataRef healthRef)
     debugMain "Initializing Spock Instance"
     runSpock 8080 $ spock spockCfg $ app accountBytesRef arrServerStatus arrWorkstationStatus
 
@@ -110,67 +101,72 @@ app :: IORef B.ByteString
     -> Array WorkstationID (MVar ((Int, Int), Word32))
     -> SpockM () UserSession MyAppState ()
 app accountBytesRef arrServerStatus arrWorkstationStatus = do
-    get root $
-        redirect "/login"
+    get "crew" $
+        userAuthenticated (withData H.crewRosterPage) (redirectUserToLogin "crew")
+    post "crew" $
+        userAuthenticated (updateCacheWith updateCrewRoster) (redirectUserToLogin "crew")
 
-    get ("crew" <//> var) $ \role ->
-        html ("Yay!" <> role)
+    get "rsc" $
+        userAuthenticated (withData H.rollingStockRosterPage) (redirectUserToLogin "rsc")
+    post "rsc" $
+        userAuthenticated (updateCacheWith updateRollingStockRoster) (redirectUserToLogin "rsc")
 
-    let getLogin :: T.Text -> SpockAction () UserSession MyAppState ()
-        getLogin = const $ userAuthenticated (redirect "/home") (html H.login)
+    let getLogin :: User -> SpockAction () UserSession MyAppState ()
+        getLogin user = userAuthenticated (redirectLoggedUserToHome user) (html H.login)
 
-    get ("login" <//> var) getLogin
-    post ("login" <//> var) $ \role ->
-        userAuthenticated (redirect "/home") (do
+    get ("login" <//> var) (getLogin . roleToUser)
+    post ("login" <//> var) $ \role -> do
+        let user = roleToUser role
+        userAuthenticated (redirectLoggedUserToHome user) (do
             ps <- paramsPost
-            maybe (redirect "/login") (\pwd -> do
+            maybe (redirectUserToLogin role) (\pwd -> do
                 b <- runQuery $ const $ do
                     debugMain "Validating password..."
-                    -- debugMain $ T.unpack role
-                    validatePassword role pwd
+                    validatePassword user pwd
                 if b
                     then do
-                        login
+                        loginUser user
                         updateHealth
-                        redirect "/home"
-                    else redirect "/login"
+                        redirectLoggedUserToHome user
+                    else redirectUserToLogin role
                 ) (lookup "password" ps)
             )
 
     get ("logout" <//> var) $ \role ->
-        logout >> redirect ("/login/" <> role)
+        logout >> redirectUserToLogin role
 
     get "heartbeat" updateHealth
 
     get "home" $
-        userAuthenticated (withData H.home) (redirect "/login")
+        userAuthenticated (withData H.home) (redirectUserToLogin "cc")
 
-    get "changePassword" $
-        userAuthenticated (html H.changePassword) (redirect "/login")
-    post "changePassword" $
+    get ("changePassword" <//> var) $ \role ->
+        userAuthenticated (html $ H.changePassword $ roleToUser role) (redirectUserToLogin role)
+    post ("changePassword" <//> var) $ \role ->
         userAuthenticated (do
             ps <- paramsPost
             maybe (text "0") (\pwd -> do
                 runQuery $ const $ do
                     debugMain "Storing new password..."
-                    storePassword pwd
+                    let user = roleToUser role
+                    storePassword user pwd
                 text "1"
                 ) (lookup "password" ps)
-            ) (redirect "/login")
+            ) (redirectUserToLogin role)
 
     get ("account" <//> var) $ \uid ->
         -- TODO: This will have to be changed when the UserID type changes.
-        userAuthenticated (withData $ H.editAccount uid) (redirect "/login")
+        userAuthenticated (withData $ H.editAccount uid) (redirectUserToLogin "cc")
     post "account" $
-        userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
+        userAuthenticated (updateCacheWith updateAccount) (redirectUserToLogin "cc")
 
     get "addAccount" $
-        userAuthenticated (withData H.addAccount) (redirect "/login")
+        userAuthenticated (withData H.addAccount) (redirectUserToLogin "cc")
     post "addAccount" $
-        userAuthenticated (updateCacheWith updateAccount) (redirect "/login")
+        userAuthenticated (updateCacheWith updateAccount) (redirectUserToLogin "cc")
 
     post "deleteAccount" $
-        userAuthenticated (updateCacheWith deleteAccount) (redirect "/login")
+        userAuthenticated (updateCacheWith deleteAccount) (redirectUserToLogin "cc")
 
     get "saveData" $
         userAuthenticated (do
@@ -196,38 +192,28 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                 pure str
                 ) errorHandler
             text val
-            ) (redirect "/login")
+            ) (redirectUserToLogin "cc")
 
     post "loadData" $
-        userAuthenticated (body >>= \fileData -> updateCacheWith (updateData fileData)) (redirect "/login")
+        userAuthenticated (body >>= \fileData -> updateCacheWith (updateData fileData)) (redirectUserToLogin "cc")
 
     post "systemParams" $
-        userAuthenticated (updateCacheWith updateSystemParams) (redirect "/login")
+        userAuthenticated (updateCacheWith updateSystemParams) (redirectUserToLogin "cc")
 
     get "runningTimeLists" $
-        userAuthenticated (withData H.runningTimeListsPage) (redirect "/login")
+        userAuthenticated (withData H.runningTimeListsPage) (redirectUserToLogin "cc")
     post "runningTimeLists" $
-        userAuthenticated (updateCacheWith updateRunningTimeLists) (redirect "/login")
+        userAuthenticated (updateCacheWith updateRunningTimeLists) (redirectUserToLogin "cc")
 
     get "dwellTimeSets" $
-        userAuthenticated (withData H.dwellTimeSetsPage) (redirect "/login")
+        userAuthenticated (withData H.dwellTimeSetsPage) (redirectUserToLogin "cc")
     post "dwellTimeSets" $
-        userAuthenticated (updateCacheWith updateDwellTimeSets) (redirect "/login")
+        userAuthenticated (updateCacheWith updateDwellTimeSets) (redirectUserToLogin "cc")
 
     get "alarmLevels" $
-        userAuthenticated (withData H.alarmLevels) (redirect "/login")
+        userAuthenticated (withData H.alarmLevels) (redirectUserToLogin "cc")
     post "alarmLevels" $
-        userAuthenticated (updateCacheWith updateAlarmLevels) (redirect "/login")
-
-    get "rollingStockRoster" $
-        userAuthenticated (withData H.rollingStockRosterPage) (redirect "/login")
-    post "rollingStockRoster" $
-        userAuthenticated (updateCacheWith updateRollingStockRoster) (redirect "/login")
-
-    get "crewRoster" $
-        userAuthenticated (withData H.crewRosterPage) (redirect "/login")
-    post "crewRoster" $
-        userAuthenticated (updateCacheWith updateCrewRoster) (redirect "/login")
+        userAuthenticated (updateCacheWith updateAlarmLevels) (redirectUserToLogin "cc")
 
     post "applyChanges" $
         userAuthenticated (do
@@ -256,7 +242,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                 pure "1"
                 ) errorHandler
             text val
-            ) (redirect "/login")
+            ) (redirectUserToLogin "cc")
 
     where
         errorHandler :: SomeException -> IO T.Text
@@ -267,7 +253,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         -- Read account data from the cache, and run the action with that data
         withData :: (AccountAndSystemParameterConfig -> T.Text) -> SpockAction () UserSession MyAppState ()
         withData action = do
-            (MyAppState _ accountCache _) <- getState
+            (MyAppState accountCache _) <- getState
             acData <- liftIO (readIORef accountCache)
             html $ action acData
 
@@ -275,7 +261,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
             -> SpockAction () UserSession MyAppState ()
         updateCacheWith update = do
             ps <- paramsPost
-            (MyAppState _ accountCache _) <- getState
+            (MyAppState accountCache _) <- getState
             acData <- liftIO (readIORef accountCache)
             maybe (text "0") (updateCache accountCache) $ update ps acData
             where
@@ -294,28 +280,23 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
             -> SpockAction () UserSession MyAppState ()
             -> SpockAction () UserSession MyAppState ()
         userAuthenticated actionTrue actionFalse = do
-            (MyAppState ref _ healthRef) <- getState
+            (MyAppState _ healthRef) <- getState
             healthVal <- liftIO $ readIORef healthRef
             when (healthVal == 0) logout
             session <- readSession
             case session of
                 UserLoggedIn _ -> actionTrue
-                UserLoggedOut -> do
-                  -- Check if some other user is already using the app. If yes, don't show the login page.
-                    appState <- liftIO (readIORef ref)
-                    case appState of
-                        InUse -> text "The account management system is in use by another user. Kindly login at a later time."
-                        Free -> actionFalse
+                UserLoggedOut -> actionFalse
 
-        login = writeAppState InUse >> writeSession (UserLoggedIn ChiefController)
-        logout = writeAppState Free >> writeSession UserLoggedOut
+        loginUser user = writeSession (UserLoggedIn user)
+        logout = writeSession UserLoggedOut
+        redirectUserToLogin role = redirect ("/login/" <> role)
+        redirectLoggedUserToHome user = case user of
+            CrewController          -> redirect "/crew"
+            RollingStockController  -> redirect "/rsc"
+            ChiefController         -> redirect "/home"
 
         updateHealth :: SpockAction () UserSession MyAppState ()
         updateHealth = do
-            (MyAppState _ _ healthRef) <- getState
+            (MyAppState _ healthRef) <- getState
             liftIO $ atomicModifyIORef' healthRef $ const (healthInterval, ())
-
-        writeAppState :: AppState -> SpockAction () UserSession MyAppState ()
-        writeAppState appState = do
-            (MyAppState ref _ _) <- getState
-            liftIO $ atomicModifyIORef' ref (const (appState, ()))

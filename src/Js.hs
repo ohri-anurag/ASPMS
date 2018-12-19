@@ -864,7 +864,7 @@ rollingStockRoster = show $ renderJs $ sendXHRExp <>
 
                     return [num, inputs[1].value]
                 },
-                url: "rollingStockRoster"
+                url: "rsc"
             }
         };
     |]
@@ -881,7 +881,7 @@ crewRoster = show $ renderJs $ sendXHRExp <>
                 text: "Crew",
                 verify: [notEmpty, noMoreThan 9999],
                 toPostElement: \ inputs -> [{unCrewID: parseInt(inputs[0].value)}, inputs[1].value],
-                url: "crewRoster"
+                url: "crew"
             }
         };
     |]
@@ -895,12 +895,13 @@ changePassword = show $ renderJs $ sendXHRExp <>
             var saveButton = document.getElementById('saveButton');
             saveButton.onclick = \ {
                 var input = document.getElementById('password').value, check = true;
+                var role = location.pathname.substring(location.pathname.lastIndexOf('/') + 1);
                 check = validator 'password' [notEmpty, noLongerThan 25, noSpaces];
 
                 if (!check)
                     return;
 
-                sendXHR("/changePassword", "password=" + input, {
+                sendXHR("/changePassword/" + role, "password=" + input, {
                     success: \ {
                         location.reload();
                     },

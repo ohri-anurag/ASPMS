@@ -2,30 +2,35 @@
 module Credentials where
 
 import Utility
+import Types
 
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString as B
 import Control.Exception.Base(SomeException, catch)
 
-defaultPassword :: T.Text -> T.Text
-defaultPassword "crew"  = "passwordcrew"
-defaultPassword "rsc"   = "passwordrsc"
-defaultPassword _       = "password"
+defaultPassword :: User -> T.Text
+defaultPassword CrewController          = "passwordcrew"
+defaultPassword RollingStockController  = "passwordrsc"
+defaultPassword _                       = "password"
 
-credentialsPath :: T.Text -> String
-credentialsPath "crew"  = credentialsPathCrew
-credentialsPath "rsc"   = credentialsPathRSC
-credentialsPath _       = credentialsPathCC
+credentialsPath :: User -> String
+credentialsPath CrewController          = credentialsPathCrew
+credentialsPath RollingStockController  = credentialsPathRSC
+credentialsPath _                       = credentialsPathCC
 
--- TODO: Role Selector here as well
-storePassword :: T.Text -> IO ()
-storePassword = B.writeFile credentialsPathCC . TE.encodeUtf8
+roleToUser :: T.Text -> User
+roleToUser "crew"   = CrewController
+roleToUser "rsc"    = RollingStockController
+roleToUser _        = ChiefController
 
-validatePassword :: T.Text -> T.Text -> IO Bool
-validatePassword role text = (==) text . TE.decodeUtf8 <$> catch (B.readFile $ credentialsPath role) handler
+storePassword :: User -> T.Text -> IO ()
+storePassword user = B.writeFile (credentialsPath user) . TE.encodeUtf8
+
+validatePassword :: User -> T.Text -> IO Bool
+validatePassword user text = (==) text . TE.decodeUtf8 <$> catch (B.readFile $ credentialsPath user) handler
     where
         handler :: SomeException -> IO B.ByteString
         handler e = do
             debugMain $ "Could not read password from file. Resorting to default password. Error : " ++ show e
-            pure $ TE.encodeUtf8 $ defaultPassword role
+            pure $ TE.encodeUtf8 $ defaultPassword user
