@@ -17,6 +17,7 @@ import qualified Data.ByteString as B
 import System.IO(stdout)
 import Data.Derive.Class.Default
 import Data.Time.Clock.POSIX(getPOSIXTime)
+import Data.Monoid ((<>))
 
 import SP6.Data.ID
 import SP6.CommonIO
@@ -43,7 +44,10 @@ data MyAppState = MyAppState
 data AppState = InUse | Free
     deriving (Eq, Show)
 
-data UserSession = UserLoggedIn | UserLoggedOut
+data User = ChiefController | RollingStockController | CrewController
+    deriving Show
+
+data UserSession = UserLoggedIn User | UserLoggedOut
     deriving Show
 
 -- The interval(seconds) after which user is logged out
@@ -109,15 +113,21 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
     get root $
         redirect "/login"
 
-    get "login" $
-        userAuthenticated (redirect "/home") (html H.login)
-    post "login" $
+    get ("crew" <//> var) $ \role ->
+        html ("Yay!" <> role)
+
+    let getLogin :: T.Text -> SpockAction () UserSession MyAppState ()
+        getLogin = const $ userAuthenticated (redirect "/home") (html H.login)
+
+    get ("login" <//> var) getLogin
+    post ("login" <//> var) $ \role ->
         userAuthenticated (redirect "/home") (do
             ps <- paramsPost
             maybe (redirect "/login") (\pwd -> do
                 b <- runQuery $ const $ do
                     debugMain "Validating password..."
-                    validatePassword pwd
+                    -- debugMain $ T.unpack role
+                    validatePassword role pwd
                 if b
                     then do
                         login
@@ -127,8 +137,8 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                 ) (lookup "password" ps)
             )
 
-    get "logout" $
-        logout >> redirect "/login"
+    get ("logout" <//> var) $ \role ->
+        logout >> redirect ("/login/" <> role)
 
     get "heartbeat" updateHealth
 
@@ -279,13 +289,17 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                     text "1"
 
         -- Check if this user is logged in. If yes, perform the given action, otherwise redirect to the login page.
+        userAuthenticated
+            :: SpockAction () UserSession MyAppState ()
+            -> SpockAction () UserSession MyAppState ()
+            -> SpockAction () UserSession MyAppState ()
         userAuthenticated actionTrue actionFalse = do
             (MyAppState ref _ healthRef) <- getState
             healthVal <- liftIO $ readIORef healthRef
             when (healthVal == 0) logout
             session <- readSession
             case session of
-                UserLoggedIn -> actionTrue
+                UserLoggedIn _ -> actionTrue
                 UserLoggedOut -> do
                   -- Check if some other user is already using the app. If yes, don't show the login page.
                     appState <- liftIO (readIORef ref)
@@ -293,7 +307,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
                         InUse -> text "The account management system is in use by another user. Kindly login at a later time."
                         Free -> actionFalse
 
-        login = writeAppState InUse >> writeSession UserLoggedIn
+        login = writeAppState InUse >> writeSession (UserLoggedIn ChiefController)
         logout = writeAppState Free >> writeSession UserLoggedOut
 
         updateHealth :: SpockAction () UserSession MyAppState ()

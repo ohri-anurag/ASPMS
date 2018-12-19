@@ -51,7 +51,8 @@ login = LT.toStrict $ renderHtml $ H.docTypeHtml $ do
     H.head $ do
         H.title "Login"
         H.style $ toHtml CSS.loginCss
-    H.body $ H.form ! action "login" ! method "post" $ do
+        script ! type_ "text/javascript" $ toHtml JS.login
+    H.body $ H.form ! method "post" $ do
         input ! type_ "password" ! placeholder "Password" ! name "password"
         input ! type_ "submit" ! value "Login"
 
@@ -89,7 +90,7 @@ home accountAndSystemParameterConfig = LT.toStrict $ renderHtml $ docTypeHtml $ 
                 H.div ! A.id "versionDiv" $ toHtml $ "Version : " ++ version
                 H.div ! A.id "linkContainer" $ do
                     a ! href "/changePassword" $ H.div ! A.id "changePassword" $ "Change Password"
-                    a ! href "/logout" $ H.div ! A.id "logout" $ "Logout"
+                    a ! href "/logout/cc" $ H.div ! A.id "logout" $ "Logout"
             H.div ! A.id "main" $ accountAndSystemParameterView accountAndSystemParameterConfig
 
 -- Change Password Page HTML

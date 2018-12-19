@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Js(
+    login,
     home,
     account,
     runningTimeLists,
@@ -14,6 +15,16 @@ import Prelude(String, show, ($), (==))
 import Types
 import Data.Monoid((<>))
 import Language.Javascript.JMacro
+
+login :: String
+login = show $ renderJs $
+    [jmacro|
+        document.onload = function() {
+            var form = document.querySelector('form');
+            var role = location.pathname.substring(location.pathname.lastIndexOf('/') + 1);
+            form.action = 'login/' + role;
+        };
+    |]
 
 validation :: JStat
 validation = [jmacro|

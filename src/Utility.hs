@@ -8,7 +8,9 @@ module Utility(
     debugHeartBeat,
     debugMain,
     debugTCP,
-    credentialsPath,
+    credentialsPathCC,
+    credentialsPathCrew,
+    credentialsPathRSC,
     version
 ) where
 
@@ -58,8 +60,14 @@ accountFilePath = "AccountData"
 accountFileCopy :: FilePath
 accountFileCopy = "AccountDataCopy"
 
-credentialsPath :: FilePath
-credentialsPath = "Credentials"
+credentialsPathCC :: FilePath
+credentialsPathCC = "CredentialsCC"
+
+credentialsPathCrew :: FilePath
+credentialsPathCrew = "CredentialsCrew"
+
+credentialsPathRSC :: FilePath
+credentialsPathRSC = "CredentialsRSC"
 
 version :: String
 version = "0.0.3"
