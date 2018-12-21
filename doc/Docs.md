@@ -1,45 +1,55 @@
 - [ASPMS](#aspms)
-    - [Pre Installation Instructions](#pre-installation-instructions)
-    - [How to Install](#how-to-install)
-        - [Build from source](#build-from-source)
-        - [Run Precompiled binary (ASPMS)](#run-precompiled-binary-aspms)
-    - [How it works](#how-it-works)
-        - [Saving Data](#saving-data)
-        - [Updating Data](#updating-data)
-    - [Login](#login)
-        - [How to Login](#how-to-login)
-    - [Home](#home)
-        - [Sidebar](#sidebar)
-        - [Views](#views)
-            - [Accounts View](#accounts-view)
-            - [System Parameters View](#system-parameters-view)
-    - [Add Account](#add-account)
-    - [Edit Account](#edit-account)
-    - [Running Time Lists](#running-time-lists)
-        - [Sidebar](#sidebar)
-        - [Views](#views)
-            - [Maximum Performance](#maximum-performance)
-            - [Five Percent Coasting](#five-percent-coasting)
-            - [Eight Percent Coasting](#eight-percent-coasting)
-            - [Energy Saving](#energy-saving)
-            - [Full Coasting](#full-coasting)
-        - [How to Edit](#how-to-edit)
-        - [Accepted Values](#accepted-values)
-    - [Dwell Time Sets](#dwell-time-sets)
-        - [Sidebar](#sidebar)
-        - [Views](#views)
-            - [Dwell Time Set 1](#dwell-time-set-1)
-            - [Dwell Time Set 2](#dwell-time-set-2)
-            - [Dwell Time Set 3](#dwell-time-set-3)
-        - [How to Edit](#how-to-edit)
-        - [Accepted Values](#accepted-values)
-    - [Alarm Levels](#alarm-levels)
-        - [How to Edit](#how-to-edit)
-        - [How to Save](#how-to-save)
-    - [Change Password](#change-password)
-        - [How to Edit](#how-to-edit)
-        - [How to Save](#how-to-save)
-        - [Accepted Values](#accepted-values)
+  - [Pre Installation Instructions](#pre-installation-instructions)
+  - [How to Install](#how-to-install)
+    - [Build from source](#build-from-source)
+    - [Run Precompiled binary (ASPMS)](#run-precompiled-binary-aspms)
+  - [How it works](#how-it-works)
+    - [Saving Data](#saving-data)
+    - [Updating Data](#updating-data)
+  - [Login](#login)
+    - [How to Login](#how-to-login)
+  - [Home](#home)
+    - [Sidebar](#sidebar)
+    - [Views](#views)
+      - [Accounts View](#accounts-view)
+      - [System Parameters View](#system-parameters-view)
+  - [Add Account](#add-account)
+  - [Edit Account](#edit-account)
+  - [Running Time Lists](#running-time-lists)
+    - [Sidebar](#sidebar-1)
+    - [Views](#views-1)
+      - [Maximum Performance](#maximum-performance)
+      - [Five Percent Coasting](#five-percent-coasting)
+      - [Eight Percent Coasting](#eight-percent-coasting)
+      - [Energy Saving](#energy-saving)
+      - [Full Coasting](#full-coasting)
+    - [How to Edit](#how-to-edit)
+    - [Accepted Values](#accepted-values)
+  - [Dwell Time Sets](#dwell-time-sets)
+    - [Sidebar](#sidebar-2)
+    - [Views](#views-2)
+      - [Dwell Time Set 1](#dwell-time-set-1)
+      - [Dwell Time Set 2](#dwell-time-set-2)
+      - [Dwell Time Set 3](#dwell-time-set-3)
+    - [How to Edit](#how-to-edit-1)
+    - [Accepted Values](#accepted-values-1)
+  - [Alarm Levels](#alarm-levels)
+    - [How to Edit](#how-to-edit-2)
+    - [How to Save](#how-to-save)
+  - [Rolling Stock Roster](#rolling-stock-roster)
+    - [How to Add Rolling Stock](#how-to-add-rolling-stock)
+    - [Accepted Values](#accepted-values-2)
+    - [How to Delete Rolling Stock](#how-to-delete-rolling-stock)
+    - [How to Save](#how-to-save-1)
+  - [Crew Roster](#crew-roster)
+    - [How to Add Crew](#how-to-add-crew)
+    - [Accepted Values](#accepted-values-3)
+    - [How to Delete Crew](#how-to-delete-crew)
+    - [How to Save](#how-to-save-2)
+  - [Change Password](#change-password)
+    - [How to Edit](#how-to-edit-3)
+    - [How to Save](#how-to-save-3)
+    - [Accepted Values](#accepted-values-4)
 
 # ASPMS
 Welcome to Accounts and System Parameters Management System.
@@ -122,6 +132,19 @@ Click on **Apply Changes**, and then click **Yes** in the confirmation dialog. T
 *Add Account*
 
 This link can be clicked to add a new account via the Add Account page.
+
+*Version*
+
+This section displays the current version of ASPMS.
+
+*Load Data*
+
+This button can be used to import the data that was previously exported from ASPMS. The imported data is automatically saved and ASPMS is updated to use it.
+Clicking on this button opens up a window, from which the user can browse to the file to be loaded. After selecting the file in window, user can click on Open button to load it into ASPMS.
+
+*Save Data*
+
+This button can be used to export the data that ASPMS holds currently. A new file will be created on the server, and a dialog will display the name of the file.
 
 *Change Password*
 
@@ -436,6 +459,52 @@ Click on **Save Changes** and then click **OK** to save the changes.
 *Home*
 
 Click on **Home** to go back to the home page.
+
+## Rolling Stock Roster
+![Rolling Stock Roster](img/RollingStock.png)
+This page displays a list of the Rolling Stock, showing each Rake ID along with its description.
+
+### How to Add Rolling Stock
+![Rolling Stock Roster](img/AddRollingStock.png)
+Click on **Add Rolling Stock** button at the end of the page. It will add an empty row to the table. Enter the new Rake ID and the associated description.
+
+### Accepted Values
+All Rake IDs must be of the form 801, 802, 803 .. 899, 8A0 ... 8F9. Maximum value is 8F9. Fields can **NOT** be left blank.
+
+The description has a maximum length of 25 characters.
+
+### How to Delete Rolling Stock
+
+Select the Rolling Stock to be deleted by clicking on the checkboxes next to them. Then click on **Delete Rolling Stock** button to delete the selected Rolling Stock.
+
+### How to Save
+Click on **Save Changes** and then **OK** to save the changes.
+
+>**NOTE :** Rolling Stock cannot be added if invalid information is provided. Appropriate error message will be displayed.
+![Error](img/ValidationRS.png)
+
+## Crew Roster
+![Crew Roster](img/Crew.png)
+This page displays a list of the Crew, showing each Crew ID along with its description.
+
+### How to Add Crew
+![Crew Roster](img/AddCrew.png)
+Click on **Add Crew** button at the end of the page. It will add an empty row to the table. Enter the new Crew ID and the associated description.
+
+### Accepted Values
+All Crew IDs must be a number. Maximum value is 9999. Fields can **NOT** be left blank.
+
+The description has a maximum length of 25 characters.
+
+### How to Delete Crew
+
+Select the Crew to be deleted by clicking on the checkboxes next to them. Then click on **Delete Crew** button to delete the selected Crew.
+
+### How to Save
+Click on **Save Changes** and then **OK** to save the changes.
+
+>**NOTE :** Crew cannot be added if invalid information is provided. Appropriate error message will be displayed.
+![Error](img/ValidationCrew.png)
 
 ## Change Password
 ![Change Password](img/ChangePassword.png)

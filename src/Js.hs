@@ -808,12 +808,12 @@ crewAndRollingStockExp = [jmacro|
                 for (i = 1; i < rows.length; ++i) {
                     rowFlag = true;
                     var inputs = rows[i].querySelectorAll('input'),
-                        rakeID = inputs[0].value,
-                        desc   = inputs[1].value;
+                        rakeCrewId = inputs[0].getAttribute('id'),
+                        descId = inputs[1].getAttribute('id');
 
-                    flag = validator (obj.text.toLocaleLowerCase() + (i-1)) obj.verify;
+                    flag = validator rakeCrewId obj.verify;
                     if (flag)
-                        flag = validator ("desc" + (i-1)) [notEmpty, noLongerThan 25];
+                        flag = validator descId [notEmpty, noLongerThan 25];
                     
                     check = check && flag;
                 }
