@@ -41,11 +41,13 @@
     - [Accepted Values](#accepted-values-2)
     - [How to Delete Rolling Stock](#how-to-delete-rolling-stock)
     - [How to Save](#how-to-save-1)
+    - [Home](#home-1)
   - [Crew Roster](#crew-roster)
     - [How to Add Crew](#how-to-add-crew)
     - [Accepted Values](#accepted-values-3)
     - [How to Delete Crew](#how-to-delete-crew)
     - [How to Save](#how-to-save-2)
+    - [Home](#home-2)
   - [Change Password](#change-password)
     - [How to Edit](#how-to-edit-3)
     - [How to Save](#how-to-save-3)
@@ -190,6 +192,7 @@ This view lists the following systems parameters:
 4. Delay Detection Threshold
 5. Interstation Stop Detection Time
 6. Tunnel Limit
+7. WakeUp Command Offset
 
 *How to Edit*
 
@@ -211,6 +214,7 @@ The values acceptable for each of the above parameters are documented in the tab
 | Delay Detection Threshold        | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
 | Interstation Stop Detection Time | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
 | Tunnel Limit                     | Value must be a number **greater than 0** and **lesser than or equal to 5**, decimals are **NOT** allowed. |
+| WakeUp Command Offset            | Value must be a number **greater than 5** and **lesser than or equal to 18000**, decimals are **NOT** allowed. |
 
 
 >**NOTE :** New Account cannot be added if invalid information is provided. Appropriate error message will be displayed.
@@ -229,6 +233,14 @@ This link can be clicked to open the Dwell Time Sets page.
 *Alarm Levels*
 
 This link can be clicked to open the Alarm Levels page.
+
+*Rolling Stock Roster*
+
+This link can be clicked to open the Rolling Stock Roster page.
+
+*Crew Roster*
+
+This link can be clicked to open the Crew Roster page.
 
 ## Add Account
 ![Add Account](img/AddAccount.png)
@@ -483,6 +495,9 @@ Click on **Save Changes** and then **OK** to save the changes.
 >**NOTE :** Rolling Stock cannot be added if invalid information is provided. Appropriate error message will be displayed.
 ![Error](img/ValidationRS.png)
 
+### Home
+Click on **Home** to go back to the Home page.
+
 ## Crew Roster
 ![Crew Roster](img/Crew.png)
 This page displays a list of the Crew, showing each Crew ID along with its description.
@@ -505,6 +520,9 @@ Click on **Save Changes** and then **OK** to save the changes.
 
 >**NOTE :** Crew cannot be added if invalid information is provided. Appropriate error message will be displayed.
 ![Error](img/ValidationCrew.png)
+
+### Home
+Click on **Home** to go back to the Home page.
 
 ## Change Password
 ![Change Password](img/ChangePassword.png)
