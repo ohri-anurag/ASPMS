@@ -28,7 +28,7 @@ import qualified Data.Map.Strict as M
 import Types
 import Utility(version)
 import SP6.Data.Account
-import SP6.Data.ID hiding (RollingStockController, CrewController)
+import SP6.Data.ID hiding (RollingStockController)
 import SP6.Data.Command
 import SP6.Data.Common((<!))
 import Data.Time.Clock(NominalDiffTime)
@@ -296,6 +296,18 @@ checkbox checkBoxLabel name' isChecked isDisabled = H.div $ do
             then tag ! disabled "disabled"
             else tag
 
+radiobox :: Html -> AttributeValue -> AttributeValue -> Bool -> Bool -> Html
+radiobox checkBoxLabel name' val isChecked isDisabled = H.div $ do
+    markDisabled $ markChecked $ input ! type_ "radio" ! name name' ! value val
+    H.label ! for name' $ checkBoxLabel
+    where
+        markChecked tag = if isChecked
+            then tag ! checked "checked"
+            else tag
+        markDisabled tag = if isDisabled
+            then tag ! disabled "disabled"
+            else tag
+
 simpleInput :: (ToValue a) =>AttributeValue -> String -> a -> Html
 simpleInput name' holder val =
     input ! class_ "rowElem"
@@ -370,7 +382,7 @@ areaOfControlView areaOfControl = do
     checkbox "AOC Line Overview Playback" "aocLineOverviewPlayback" (toBool aocLineOverviewPlayback) False
     checkbox "AOC Maintenance Monitor Playback" "aocMaintenanceMonitorPlayback" (toBool aocMaintenanceMonitorPlayback) False
     checkbox "AOC Rolling Stock Controller" "aocRollingStockController" (toBool aocRollingStockController) False
-    checkbox "AOC Crew Controller" "aocCrewController" (toBool aocCrewController) False
+    checkbox "AOC Crew Management" "aocCrewManagement" (toBool aocCrewManagement) False
     checkbox "AOC Rolling Stock Management" "aocRollingStockManagement" (toBool aocRollingStockManagement) False
     checkbox "AOC Handle Fault Data" "aocHandleFaultData" (toBool aocHandleFaultData) False
     where
@@ -381,10 +393,23 @@ lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ 
     checkbox "AOC Line Overview Config" "aocLineOverview" isChecked False
     H.div ! class_ "form" $ do
         checkbox "Enable Global Command" "enableGlobalCommand" (toBool enableGlobalCommand $ join lineOverviewConfig) (not isChecked)
-        checkbox "Enable Regulation" "enableRegulation" (toBool enableRegulation $ join lineOverviewConfig) (not isChecked)
+        H.div ! A.id "enableRegulationDiv" $ do
+            checkbox "Enable Regulation" "enableRegulation" isChecked (not isChecked)
+            enableRegulationView $ enableRegulation <$> join lineOverviewConfig
     where
         toBool = maybe False
         isChecked = toBool isJust lineOverviewConfig
+
+
+enableRegulationView :: Maybe (Maybe AppMode) -> Html
+enableRegulationView enableRegulation = 
+    H.div ! class_ "form" $ do
+        radiobox "Timetable Mgmt Mode" "appMode" "tt" (appMode == Just TimetableManagementMode) (not isChecked)
+        radiobox "Rolling Stock Mgmt Mode" "appMode" "rsc" (appMode == Just RollingStockManagementMode) (not isChecked)
+        radiobox "Crew Mgmt Mode" "appMode" "crew" (appMode == Just CrewManagementMode) (not isChecked)
+    where
+        appMode = join enableRegulation
+        isChecked = isJust appMode
 
 -- System Parameter Page Helpers
 systemParamsView :: SystemParameter -> Html

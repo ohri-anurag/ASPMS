@@ -24,6 +24,7 @@ data AccountMode = ADD | EDIT
 
 instance FromJSON AreaOfControl
 instance FromJSON LineOverviewConfig
+instance FromJSON AppMode
 
 instance Hashable OC_ID
 instance FromJSONKey OC_ID
@@ -63,6 +64,7 @@ instance ToJSON RunningTimeLists
 instance ToJSON DwellTimeSets
 instance ToJSON AreaOfControl
 instance ToJSON LineOverviewConfig
+instance ToJSON AppMode
 instance (Show a, ToJSON b, A.IArray A.UArray b, A.Ix a) => ToJSON (A.UArray a b) where
     toJSON = object . map (\(a,b) -> (T.pack $ show a, toJSON b)) . A.assocs
 

@@ -19,7 +19,7 @@ import Data.Derive.Class.Default
 import Data.Time.Clock.POSIX(getPOSIXTime)
 import Data.Monoid ((<>))
 
-import SP6.Data.ID hiding (CrewController, RollingStockController)
+import SP6.Data.ID hiding (RollingStockController)
 import SP6.CommonIO
 import SP6.Data.Render
 import SP6.Data.Utility

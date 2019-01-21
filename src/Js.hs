@@ -420,9 +420,11 @@ account mode = show $ renderJs $ sendXHRExp <>
     heartBeatExp <>
     [jmacro|
         window.onload = \ {
-            var checkbox = document.getElementById('aocLineOverview'),
+            var i,
+                checkbox = document.getElementById('aocLineOverview'),
                 child1 = document.getElementById('enableGlobalCommand'),
-                child2 = document.getElementById('enableRegulation');
+                child2 = document.getElementById('enableRegulation'),
+                grandChildren = document.querySelectorAll('input[type=radio]');
             checkbox.onchange = \ {
                 if (checkbox.checked) {
                     child1.removeAttribute('disabled');
@@ -433,6 +435,24 @@ account mode = show $ renderJs $ sendXHRExp <>
                     child2.checked = false;
                     child1.setAttribute('disabled', 'disabled');
                     child2.setAttribute('disabled', 'disabled');
+                    for (i=0; i<grandChildren.length; ++i) {
+                        grandChildren[i].checked = false;
+                        grandChildren[i].setAttribute('disabled', 'disabled');
+                    }
+                }
+            };
+            child2.onchange = \ {
+                if (child2.checked) {
+                    for (i=0; i<grandChildren.length; ++i) {
+                        grandChildren[i].removeAttribute('disabled');
+                    }
+                    grandChildren[0].checked = true;
+                }
+                else {
+                    for (i=0; i<grandChildren.length; ++i) {
+                        grandChildren[i].checked = false;
+                        grandChildren[i].setAttribute('disabled', 'disabled');
+                    }
                 }
             };
             var form = document.getElementById("accountForm");
@@ -442,7 +462,7 @@ account mode = show $ renderJs $ sendXHRExp <>
             var submitButton = document.getElementById('submit');
             submitButton.onclick = \ {
                 var obj = {};
-                var i, elem,
+                var elem,
                     password = document.getElementById('accountPassword'),
                     name = document.getElementById('accountName'),
                     acrList = document.getElementById('accountACR').querySelectorAll('input'),
@@ -475,7 +495,22 @@ account mode = show $ renderJs $ sendXHRExp <>
                 if (aocLineOverviewList[0].checked) {
                     obj.accountAOC.aocLineOverview = {};
                     obj.accountAOC.aocLineOverview.enableGlobalCommand = aocLineOverviewList[1].checked;
-                    obj.accountAOC.aocLineOverview.enableRegulation = aocLineOverviewList[2].checked;
+                    if (aocLineOverviewList[2].checked) {
+                        var val;
+                        if (aocLineOverviewList[3].checked) {
+                            val = "TimetableManagementMode";
+                        }
+                        else if (aocLineOverviewList[4].checked) {
+                            val = "RollingStockManagementMode";
+                        }
+                        else {
+                            val = "CrewManagementMode";
+                        }
+                        obj.accountAOC.aocLineOverview.enableRegulation = val;
+                    }
+                    else {
+                        obj.accountAOC.aocLineOverview.enableRegulation = null;
+                    }
                 }
                 else{
                     obj.accountAOC.aocLineOverview = null;
