@@ -46,15 +46,20 @@ dialog = do
         button ! A.id "dialogButton" $ "OK"
 
 -- Login Page HTML
-login :: T.Text
-login = LT.toStrict $ renderHtml $ H.docTypeHtml $ do
+login :: User -> T.Text
+login user = LT.toStrict $ renderHtml $ H.docTypeHtml $ do
     H.head $ do
         H.title "Login"
         H.style $ toHtml CSS.loginCss
-        script ! type_ "text/javascript" $ toHtml JS.login
-    H.body $ H.form ! method "post" $ do
+    H.body $ H.form ! method "post" ! action userToAction $ do
+        h1 $ toHtml $ show user
         input ! type_ "password" ! placeholder "Password" ! name "password"
         input ! type_ "submit" ! value "Login"
+    where
+        userToAction = case user of
+            ChiefController        -> "/login/cc"
+            RollingStockController -> "/login/rsc"
+            CrewController         -> "/login/crew"
 
 -- Home Page HTML
 home :: AccountAndSystemParameterConfig -> T.Text

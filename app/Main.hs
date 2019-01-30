@@ -112,7 +112,7 @@ app accountBytesRef arrServerStatus arrWorkstationStatus = do
         userAuthenticated (updateCacheWith updateRollingStockRoster) (redirectUserToLogin "rsc")
 
     let getLogin :: User -> SpockAction () UserSession MyAppState ()
-        getLogin user = userAuthenticated (redirectLoggedUserToHome user) (html H.login)
+        getLogin user = userAuthenticated (redirectLoggedUserToHome user) (html $ H.login user)
 
     get ("login" <//> var) (getLogin . roleToUser)
     post ("login" <//> var) $ \role -> do

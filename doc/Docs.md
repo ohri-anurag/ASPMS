@@ -6,6 +6,8 @@
   - [How it works](#how-it-works)
     - [Saving Data](#saving-data)
     - [Updating Data](#updating-data)
+  - [Users](#users)
+- [Chief Controller View](#chief-controller-view)
   - [Login](#login)
     - [How to Login](#how-to-login)
   - [Home](#home)
@@ -36,22 +38,34 @@
   - [Alarm Levels](#alarm-levels)
     - [How to Edit](#how-to-edit-2)
     - [How to Save](#how-to-save)
-  - [Rolling Stock Roster](#rolling-stock-roster)
-    - [How to Add Rolling Stock](#how-to-add-rolling-stock)
-    - [Accepted Values](#accepted-values-2)
-    - [How to Delete Rolling Stock](#how-to-delete-rolling-stock)
-    - [How to Save](#how-to-save-1)
-    - [Home](#home-1)
-  - [Crew Roster](#crew-roster)
-    - [How to Add Crew](#how-to-add-crew)
-    - [Accepted Values](#accepted-values-3)
-    - [How to Delete Crew](#how-to-delete-crew)
-    - [How to Save](#how-to-save-2)
-    - [Home](#home-2)
   - [Change Password](#change-password)
     - [How to Edit](#how-to-edit-3)
+    - [How to Save](#how-to-save-1)
+    - [Accepted Values](#accepted-values-2)
+- [Rolling Stock Controller View](#rolling-stock-controller-view)
+  - [Login](#login-1)
+    - [How to Login](#how-to-login-1)
+  - [Rolling Stock Roster](#rolling-stock-roster)
+    - [How to Add Rolling Stock](#how-to-add-rolling-stock)
+    - [Accepted Values](#accepted-values-3)
+    - [How to Delete Rolling Stock](#how-to-delete-rolling-stock)
+    - [How to Save](#how-to-save-2)
+  - [Change Password](#change-password-1)
+    - [How to Edit](#how-to-edit-4)
     - [How to Save](#how-to-save-3)
     - [Accepted Values](#accepted-values-4)
+- [Crew Controller View](#crew-controller-view)
+  - [Login](#login-2)
+    - [How to Login](#how-to-login-2)
+  - [Crew Roster](#crew-roster)
+    - [How to Add Crew](#how-to-add-crew)
+    - [Accepted Values](#accepted-values-5)
+    - [How to Delete Crew](#how-to-delete-crew)
+    - [How to Save](#how-to-save-4)
+  - [Change Password](#change-password-2)
+    - [How to Edit](#how-to-edit-5)
+    - [How to Save](#how-to-save-5)
+    - [Accepted Values](#accepted-values-6)
 
 # ASPMS
 Welcome to Accounts and System Parameters Management System.
@@ -96,6 +110,21 @@ Data can be updated by clicking on Apply Changes button. This updates already sa
 
 The rest of the document goes through all the pages in ASPMS and explains them one by one.
 
+## Users
+There are three users permitted to use ASPMS:
+1. Chief Controller
+2. Rolling Stock Controller
+3. Crew Controller
+
+Each user has a different password for ASPMS, and can login using that password. All three users have different permissions and different views.
+
+| User                     | View                                             | Default Password |
+| ------------------------ | ------------------------------------------------ | ---------------- |
+| Chief Controller         | Everything except Rolling Stock and Crew Details | password         |
+| Crew Controller          | Crew Details                                     | passwordcrew     |
+| Rolling Stock Controller | Rolling Stock Details                            | passwordrsc      |
+
+# Chief Controller View
 ## Login
 ![Login screen](img/Login.png)
 
@@ -105,8 +134,6 @@ The login screen is the first screen encountered when opening ASPMS.
 The default password is "password" (without the quotes). This can be changed to some other value once the user has logged in.
 
 In order to login, enter the password in the text box, and press enter or click Login.
-
-> **NOTE :** ASPMS is a one user system. When one user has logged in, no one else can login till the first user logs out.
 
 ## Home
 The home page is displayed after logging in.
@@ -206,14 +233,14 @@ Click on the **Save Changes** button below to save any changes. Then click **OK*
 
 The values acceptable for each of the above parameters are documented in the table below:
 
-| System Parameter                 | Accepted Value                                                           |
-| -------------------------------- | ------------------------------------------------------------------------ |
-| Departure Offset                 | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
-| Route Trigger Offset             | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
-| Minimum Dwell Time               | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
-| Delay Detection Threshold        | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
-| Interstation Stop Detection Time | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed. |
-| Tunnel Limit                     | Value must be a number **greater than 0** and **lesser than or equal to 5**, decimals are **NOT** allowed. |
+| System Parameter                 | Accepted Value                                                                                                 |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Departure Offset                 | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed.   |
+| Route Trigger Offset             | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed.   |
+| Minimum Dwell Time               | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed.   |
+| Delay Detection Threshold        | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed.   |
+| Interstation Stop Detection Time | Value must be a number **greater than 0** and **lesser than or equal to 999**, decimals are **NOT** allowed.   |
+| Tunnel Limit                     | Value must be a number **greater than 0** and **lesser than or equal to 5**, decimals are **NOT** allowed.     |
 | WakeUp Command Offset            | Value must be a number **greater than 5** and **lesser than or equal to 18000**, decimals are **NOT** allowed. |
 
 
@@ -234,13 +261,6 @@ This link can be clicked to open the Dwell Time Sets page.
 
 This link can be clicked to open the Alarm Levels page.
 
-*Rolling Stock Roster*
-
-This link can be clicked to open the Rolling Stock Roster page.
-
-*Crew Roster*
-
-This link can be clicked to open the Crew Roster page.
 
 ## Add Account
 ![Add Account](img/AddAccount.png)
@@ -260,11 +280,11 @@ The following table explains each part of the page:
 
 The following table lists the accepted values for the text boxes on the Add Account page
 
-| Field Name       | Accepted Value                                                                                                                                           |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Field Name       | Accepted Value                                                                                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | User Id          | Alphabets(A-Z,a-z), Numbers(0-9), spaces and underscores are allowed. Only one space/underscore allowed between words. Should **NOT** be empty. Maximum length is 25 characters. |
-| Account Name     | Alphabets(A-Z,a-z), Numbers(0-9) and spaces are allowed. Only one space allowed between words. Should **NOT** be empty. Maximum length is 25 characters. |
-| Account Password | Should **NOT** contain spaces, all other characters are acceptable . Should **NOT** be empty. Maximum length is 25 characters.                           |
+| Account Name     | Alphabets(A-Z,a-z), Numbers(0-9) and spaces are allowed. Only one space allowed between words. Should **NOT** be empty. Maximum length is 25 characters.                         |
+| Account Password | Should **NOT** contain spaces, all other characters are acceptable . Should **NOT** be empty. Maximum length is 25 characters.                                                   |
 
 *Line Overview Config*
 
@@ -291,10 +311,10 @@ This page allows the user to edit an account in ASPMS.
 
 The following table explains each part of the page:
 
-| Label            | Value                                                             |
-| ---------------- | ----------------------------------------------------------------- |
-| Account Name     | Enter the new account name for the account.                       |
-| Account Password | Enter the new account password for the account.                   |
+| Label            | Value                                                       |
+| ---------------- | ----------------------------------------------------------- |
+| Account Name     | Enter the new account name for the account.                 |
+| Account Password | Enter the new account password for the account.             |
 | Account ACR      | Edit the regions for which the account will have authority. |
 | Account AOC      | Edit the Area of Control permissions for the account.       |
 
@@ -472,9 +492,48 @@ Click on **Save Changes** and then click **OK** to save the changes.
 
 Click on **Home** to go back to the home page.
 
+## Change Password
+![Change Password](img/ChangePassword.png)
+This page allows you to edit the user password.
+
+### How to Edit
+Just enter the new password in the text box.
+
+### How to Save
+Click on **Save Changes** and then click **OK** in the success dialog.
+
+### Accepted Values
+Spaces are not acceptable, all other characters are accepted. Password must **NOT** be left blank. Maximum length is 25 characters.
+
+>**NOTE :** Password cannot be changed if invalid information is provided. Appropriate error message will be displayed.
+![Error](img/ValidationCP.png)
+
+*Home*
+
+Click on **Home** to go back to the Home Page.
+
+# Rolling Stock Controller View
+## Login
+![Login screen](img/LoginRSC.png)
+
+The login screen is the first screen encountered when opening ASPMS.
+
+### How to Login
+The default password is "passwordrsc" (without the quotes). This can be changed to some other value once the user has logged in.
+
+In order to login, enter the password in the text box, and press enter or click Login.
+
 ## Rolling Stock Roster
 ![Rolling Stock Roster](img/RollingStock.png)
 This page displays a list of the Rolling Stock, showing each Rake ID along with its description.
+
+*Change Password*
+
+This link can be clicked to change the existing password via the Change Password page.
+
+*Logout*
+
+Click the logout button to log out of ASPMS.
 
 ### How to Add Rolling Stock
 ![Rolling Stock Roster](img/AddRollingStock.png)
@@ -495,12 +554,48 @@ Click on **Save Changes** and then **OK** to save the changes.
 >**NOTE :** Rolling Stock cannot be added if invalid information is provided. Appropriate error message will be displayed.
 ![Error](img/ValidationRS.png)
 
-### Home
-Click on **Home** to go back to the Home page.
+## Change Password
+![Change Password](img/ChangePasswordRSC.png)
+This page allows you to edit the user password.
+
+### How to Edit
+Just enter the new password in the text box.
+
+### How to Save
+Click on **Save Changes** and then click **OK** in the success dialog.
+
+### Accepted Values
+Spaces are not acceptable, all other characters are accepted. Password must **NOT** be left blank. Maximum length is 25 characters.
+
+>**NOTE :** Password cannot be changed if invalid information is provided. Appropriate error message will be displayed.
+![Error](img/ValidationCPRSC.png)
+
+*Home*
+
+Click on **Home** to go back to the Home Page.
+
+# Crew Controller View
+## Login
+![Login screen](img/LoginCrew.png)
+
+The login screen is the first screen encountered when opening ASPMS.
+
+### How to Login
+The default password is "passwordcrew" (without the quotes). This can be changed to some other value once the user has logged in.
+
+In order to login, enter the password in the text box, and press enter or click Login.
 
 ## Crew Roster
 ![Crew Roster](img/Crew.png)
 This page displays a list of the Crew, showing each Crew ID along with its description.
+
+*Change Password*
+
+This link can be clicked to change the existing password via the Change Password page.
+
+*Logout*
+
+Click the logout button to log out of ASPMS.
 
 ### How to Add Crew
 ![Crew Roster](img/AddCrew.png)
@@ -521,11 +616,8 @@ Click on **Save Changes** and then **OK** to save the changes.
 >**NOTE :** Crew cannot be added if invalid information is provided. Appropriate error message will be displayed.
 ![Error](img/ValidationCrew.png)
 
-### Home
-Click on **Home** to go back to the Home page.
-
 ## Change Password
-![Change Password](img/ChangePassword.png)
+![Change Password](img/ChangePasswordCrew.png)
 This page allows you to edit the user password.
 
 ### How to Edit
@@ -538,7 +630,7 @@ Click on **Save Changes** and then click **OK** in the success dialog.
 Spaces are not acceptable, all other characters are accepted. Password must **NOT** be left blank. Maximum length is 25 characters.
 
 >**NOTE :** Password cannot be changed if invalid information is provided. Appropriate error message will be displayed.
-![Error](img/ValidationCP.png)
+![Error](img/ValidationCPCrew.png)
 
 *Home*
 
