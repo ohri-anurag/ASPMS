@@ -175,6 +175,8 @@ Clicking on this button opens up a window, from which the user can browse to the
 
 This button can be used to export the data that ASPMS holds currently. A new file will be created on the server, and a dialog will display the name of the file.
 
+Internet Explorer 11 will display a dialog asking you if you want to download the saved file to the machine. Click on Save Button to download it.
+
 *Change Password*
 
 This link can be clicked to change the existing password via the Change Password page.
