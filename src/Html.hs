@@ -399,7 +399,7 @@ lineOverviewConfigView lineOverviewConfig = H.div ! A.id "aocLineOverviewDiv" $ 
     H.div ! class_ "form" $ do
         checkbox "Enable Global Command" "enableGlobalCommand" (toBool enableGlobalCommand $ join lineOverviewConfig) (not isChecked)
         H.div ! A.id "enableRegulationDiv" $ do
-            checkbox "Enable Regulation" "enableRegulation" isChecked (not isChecked)
+            checkbox "Enable Regulation" "enableRegulation" (toBool (isJust . enableRegulation) $ join lineOverviewConfig) (not isChecked)
             enableRegulationView $ enableRegulation <$> join lineOverviewConfig
     where
         toBool = maybe False
