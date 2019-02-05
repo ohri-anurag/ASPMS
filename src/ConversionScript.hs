@@ -16,25 +16,11 @@ import GHC.Generics (Generic)
 
 -- Previous Format
 data AccountAndSystemParameterConfigp = AccountAndSystemParameterConfigp
-    { systemParameter :: SystemParameterp
+    { systemParameter :: A.SystemParameter
     , accountConfig   :: M.Map UserID2 Accountp
     } deriving (Show, Eq, Ord, Generic)
 
 instance Serialize AccountAndSystemParameterConfigp
-
-data SystemParameterp = SystemParameterp
-    { departureOffset               :: NominalDiffTime
-    , routeTriggerOffset            :: NominalDiffTime
-    , minimumDwellTime              :: NominalDiffTime
-    , delayDetectionThreshHold      :: NominalDiffTime
-    , interstationStopDetectionTime :: NominalDiffTime
-    , tunnelLimit                   :: Int
-    , runningTimeLists              :: A.RunningTimeLists
-    , dwellTimeSets                 :: A.DwellTimeSets
-    , alarmLevel                    :: M.Map EventTag AlarmLevel
-    } deriving (Show, Eq, Ord, Generic)
-
-instance Serialize SystemParameterp
 
 data Accountp = Accountp
     { accountPassword :: String
@@ -46,7 +32,7 @@ data Accountp = Accountp
 instance Serialize Accountp
 
 data AreaOfControlp = AreaOfControlp
-    { aocLineOverview               :: Maybe A.LineOverviewConfig
+    { aocLineOverview               :: Maybe LineOverviewConfigp
     , aocMaintenanceMonitor         :: Bool
     , aocTimetableManagement        :: Bool
     , aocEventMonitor               :: Bool
@@ -55,51 +41,51 @@ data AreaOfControlp = AreaOfControlp
     , aocRollingStockController     :: Bool
     , aocCrewController             :: Bool
     , aocRollingStockManagement     :: Bool
+    , aocHandleFaultData            :: Bool
     } deriving (Show, Eq, Ord, Generic)
 
 instance Serialize AreaOfControlp
 
+data LineOverviewConfigp = LineOverviewConfigp
+    { enableGlobalCommand    :: !Bool
+    , enableRegulation :: !Bool
+    } deriving (Show, Eq, Ord, Generic)
+
+instance Serialize LineOverviewConfigp
+
 transform :: AccountAndSystemParameterConfigp -> A.AccountAndSystemParameterConfig
 transform old = A.AccountAndSystemParameterConfig
-    { A.systemParameter   = transformSystemParameter $ systemParameter old
-    , A.accountConfig  = M.map transformAccount $ accountConfig old
+    { A.systemParameter   = systemParameter old
+    , A.accountConfig  = M.mapWithKey transformAccount $ accountConfig old
     }
     where
-        transformSystemParameter old = A.SystemParameter
-            { A.departureOffset               = departureOffset old
-            , A.routeTriggerOffset            = routeTriggerOffset old
-            , A.minimumDwellTime              = minimumDwellTime old
-            , A.delayDetectionThreshHold      = delayDetectionThreshHold old
-            , A.interstationStopDetectionTime = interstationStopDetectionTime old
-            , A.tunnelLimit                   = tunnelLimit old
-            , A.wakeUpCommandOffset           = 600
-            , A.runningTimeLists              = runningTimeLists old
-            , A.dwellTimeSets                 = dwellTimeSets old
-            , A.alarmLevel                    = alarmLevel old
-            , A.rollingStockRoster            = M.fromList
-                                              $ zip (map RakeID [1..])
-                                              $ replicate 29
-                                              $ T.pack "6 car"
-            , A.crewRoster                    = M.empty
-            }
-        transformAccount old = A.Account
+        transformAccount userId old = A.Account
             { A.accountPassword = accountPassword old
             , A.accountName     = accountName old
             , A.accountACR      = accountACR old
-            , A.accountAOC      = transformAOC $ accountAOC old
+            , A.accountAOC      = transformAOC userId $ accountAOC old
             }
-        transformAOC old = A.AreaOfControl
-            { A.aocLineOverview               = aocLineOverview old
+        transformAOC userId old = A.AreaOfControl
+            { A.aocLineOverview               = transformAocLineOverview userId <$> aocLineOverview old
             , A.aocMaintenanceMonitor         = aocMaintenanceMonitor old
             , A.aocTimetableManagement        = aocTimetableManagement old
             , A.aocEventMonitor               = aocEventMonitor old
             , A.aocLineOverviewPlayback       = aocLineOverviewPlayback old
             , A.aocMaintenanceMonitorPlayback = aocMaintenanceMonitorPlayback old
             , A.aocRollingStockController     = aocRollingStockController old
-            , A.aocCrewController             = aocCrewController old
+            , A.aocCrewManagement             = aocCrewController old
             , A.aocRollingStockManagement     = aocRollingStockManagement old
-            , A.aocHandleFaultData            = False
+            , A.aocHandleFaultData            = aocHandleFaultData old
             }
+        transformAocLineOverview userId old = A.LineOverviewConfig
+            { A.enableGlobalCommand = enableGlobalCommand old
+            , A.enableRegulation = regulationMode
+            }
+            where
+                regulationMode = do
+                    defaultAccount <- M.lookup userId A.defaultAccountConfig
+                    defaultLineOverviewConfig <- A.aocLineOverview $ A.accountAOC defaultAccount
+                    A.enableRegulation defaultLineOverviewConfig
 
 convert :: String -> String -> IO ()
 convert old new = do
