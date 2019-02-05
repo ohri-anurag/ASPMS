@@ -70,7 +70,7 @@ credentialsPathRSC :: FilePath
 credentialsPathRSC = "CredentialsRSC"
 
 version :: String
-version = "0.0.3"
+version = "0.0.4"
 
 -- Debugging Functions
 debugTCP :: String -> IO ()
